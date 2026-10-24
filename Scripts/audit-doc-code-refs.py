@@ -86,7 +86,10 @@ for d in docs:
     text = open(d, encoding="utf-8").read()
     for c in candidates(text):
         checked += 1
-        norm = c[2:] if c.startswith("./") else c
+        if c.startswith("../"):  # relative link target: resolve against the doc's folder
+            norm = posixpath.normpath(posixpath.join(posixpath.dirname(d), c))
+        else:
+            norm = c[2:] if c.startswith("./") else c
         if not exists(norm):
             broken.setdefault(d, []).append(c)
 

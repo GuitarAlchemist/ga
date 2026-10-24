@@ -1,4 +1,4 @@
-﻿namespace GaApi.Tests.Controllers;
+namespace GaApi.Tests.Controllers;
 
 using System.Net;
 using System.Net.Http.Json;
@@ -87,8 +87,8 @@ public class MonadicChordsControllerTests
         // Act
         var response = await _client!.GetAsync($"/api/monadic/chords/quality/{quality}?limit=10");
 
-        // Assert — 500 is acceptable when MongoDB is unavailable in the test environment
-        Assert.That(response.StatusCode, Is.AnyOf(HttpStatusCode.OK, HttpStatusCode.BadRequest, HttpStatusCode.InternalServerError));
+        // A valid query must not hide database or deserialization failures.
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
         if (response.StatusCode == HttpStatusCode.OK)
         {
@@ -152,8 +152,8 @@ public class MonadicChordsControllerTests
         // Act
         var response = await _client!.GetAsync($"/api/monadic/chords/stacking/{stackingType}?limit=10");
 
-        // Assert — 500 is acceptable when MongoDB is unavailable in the test environment
-        Assert.That(response.StatusCode, Is.AnyOf(HttpStatusCode.OK, HttpStatusCode.BadRequest, HttpStatusCode.InternalServerError));
+        // A valid query must not hide database or deserialization failures.
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
         if (response.StatusCode == HttpStatusCode.OK)
         {
@@ -172,8 +172,8 @@ public class MonadicChordsControllerTests
         // Act
         var response = await _client!.GetAsync($"/api/monadic/chords/search?query={query}&limit=10");
 
-        // Assert — 500 is acceptable when MongoDB is unavailable in the test environment
-        Assert.That(response.StatusCode, Is.AnyOf(HttpStatusCode.OK, HttpStatusCode.BadRequest, HttpStatusCode.InternalServerError));
+        // A valid query must not hide database or deserialization failures.
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
         if (response.StatusCode == HttpStatusCode.OK)
         {

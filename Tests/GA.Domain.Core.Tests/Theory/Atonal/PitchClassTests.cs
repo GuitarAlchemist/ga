@@ -1,6 +1,7 @@
 namespace GA.Domain.Core.Tests.Theory.Atonal;
 
 using NUnit.Framework;
+using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Theory.Atonal;
 
 [TestFixture]

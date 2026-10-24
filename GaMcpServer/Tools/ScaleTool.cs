@@ -1,6 +1,7 @@
 namespace GaMcpServer.Tools;
 
 using GA.Business.Config;
+using GA.Business.ML.Agents.Mcp;
 using GA.Domain.Core.Theory.Atonal;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
@@ -99,7 +100,7 @@ public static class ScaleTool
     {
         var parts = (key ?? "").Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length < 2)
-            throw new McpException($"Invalid key format '{key}'. Expected 'Root mode', e.g. 'G major'.");
+            throw new McpException($"Invalid key format '{McpEchoSanitizer.SanitizeEcho(key)}'. Expected 'Root mode', e.g. 'G major'.");
 
         var root = parts[0];
         var mode = string.Join(' ', parts[1].Split(' ', StringSplitOptions.RemoveEmptyEntries));
@@ -108,11 +109,11 @@ public static class ScaleTool
         var accidental = root.Length > 1 ? root[1..] : "";
         var shift = accidental switch { "" => 0, "#" => 1, "##" or "x" => 2, "b" => -1, "bb" => -2, _ => (int?)null };
         if (letter < 0 || shift is null)
-            throw new McpException($"Unknown root note '{root}'. Use a letter A-G with an optional #, ## (or x), b or bb, e.g. C, F#, Bb.");
+            throw new McpException($"Unknown root note '{McpEchoSanitizer.SanitizeEcho(root)}'. Use a letter A-G with an optional #, ## (or x), b or bb, e.g. C, F#, Bb.");
 
         if (!ModeOffsets.TryGetValue(mode, out var offsets))
             throw new McpException(
-                $"Unsupported mode '{mode}'. Use major, minor, natural minor, ionian, dorian, phrygian, lydian, mixolydian, aeolian or locrian.");
+                $"Unsupported mode '{McpEchoSanitizer.SanitizeEcho(mode)}'. Use major, minor, natural minor, ionian, dorian, phrygian, lydian, mixolydian, aeolian or locrian.");
 
         var rootPc = (LetterPitchClasses[letter] + shift.Value + 12) % 12;
         var notes = offsets.Select((offset, degree) =>
@@ -164,4 +165,58 @@ public static class ScaleTool
                 Description: {m.Description?.Value ?? ""}
                 """;
     }
+
+    [McpServerTool]
+    [Description(
+        "Get detailed mathematical and structural properties for a scale by binary scale ID. " +
+        "Includes Myhill's Property, Rothenberg Propriety, Maximal Evenness Discrepancy, " +
+        "Well-Formedness, Imperfection Count, Zeitler Legitimacy, and Interval Contradictions/Ambiguities.")]
+    public static string GaScaleProperties(
+        [Description("Binary scale ID, e.g. 1709 for Dorian or 2741 for Major")] int id)
+    {
+        var pcsId = GA.Domain.Core.Theory.Atonal.PitchClassSetId.FromValue(id);
+        var pcs = pcsId.ToPitchClassSet();
+        var (contradictions, ambiguities) = GA.Domain.Core.Theory.Atonal.AdvancedScaleGeometry.GetIntervalMatrixDiagnostics(pcs);
+        var isWellFormed = GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.IsWellFormed(pcs, out var generator);
+
+        return $"""
+                Binary Scale ID: {id}
+                Pitch Classes: {pcs}
+                Cardinality: {pcs.Cardinality.Value}
+                Myhill's Property: {GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.HasMyhillProperty(pcs)}
+                Rothenberg Propriety: {GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.GetRothenbergPropriety(pcs)}
+                Maximal Evenness Discrepancy: {GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.GetMaximalEvennessDiscrepancy(pcs):F4}
+                Well-Formed: {isWellFormed} (Generator: {(isWellFormed ? generator : "none")})
+                Imperfection Count: {GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.GetImperfectionCount(pcs)}
+                Zeitler Legitimacy: {GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.GetZeitlerLegitimacy(pcs)}
+                Interval Contradictions: {contradictions}
+                Interval Ambiguities: {ambiguities}
+                """;
+    }
+
+    [McpServerTool]
+    [Description(
+        "Get all common tertian triads (Major, Minor, Diminished, Augmented) in a scale and their " +
+        "parsimonious voice-leading connections (2 common tones, 1 voice moving by 1-2 semitones).")]
+    public static string GaParsimoniousTriads(
+        [Description("Binary scale ID, e.g. 1709 for Dorian")] int id)
+    {
+        var pcsId = GA.Domain.Core.Theory.Atonal.PitchClassSetId.FromValue(id);
+        var pcs = pcsId.ToPitchClassSet();
+        var triads = GA.Domain.Core.Theory.Atonal.AdvancedScaleGeometry.GetTertianTriads(pcs);
+        var connections = GA.Domain.Core.Theory.Atonal.AdvancedScaleGeometry.GetParsimoniousTriadConnections(pcs);
+
+        var triadList = string.Join("\n", triads.Select(t => $"  - {t.Root} {t.TriadQuality} ({t.Root}, {t.Third}, {t.Fifth})"));
+        var connList = string.Join("\n", connections.Select(c =>
+            $"  - {c.FromTriad.Root} {c.FromTriad.TriadQuality} <-> {c.ToTriad.Root} {c.ToTriad.TriadQuality} [Voice {c.MovingVoiceFrom} -> {c.MovingVoiceTo} ({c.SemitoneShift} semitone)]"));
+
+        return $"""
+                Triads ({triads.Count}):
+                {triadList}
+
+                Parsimonious Voice-Leading Connections ({connections.Count}):
+                {connList}
+                """;
+    }
 }
+

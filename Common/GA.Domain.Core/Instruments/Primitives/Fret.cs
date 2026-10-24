@@ -146,7 +146,7 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
     /// <summary>
     ///     Gets all Fret values (automatically memoized).
     /// </summary>
-    public static IReadOnlyList<int> Values => ValueObjectUtils<Fret>.Values;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<Fret>.ValuesList;
 
     /// <summary>
     ///     Gets the cached span representing the full fret range.

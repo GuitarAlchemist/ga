@@ -13,20 +13,26 @@ using GA.Core.Functional;
 /// outcome; this type never produces an HTTP status or SSE byte.
 /// </summary>
 /// <remarks>
-/// Behavior-preserving for the first transport (<c>POST /api/chatbot/chat</c>): the
-/// only inputs forwarded to the orchestrator are <c>Message</c> + <c>SessionId</c>,
-/// matching the controller before the seam existed. Length-cap unification (the
-/// divergent 2000/4000/none across transports) is a deliberate policy change deferred
-/// until all three transports route through the seam — see the <c>#1</c> plan section.
+/// Both dispatch modes preserve message, opaque session identity, and caller history.
+/// Length-cap unification remains a separate policy change.
 /// </remarks>
 public sealed class ChatIntake(
     IChatApplicationService chatService,
     ILlmConcurrencyGate concurrencyGate) : IChatIntake
 {
-    public async Task<Result<ChatResponse, ChatIntakeError>> IntakeAsync(
+    public Task<Result<ChatResponse, ChatIntakeError>> IntakeAsync(
         ChatIntakeRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync(request, null, cancellationToken);
+
+    public Task<Result<ChatResponse, ChatIntakeError>> IntakeStreamingAsync(
+        ChatIntakeRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(request, onToken, cancellationToken);
+
+    private async Task<Result<ChatResponse, ChatIntakeError>> ExecuteAsync(
+        ChatIntakeRequest request, Func<string, Task>? onToken, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var message = request.Message?.Trim();
         if (string.IsNullOrWhiteSpace(message))
         {
@@ -41,9 +47,22 @@ public sealed class ChatIntake(
 
         try
         {
-            var response = await chatService.ChatAsync(
-                new ChatRequest(message, SessionId: request.SessionId, History: request.History),
-                cancellationToken);
+            var chatRequest = new ChatRequest(message, SessionId: request.SessionId, History: request.History);
+            var emittedText = false;
+            async Task EmitAsync(string token)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (string.IsNullOrEmpty(token)) return;
+                await onToken!(token);
+                emittedText = true;
+            }
+            var response = onToken is null
+                ? await chatService.ChatAsync(chatRequest, cancellationToken)
+                : await chatService.ChatStreamingAsync(chatRequest, EmitAsync, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            // Readiness blocks and pre-token fallback can return a final answer without tokens.
+            if (onToken is not null && !emittedText && !string.IsNullOrEmpty(response.NaturalLanguageAnswer))
+                await EmitAsync(response.NaturalLanguageAnswer);
             return Result<ChatResponse, ChatIntakeError>.Success(response);
         }
         finally

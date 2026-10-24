@@ -4,7 +4,14 @@
    VexTab is a text-based language for music notation that compiles to VexFlow.
    This grammar defines the complete VexTab syntax for parsing and generation.
    
-   Reference: https://vexflow.com/vextab/
+   Reference: https://vexflow.com/vextab/tutorial.html and VexTab's own
+   grammar, https://github.com/0xfe/vextab/blob/master/src/vextab.jison.
+   This is the subset GA models (Parsers/VexTabParser.fs); what it accepts,
+   VexTab accepts.
+
+   Whitespace: tokens are separated by spaces or tabs inside a line, and
+   lines by newlines. A keyword line (tabstave, notes, text, options) ends
+   at the end of its line.
    ============================================================================ *)
 
 (* ============================================================================
@@ -25,7 +32,7 @@ blank_line = whitespace ;
    OPTIONS
    ============================================================================ *)
 
-options_line = "options", { option } ;
+options_line = "options", { " ", option } ;
 
 option = option_name, "=", option_value ;
 
@@ -39,13 +46,13 @@ option_name = "width"
             | "tab-stems"
             | "tab-stem-direction" ;
 
-option_value = number | identifier | boolean ;
+option_value = { any_char - whitespace } ;  (* true/false, an integer, or a word such as 0.8 *)
 
 (* ============================================================================
    TABSTAVE (Stave Configuration)
    ============================================================================ *)
 
-tabstave_line = "tabstave", { tabstave_option } ;
+tabstave_line = "tabstave", { " ", tabstave_option } ;  (* options not written stay unset *)
 
 tabstave_option = "notation=", boolean
                 | "tablature=", boolean
@@ -56,9 +63,13 @@ tabstave_option = "notation=", boolean
 
 clef_type = "treble" | "alto" | "tenor" | "bass" | "percussion" ;
 
-key_signature = note_letter, [accidental], [mode] ;
+key_signature = note_name, [key_accidental], [mode] ;  (* VexFlow key specs: C, Bb, F#, Am, C#m *)
 
-mode = "major" | "minor" ;
+key_accidental = "#" | "b" ;
+
+mode = "m"         (* minor, as VexTab writes it *)
+     | "minor"
+     | "major" ;
 
 time_signature = number, "/", number
                | "C"
@@ -69,16 +80,18 @@ tuning = "standard"
        | "eb"
        | custom_tuning ;
 
-custom_tuning = note_letter, [accidental], "/", octave,
-                { ",", note_letter, [accidental], "/", octave } ;
+custom_tuning = note_name, [tuning_accidental], "/", octave,
+                { ",", note_name, [tuning_accidental], "/", octave } ;
+
+tuning_accidental = "#" | "##" | "b" | "bb" | "n" ;
 
 (* ============================================================================
    NOTES
    ============================================================================ *)
 
-notes_line = "notes", { duration }, note_sequence ;
+notes_line = "notes", [duration], note_sequence ;
 
-duration = ":", duration_code, [dot], [slash_notation] ;
+duration = ":", duration_code, [slash_notation], [dot] ;  (* e.g. :8, :qd, :8Sd *)
 
 duration_code = "w"     (* whole *)
               | "h"     (* half *)
@@ -91,34 +104,33 @@ dot = "d" ;  (* dotted note *)
 
 slash_notation = "S" ;  (* slash notation for rhythm *)
 
-note_sequence = note_item, { separator, note_item } ;
+note_sequence = { note_item } ;  (* separated by spaces or tabs *)
 
-separator = "-" | whitespace ;
-
-note_item = note
+note_item = note_run
+          | tab_run
           | chord
           | rest
           | bar_line
           | tuplet
-          | annotation ;
+          | duration      (* a duration in the middle of a line applies to the notes after it *)
+          | annotation ;  (* $...$ applies to the note before it *)
 
 (* ============================================================================
    STANDARD NOTATION NOTES
    ============================================================================ *)
 
-note = note_name, [accidental], "/", octave, [technique_chain], [articulation] ;
+(* One or more notes sharing an octave: C/4, C#-D-E@/4 *)
+note_run = note_head, { technique_step }, "/", octave ;
+
+note_head = note_name, [accidental] ;
 
 note_name = "A" | "B" | "C" | "D" | "E" | "F" | "G" ;
 
 accidental = "#"    (* sharp *)
            | "##"   (* double sharp *)
-           | "b"    (* flat *)
-           | "bb"   (* double flat *)
-           | "n"    (* natural *)
-           | "x"    (* double sharp alternative *)
-           | "♯"    (* unicode sharp *)
-           | "♭"    (* unicode flat *)
-           | "♮" ;  (* unicode natural *)
+           | "@"    (* flat *)
+           | "@@"   (* double flat *)
+           | "n" ;  (* natural *)
 
 octave = digit ;
 
@@ -126,55 +138,46 @@ octave = digit ;
    TABLATURE NOTES
    ============================================================================ *)
 
-tab_note = fret, "/", string, [technique_chain], [articulation] ;
+(* One or more frets sharing a string, the techniques between them:
+   5/3, 5h7/3, 7b9b7/3 (bend and release), 4-5-6/3 (a run), t12p7p5h7/4 (tap) *)
+tab_run = ["t"], fret, { technique_step }, "/", string ;
 
 fret = number | "X" ;  (* X for muted note *)
 
-string = digit ;  (* 1-6 for standard guitar *)
+string = number ;  (* 1-6 for standard guitar *)
 
 (* ============================================================================
    CHORDS
    ============================================================================ *)
 
-chord = "(", chord_note, { ".", chord_note }, ")", [technique_chain] ;
+chord = "(", chord_line, { ".", chord_line }, ")", { decorator } ;
 
-chord_note = note | tab_note ;
+chord_line = note_run | tab_run ;
 
 (* ============================================================================
    TECHNIQUES (Guitar-specific)
    ============================================================================ *)
 
-technique_chain = technique, { technique } ;
+(* Techniques sit between the frets of a run, as in VexTab: 5h7/3, not 5/3h7 *)
+technique_step = decorator
+               | "h", number     (* hammer-on to that fret *)
+               | "p", number     (* pull-off *)
+               | "s", number     (* slide *)
+               | "b", number     (* bend; a second b is the release: 7b9b7 *)
+               | "-", fret       (* next note of the run, no technique *)
+               | "t", fret ;     (* next note of the run, tapped *)
 
-technique = hammer_on
-          | pull_off
-          | slide
-          | bend
-          | vibrato
-          | tap
-          | stroke ;
-
-hammer_on = "h", fret ;
-
-pull_off = "p", fret ;
-
-slide = "s", fret ;
-
-bend = "b", fret, ["b", fret] ;  (* bend and optional release *)
-
-vibrato = "v"   (* normal vibrato *)
-        | "V" ; (* harsh vibrato *)
-
-tap = "t" ;
-
-stroke = "u"    (* upstroke *)
-       | "d" ;  (* downstroke *)
+decorator = "v"    (* vibrato *)
+          | "V"    (* harsh vibrato *)
+          | "u"    (* upstroke *)
+          | "d" ;  (* downstroke *)
 
 (* ============================================================================
    ARTICULATIONS
    ============================================================================ *)
 
-articulation = "$", articulation_code, "/", position, ".$" ;
+(* An articulation is an annotation after its note: C/4 $.a./top.$ *)
+articulation = "$.", articulation_code, "/", position, ".$" ;
 
 articulation_code = "a."     (* staccato *)
                   | "av"     (* staccatissimo *)
@@ -239,9 +242,7 @@ text_content = { any_char - "$" } ;
    TEXT LINES (Lyrics, chords, etc.)
    ============================================================================ *)
 
-text_line = "text", { text_duration }, text_sequence ;
-
-text_duration = duration ;
+text_line = "text", [duration, ","], text_sequence ;  (* text :h,G,C *)
 
 text_sequence = text_item, { ",", text_item } ;
 
@@ -252,7 +253,7 @@ text_item = text_string
           | font_modifier
           | new_line ;
 
-text_string = { any_char - "," - "|" - "#" - "+" } ;
+text_string = { any_char - "," - newline } ;  (* any item that is not one of the forms below *)
 
 symbol = "#", symbol_name ;
 
@@ -291,7 +292,9 @@ letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" |
        | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
        | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;
 
-whitespace = { " " | "\t" | "\n" | "\r" } ;
+whitespace = " " | "\t" | newline ;
+
+newline = "\n" | "\r\n" | "\r" ;
 
 any_char = ? any character ? ;
 

@@ -94,7 +94,7 @@ public readonly record struct IntervalClass : IStaticValueObjectList<IntervalCla
     /// <summary>
     ///     Gets all IntervalClass values (automatically memoized).
     /// </summary>
-    public static IReadOnlyList<int> Values => ValueObjectUtils<IntervalClass>.Values;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<IntervalClass>.ValuesList;
 
     /// <summary>
     ///     Gets the cached span representing the full interval class range.

@@ -1,0 +1,48 @@
+{
+  "endpoint": "https://demos.guitaralchemist.com/chatbot/api/chatbot/chat/stream",
+  "key_c_major_pcs": [0, 2, 4, 5, 7, 9, 11],
+  "cases": [
+    {
+      "id": "P1",
+      "prompt": "which arpeggio fits Am F C G",
+      "repeats": 3,
+      "expect_route": "skill.improvisation",
+      "chords": ["Am", "F", "C", "G"],
+      "key_pcs": [0, 2, 4, 5, 7, 9, 11],
+      "forbidden": ["Amm"],
+      "prediction": "route/stream/order/quality PASS; key-fit FAIL for F (F Ionian has Bb) and G (G Ionian has F#)"
+    },
+    {
+      "id": "P2",
+      "prompt": "what arpeggios work over Dm7 G7 Cmaj7",
+      "repeats": 1,
+      "expect_route": "skill.improvisation",
+      "chords": ["Dm7", "G7", "Cmaj7"],
+      "key_pcs": [0, 2, 4, 5, 7, 9, 11],
+      "forbidden": ["Dmm7"],
+      "prediction": "all PASS (D Dorian, G Mixolydian, C Ionian are diatonic to C major)"
+    },
+    {
+      "id": "N1",
+      "prompt": "which arpeggio fits C A Dm G",
+      "repeats": 1,
+      "expect_route": "skill.improvisation",
+      "chords": ["C", "A", "Dm", "G"],
+      "key_pcs": [0, 2, 4, 5, 7, 9, 11],
+      "non_diatonic_chords": ["A"],
+      "secondary_dominant_guard": {"chord": "A", "must_contain_pc": 1, "must_not_contain_pc": 0},
+      "forbidden": ["Amm"],
+      "prediction": "A guard PASS (A Ionian keeps C#, no natural C); key-fit FAIL for Dm (D Aeolian has Bb) and G (G Ionian has F#)"
+    },
+    {
+      "id": "N2",
+      "prompt": "which arpeggio fits Hm Q7",
+      "repeats": 1,
+      "expect_route": null,
+      "chords": [],
+      "invalid_input": true,
+      "forbidden": ["Hm arpeggio", "Q7 arpeggio"],
+      "prediction": "no fabricated per-chord arpeggio line; answer declines or states uncertainty (heuristic check)"
+    }
+  ]
+}

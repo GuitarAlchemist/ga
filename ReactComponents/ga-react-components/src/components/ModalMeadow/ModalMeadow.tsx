@@ -168,6 +168,12 @@ interface ModalMeadowProps {
    * page's HUD takeover-swap behaviour keeps working.
    */
   onUserTakeover?: () => void;
+  /**
+   * Callback fired every frame with the world-relative camera heading in
+   * degrees (0 = North/-Z, 90 = East/+X, 180 = South/+Z, 270 = West/-X).
+   * Useful for driving a 2D compass HUD on the test page.
+   */
+  onCameraHeadingChange?: (headingDegrees: number) => void;
   /** If true (default), camera auto-walks across all 7 regions until the
    *  player takes pointer-lock. Set false to disable auto-walk entirely. */
   autoWalk?: boolean;
@@ -177,6 +183,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
   onModeChange,
   onLockChange,
   onUserTakeover,
+  onCameraHeadingChange,
   autoWalk = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -238,6 +245,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     const skyMaterial = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       depthWrite: false,
+      fog: false,
       uniforms: skyUniforms,
       vertexShader: /* glsl */ `
         varying vec3 vDir;
@@ -373,16 +381,18 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
 
     // ─── Ground plane — heightmap-displaced rolling hills ──────────────────
     // 7-region tinted ground. Lambert from the interpolated sun direction.
-    // Ground material uses Three.js's shadow uniform plumbing by setting
-    // `lights: true` on the ShaderMaterial — THREE auto-injects the
-    // directionalLightShadows / directionalShadowMap / vDirectionalShadowCoord
-    // uniforms required by the shadowmap chunks, so we only declare our own
-    // here.
-    const groundUniforms = {
-      uBaseColors: { value: baseColors.map((c) => c.clone().multiplyScalar(0.55)) },
-      uSunDir: { value: new THREE.Vector3(0.4, 0.85, 0.35) },
-      uSunColor: { value: new THREE.Color(1.0, 0.95, 0.85) },
-    };
+    // For a ShaderMaterial with lights:true and fog:true we must include the
+    // lighting/fog uniform libraries ourselves; Three.js does not auto-inject
+    // them the way it does for built-in materials.
+    const groundUniforms = THREE.UniformsUtils.merge([
+      THREE.UniformsLib.lights,
+      THREE.UniformsLib.fog,
+      {
+        uBaseColors: { value: baseColors.map((c) => c.clone().multiplyScalar(0.55)) },
+        uSunDir: { value: new THREE.Vector3(0.4, 0.85, 0.35).normalize() },
+        uSunColor: { value: new THREE.Color(1.0, 0.95, 0.85) },
+      },
+    ]);
     const groundShadowDefines: Record<string, string> = SHADOWS_ENABLED
       ? { USE_SHADOWMAP: '', SHADOWMAP_TYPE_PCF_SOFT: '' }
       : {};
@@ -430,6 +440,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
         #include <common>
         #include <packing>
         #include <fog_pars_fragment>
+        #include <lights_pars_begin>
         #include <shadowmap_pars_fragment>
         ${NOISE_GLSL}
         ${REGION_WEIGHTS_GLSL}
@@ -484,6 +495,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     if (SHADOWS_ENABLED) {
       ground.customDepthMaterial = new THREE.ShaderMaterial({
         defines: { DEPTH_PACKING: 3201 }, // RGBADepthPacking
+        fog: false,
         vertexShader: /* glsl */ `
           ${NOISE_GLSL}
           ${HEIGHT_GLSL}
@@ -523,6 +535,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       transparent: true,
       depthWrite: false,
       side: THREE.DoubleSide,
+      fog: false,
       vertexShader: /* glsl */ `
         varying vec2 vLocal;
         varying vec3 vWorld;
@@ -615,6 +628,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       side: THREE.DoubleSide,
       transparent: false,
       depthWrite: true,
+      fog: false,
       vertexShader: /* glsl */ `
         uniform float uTime;
         uniform float uWindSpeeds[7];
@@ -868,6 +882,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
+      fog: false,
       vertexShader: /* glsl */ `
         uniform float uTime;
         uniform float uPixelRatio;
@@ -1178,6 +1193,10 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       // Camera rotation from yaw/pitch (YXZ order set on camera).
       camera.rotation.y = yaw;
       camera.rotation.x = pitch;
+
+      // Drive the optional 2D compass HUD (0 = North/-Z, 90 = East/+X).
+      const heading = ((-yaw * 180) / Math.PI) % 360;
+      onCameraHeadingChange?.(heading < 0 ? heading + 360 : heading);
 
       // Movement: WASD when pointer-locked, otherwise auto-walk traverses
       // the full Lydian↔Locrian sweep.

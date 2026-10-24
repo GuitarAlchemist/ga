@@ -65,11 +65,14 @@ public static class QueryEmbeddingLog
 
     /// <summary>
     ///     Appends a single record. Silently swallows I/O errors — this sink must
-    ///     never break the routing path.
+    ///     never break the routing path. The repo's own eval and probe runs
+    ///     (<see cref="RoutingTelemetryLog.IsSyntheticTraffic"/>) are not written: the record
+    ///     has no source field, and the OOD lens reads every row as a real query.
     /// </summary>
     public static void Append(QueryEmbeddingRecord record)
     {
         if (Environment.GetEnvironmentVariable(DisableEnvVar) == "1") return;
+        if (RoutingTelemetryLog.IsSyntheticTraffic) return;
 
         try
         {

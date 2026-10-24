@@ -21,6 +21,13 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
 
     #region IComparable<Interval> Members
 
+    /// <summary>
+    ///     Compares two intervals by semitones, then by name.
+    /// </summary>
+    /// <remarks>
+    ///     The name tiebreaker keeps the ordering consistent with structural equality (<c>CompareTo</c> returns 0 only for
+    ///     equal intervals): enharmonic intervals such as A1 and m2 span the same number of semitones but are not equal.
+    /// </remarks>
     public int CompareTo(Interval? other)
     {
         if (ReferenceEquals(this, other))
@@ -28,9 +35,20 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
             return 0;
         }
 
-        return other is null
-            ? 1
-            : Semitones.CompareTo(other.Semitones);
+        if (other is null)
+        {
+            return 1;
+        }
+
+        var semitonesComparison = Semitones.CompareTo(other.Semitones);
+        if (semitonesComparison != 0)
+        {
+            return semitonesComparison;
+        }
+
+        return Equals(other)
+            ? 0
+            : string.CompareOrdinal($"{GetType().Name}:{this}", $"{other.GetType().Name}:{other}");
     }
 
     #endregion

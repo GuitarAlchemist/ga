@@ -61,7 +61,7 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
     /// <summary>
     ///     Gets all RelativeFret values (automatically memoized).
     /// </summary>
-    public static IReadOnlyList<int> Values => ValueObjectUtils<RelativeFret>.Values;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<RelativeFret>.ValuesList;
 
     /// <summary>
     ///     Gets the cached span representing the full relative fret range.

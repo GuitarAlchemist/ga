@@ -3,7 +3,9 @@ namespace GaChatbot.Api.Tests.Services;
 using System.Net;
 using System.Text;
 using GA.Business.ML.Agents.Intents;
+using GA.Business.ML.Extensions;
 using GaChatbot.Api.Services;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -423,6 +425,222 @@ public class ChatProviderReadinessProbeTests
         });
     }
 
+    // ── Embedding probe ──────────────────────────────────────────────────────
+
+    private static readonly Dictionary<string, string?> HealthyOllamaConfig = new()
+    {
+        ["AI:ChatProvider"] = "ollama",
+        ["Ollama:ChatModel"] = "llama3.2:3b",
+        ["Ollama:EmbeddingModel"] = "nomic-embed-text",
+    };
+
+    private const string HealthyTagsBody =
+        """{"models":[{"name":"llama3.2:3b"},{"name":"nomic-embed-text:latest"}]}""";
+
+    [Test]
+    public async Task GetStatusAsync_EmbeddingSucceeds_PopulatesEmbeddingRoundTripOk()
+    {
+        var embeddings = FakeEmbeddingGenerator.Returning(dimensions: 768);
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            embeddings: embeddings);
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.EmbeddingRoundTripOk, Is.True);
+            Assert.That(status.IsAvailable, Is.True);
+            Assert.That(embeddings.Calls, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public async Task GetStatusAsync_ModelsListedButEmbeddingFails_ReturnsUnavailable()
+    {
+        // The 2026-09-27 failure: an interrupted Ollama update deleted its model
+        // runtime. /api/tags still listed both models, so /status reported ready
+        // while every embed and generate call failed.
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            embeddings: FakeEmbeddingGenerator.Throwing(
+                new HttpRequestException("error starting llama-server: llama-server binary not found")));
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.ProviderReachable, Is.True);
+            Assert.That(status.EmbeddingModelInstalled, Is.True);
+            Assert.That(status.EmbeddingRoundTripOk, Is.False);
+            Assert.That(status.IsAvailable, Is.False,
+                "a provider that lists its models but cannot run them cannot serve a request");
+            Assert.That(status.Message, Does.Contain("Embedding:").And.Contain("llama-server binary not found"));
+        });
+    }
+
+    [Test]
+    public async Task GetStatusAsync_EmbeddingHangs_TimesOutAndReturnsUnavailable()
+    {
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            embeddings: FakeEmbeddingGenerator.Hanging(),
+            embeddingTimeout: TimeSpan.FromMilliseconds(100));
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.EmbeddingRoundTripOk, Is.False);
+            Assert.That(status.IsAvailable, Is.False);
+            Assert.That(status.Message, Does.Contain("timed out"));
+        });
+    }
+
+    [Test]
+    public async Task GetStatusAsync_NoEmbedderRegistered_SkipsEmbeddingProbe()
+    {
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")]);
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.EmbeddingRoundTripOk, Is.Null, "nothing to probe without an embedder");
+            Assert.That(status.IsAvailable, Is.True);
+        });
+    }
+
+    [Test]
+    public async Task GetStatusAsync_CalledTwiceWithinCacheWindow_EmbedsOnce()
+    {
+        // /status is public and the chat page refreshes it after every answer;
+        // each call must not cost a model run.
+        var embeddings = FakeEmbeddingGenerator.Returning(dimensions: 1024);
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            embeddings: embeddings);
+
+        await probe.GetStatusAsync();
+        var second = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(embeddings.Calls, Is.EqualTo(1));
+            Assert.That(second.EmbeddingRoundTripOk, Is.True);
+        });
+    }
+
+    [Test]
+    public void GetStatusAsync_CallerCancelsDuringEmbedding_PropagatesAndDoesNotCacheFailure()
+    {
+        // A disconnecting /status caller must not leave a cached failure behind
+        // for the next 30 s of unrelated callers. The generator cancels the
+        // caller while the embedding is in flight.
+        CancellationTokenSource? caller = null;
+        var embeddings = new FakeEmbeddingGenerator(async ct =>
+        {
+            await caller!.CancelAsync();
+            await Task.Delay(Timeout.Infinite, ct);
+            return [];
+        });
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            embeddings: embeddings);
+
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            using var cts = new CancellationTokenSource();
+            caller = cts;
+            Assert.That(
+                async () => await probe.GetStatusAsync(cts.Token),
+                Throws.InstanceOf<OperationCanceledException>());
+        }
+
+        Assert.That(embeddings.Calls, Is.EqualTo(2),
+            "the second caller must run its own probe instead of reading a cached failure");
+    }
+
+    [Test]
+    public async Task GetStatusAsync_RoutingEmbedderConfigured_ProbesRoutingEmbedder()
+    {
+        // The router embeds with the "routing" purpose (bge-large in production),
+        // which can differ from the default generator; probe the one routing uses.
+        var routing = FakeEmbeddingGenerator.Returning(dimensions: 1024);
+        var fallback = FakeEmbeddingGenerator.Throwing(new InvalidOperationException("default generator used"));
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            embeddings: fallback,
+            embeddingFactory: new RoutingOnlyEmbeddingGeneratorFactory(routing));
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.EmbeddingRoundTripOk, Is.True);
+            Assert.That(routing.Calls, Is.EqualTo(1));
+            Assert.That(fallback.Calls, Is.Zero);
+        });
+    }
+
+    private sealed class FakeEmbeddingGenerator(
+        Func<CancellationToken, Task<GeneratedEmbeddings<Embedding<float>>>> behavior)
+        : IEmbeddingGenerator<string, Embedding<float>>
+    {
+        private int _calls;
+
+        public int Calls => _calls;
+
+        public static FakeEmbeddingGenerator Returning(int dimensions) =>
+            new(_ => Task.FromResult(new GeneratedEmbeddings<Embedding<float>>(
+                [new Embedding<float>(new float[dimensions])])));
+
+        public static FakeEmbeddingGenerator Throwing(Exception toThrow) =>
+            new(_ => Task.FromException<GeneratedEmbeddings<Embedding<float>>>(toThrow));
+
+        public static FakeEmbeddingGenerator Hanging() =>
+            new(async ct =>
+            {
+                await Task.Delay(Timeout.Infinite, ct);
+                return [];
+            });
+
+        public Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
+            IEnumerable<string> values,
+            EmbeddingGenerationOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            Interlocked.Increment(ref _calls);
+            return behavior(cancellationToken);
+        }
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose() { }
+    }
+
+    private sealed class RoutingOnlyEmbeddingGeneratorFactory(
+        IEmbeddingGenerator<string, Embedding<float>> routing) : IEmbeddingGeneratorFactory
+    {
+        public IEmbeddingGenerator<string, Embedding<float>>? Create(string purpose) =>
+            purpose == "routing" ? routing : null;
+    }
+
     private sealed class FakeCatalogIntent(string id, string answer) : IIntent
     {
         public string Id => id;
@@ -453,7 +671,10 @@ public class ChatProviderReadinessProbeTests
         IReadOnlyDictionary<string, string?> values,
         HttpResponseMessage? response = null,
         Exception? exception = null,
-        IIntent[]? intents = null)
+        IIntent[]? intents = null,
+        IEmbeddingGenerator<string, Embedding<float>>? embeddings = null,
+        IEmbeddingGeneratorFactory? embeddingFactory = null,
+        TimeSpan? embeddingTimeout = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(values)
@@ -473,13 +694,24 @@ public class ChatProviderReadinessProbeTests
         {
             services.AddSingleton(intent);
         }
+        if (embeddings is not null)
+        {
+            services.AddSingleton(embeddings);
+        }
+        if (embeddingFactory is not null)
+        {
+            services.AddSingleton(embeddingFactory);
+        }
         var sp = services.BuildServiceProvider();
 
         return new ChatProviderReadinessProbe(
             configuration,
             new StubHttpClientFactory(httpClient),
             sp,
-            NullLogger<ChatProviderReadinessProbe>.Instance);
+            NullLogger<ChatProviderReadinessProbe>.Instance)
+        {
+            EmbeddingProbeTimeout = embeddingTimeout ?? TimeSpan.FromSeconds(10), // production default
+        };
     }
 
     private sealed class StubHttpClientFactory(HttpClient client) : IHttpClientFactory

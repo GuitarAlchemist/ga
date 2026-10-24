@@ -25,14 +25,15 @@ const useBraceletNotation = (scale: number, size: number) => {
 
     const scaleArray = Array.from({length: 12}, (_, i) => (scale & (1 << i)) !== 0 ? 1 : 0);
 
+    // Reflection axes of the pitch-class set, in half steps of 15 degrees:
+    // axis `a` maps pitch class k to (a - k) mod 12. An even `a` passes through
+    // pitch classes a/2 and a/2 + 6; an odd `a` falls between two notes.
+    // a in 0..11 covers each line through the centre exactly once.
     const findSymmetryAxes = (): number[] => {
         const axes: number[] = [];
-        for (let i = 0; i < 6; i++) {
-            if (Array.from({ length: 6 }).every((_, j) =>
-                scaleArray[(i + j) % 12] === scaleArray[(i - j + 12) % 12]
-            )) {
-                axes.push(i);
-                if (i !== 0) axes.push((i + 6) % 12);
+        for (let a = 0; a < 12; a++) {
+            if (scaleArray.every((v, k) => v === scaleArray[(a - k + 12) % 12])) {
+                axes.push(a);
             }
         }
         return axes;
@@ -70,8 +71,6 @@ const BraceletNotation: React.FC<BraceletNotationProps> = ({ scale, size = 200 }
     const symmetryAxes = findSymmetryAxes();
     const scaleLink = `https://ianring.com/musictheory/scales/${scale}`;
 
-    console.log('Circle values:', { center, radius, lineWidth });
-
     return (
         <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -86,7 +85,7 @@ const BraceletNotation: React.FC<BraceletNotationProps> = ({ scale, size = 200 }
                 {symmetryAxes.map((axis) => (
                     <SymmetryAxis
                         key={`symmetry-${axis}`}
-                        angle={axis * 30}
+                        angle={axis * 15}
                         radius={radius}
                         center={center}
                         lineWidth={lineWidth}

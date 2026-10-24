@@ -1,0 +1,245 @@
+namespace GaMcpServer.Tests;
+
+using System.Text.Json;
+using System.Threading.Tasks;
+using GaMcpServer.Tools;
+using NUnit.Framework;
+
+[TestFixture]
+public sealed class GuitaristProblemToolsTests
+{
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
+    {
+        // Force F# closure module initializers to run before MCP tools are called.
+        GA.Business.DSL.GaClosureBootstrap.init();
+    }
+
+    [Test]
+    public void GaKeyFromProgression_TextbookCadences_ReturnsExpectedBestGuess()
+    {
+        var testCases = new[]
+        {
+            (Chords: new[] { "Dm7", "G7" },         ExpectedKey: "C major"),
+            (Chords: new[] { "Dm7", "G7", "Cmaj7" }, ExpectedKey: "C major"),
+            (Chords: new[] { "Am7", "D7", "Gmaj7" }, ExpectedKey: "G major"),
+            (Chords: new[] { "Em7", "A7", "Dmaj7" }, ExpectedKey: "D major"),
+            (Chords: new[] { "Dm", "G" },           ExpectedKey: "C major"),
+            (Chords: new[] { "G7", "C" },           ExpectedKey: "C major"),
+            (Chords: new[] { "F", "G", "C" },       ExpectedKey: "C major"),
+            (Chords: new[] { "C", "Am", "F" },       ExpectedKey: "C major")
+        };
+
+        foreach (var tc in testCases)
+        {
+            var json = GaKeyFromProgressionTool.GaKeyFromProgression(tc.Chords);
+            using var doc = JsonDocument.Parse(json);
+            var bestGuess = doc.RootElement.GetProperty("bestGuess").GetString();
+
+            Assert.That(bestGuess, Is.EqualTo(tc.ExpectedKey),
+                $"Chords [{string.Join(", ", tc.Chords)}] should have resolved to best guess key '{tc.ExpectedKey}' but got '{bestGuess}'");
+        }
+    }
+
+    [Test]
+    public async Task GaAnalyzeProgression_TextbookCadences_ReturnsExpectedKey()
+    {
+        var testCases = new[]
+        {
+            (Progression: "Dm7 G7",         ExpectedKey: "C major"),
+            (Progression: "Dm7 G7 Cmaj7",   ExpectedKey: "C major"),
+            (Progression: "Am7 D7 Gmaj7",   ExpectedKey: "G major"),
+            (Progression: "Em7 A7 Dmaj7",   ExpectedKey: "D major"),
+            (Progression: "Dm G",           ExpectedKey: "C major"),
+            (Progression: "G7 C",           ExpectedKey: "C major"),
+            (Progression: "F G C",           ExpectedKey: "C major"),
+            (Progression: "C Am F",         ExpectedKey: "C major")
+        };
+
+        foreach (var tc in testCases)
+        {
+            var analysis = await GaDslTool.GaAnalyzeProgression(tc.Progression);
+
+            Assert.That(analysis, Does.Contain($"Key: {tc.ExpectedKey}"),
+                $"Progression '{tc.Progression}' should contain 'Key: {tc.ExpectedKey}' in analysis. Analysis:\n{analysis}");
+        }
+    }
+
+    // A key and its relative share every chord, so the order of these ties used to be alphabetical
+    // (Am F C G gave A minor, G D Em C gave E minor) while the tool description promised C major.
+    [TestCase(new[] { "Am", "F", "C", "G" }, "A minor")]
+    [TestCase(new[] { "C", "G", "Am", "F" }, "C major")]
+    [TestCase(new[] { "G", "D", "Em", "C" }, "G major")]
+    // V7 -> i decides it, although D opens the progression: the tools used to re-sort by count
+    // and pick D major.
+    [TestCase(new[] { "D", "C#7", "F#m" }, "F# minor")]
+    public async Task KeyTools_AgreeOnTheKey(string[] chords, string expected)
+    {
+        using var doc = JsonDocument.Parse(GaKeyFromProgressionTool.GaKeyFromProgression(chords));
+        var analysis = await GaDslTool.GaAnalyzeProgression(string.Join(' ', chords));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(doc.RootElement.GetProperty("bestGuess").GetString(), Is.EqualTo(expected));
+            Assert.That(analysis, Does.StartWith($"Key: {expected} "));
+        });
+    }
+
+    // E7 in A minor is the harmonic-minor dominant: numbered V, from the chord, and counted in the key.
+    [Test]
+    public async Task GaAnalyzeProgression_MinorKeyDominant_IsVAndInTheKey()
+    {
+        var analysis = await GaDslTool.GaAnalyzeProgression("Am Dm E7 Am");
+        var lines = analysis.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(lines[0], Does.StartWith("Key: A minor").And.Contain("(confidence 4/4)"));
+            Assert.That(lines[2].Split(' ', StringSplitOptions.RemoveEmptyEntries),
+                Is.EqualTo(new[] { "i", "iv", "V", "i" }));
+        });
+    }
+
+    [Test]
+    public async Task GaAnalyzeProgression_NumeralsFollowTheChordQuality()
+    {
+        var analysis = await GaDslTool.GaAnalyzeProgression("C Bdim Bm7b5 Caug");
+        var lines = analysis.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        Assert.That(lines[2].Split(' ', StringSplitOptions.RemoveEmptyEntries),
+            Is.EqualTo(new[] { "I", "vii°", "viiø", "I+" }));
+    }
+
+    [Test]
+    public async Task GaAnalyzeProgression_G7_C_LabelsG7AsV_And_C_AsI()
+    {
+        var analysis = await GaDslTool.GaAnalyzeProgression("G7 C");
+        var lines = analysis.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var chordLineIndex = Array.FindIndex(lines, line => line.StartsWith("G7", StringComparison.Ordinal));
+        Assert.That(chordLineIndex, Is.GreaterThanOrEqualTo(0), "Should contain a G7/C chord line");
+
+        var chords = lines[chordLineIndex].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var functions = lines[chordLineIndex + 1].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var mappings = chords.Zip(functions).Select(pair => $"{pair.First}->{pair.Second}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(analysis, Does.Contain("Key: C major"), "Should identify C major");
+            Assert.That(mappings, Is.EqualTo(new[] { "G7->V", "C->I" }));
+        });
+    }
+    private class SuggestionResult
+    {
+        public string Key { get; set; } = "";
+        public List<SuggestionItem> Suggestions { get; set; } = new();
+    }
+
+    private class SuggestionItem
+    {
+        public string Chord { get; set; } = "";
+        public string ScaleDegree { get; set; } = "";
+        public string Arpeggio { get; set; } = "";
+        public string Mode { get; set; } = "";
+        public string Notes { get; set; } = "";
+    }
+
+    [TestCase("Cmaj7", "I", "Cmaj7", "Ionian (major)", "M7", "m7")]
+    [TestCase("G7", "V", "G7", "Mixolydian", "m7", "M7")]
+    [TestCase("Bm7b5", "vii°", "Bm7b5", "Locrian", "d5", "P5")]
+    [TestCase("C7", "V/IV", "C7", "Mixolydian", "m7", "M7")]
+    [TestCase("Gmaj7", "secondary", "Gmaj7", "Ionian (major)", "M7", "m7")]
+    [TestCase("Bbm", "chromatic", "Bbm (chromatic — outside key)", "Aeolian (minor)", "m3", "M3")]
+    public async Task GaArpeggioSuggestions_WrittenQuality_PreservesChordTones(
+        string chord, string degree, string arpeggio, string mode, string includedInterval, string excludedInterval)
+    {
+        var json = await GaArpeggioSuggestionsTool.GaArpeggioSuggestions([chord], "C major");
+        using var result = JsonDocument.Parse(json);
+        var suggestion = result.RootElement.GetProperty("suggestions")[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(suggestion.GetProperty("scaleDegree").GetString(), Is.EqualTo(degree));
+            Assert.That(suggestion.GetProperty("arpeggio").GetString(), Is.EqualTo(arpeggio));
+            Assert.That(suggestion.GetProperty("mode").GetString(), Is.EqualTo(mode));
+            Assert.That(suggestion.GetProperty("notes").GetString(), Does.Contain(includedInterval));
+            Assert.That(suggestion.GetProperty("notes").GetString(), Does.Not.Contain(excludedInterval));
+        });
+    }
+
+    [Test]
+    public async Task GaArpeggioSuggestions_DiatonicProgression_ReturnsCorrectArpeggiosAndModes()
+    {
+        // 1. Amm7 — root + full-suffix concatenation bug must be fixed.
+        // For Am, it must return "Am", not "Amm7" or similar.
+        // Also: Preserve the written seventh quality: Am7 must produce Am7, not Am.
+        var chords = new[] { "Am", "Am7", "F", "C", "G" };
+        var json = await GaArpeggioSuggestionsTool.GaArpeggioSuggestions(chords, "C major");
+
+        var result = JsonSerializer.Deserialize<SuggestionResult>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Key, Is.EqualTo("C major"));
+        Assert.That(result.Suggestions, Has.Count.EqualTo(5));
+
+        // Am (minor triad) must be "Am"
+        var amItem = result.Suggestions[0];
+        Assert.That(amItem.Chord, Is.EqualTo("Am"));
+        Assert.That(amItem.ScaleDegree, Is.EqualTo("vi"));
+        Assert.That(amItem.Arpeggio, Is.EqualTo("Am"));
+        Assert.That(amItem.Mode, Is.EqualTo("Aeolian (minor)"));
+
+        // Am7 (minor seventh) must be "Am7" (preserving seventh)
+        var am7Item = result.Suggestions[1];
+        Assert.That(am7Item.Chord, Is.EqualTo("Am7"));
+        Assert.That(am7Item.ScaleDegree, Is.EqualTo("vi"));
+        Assert.That(am7Item.Arpeggio, Is.EqualTo("Am7"));
+        Assert.That(am7Item.Mode, Is.EqualTo("Aeolian (minor)"));
+
+        var fItem = result.Suggestions[2];
+        Assert.That(fItem.Chord, Is.EqualTo("F"));
+        Assert.That(fItem.ScaleDegree, Is.EqualTo("IV"));
+        Assert.That(fItem.Arpeggio, Is.EqualTo("F"));
+        Assert.That(fItem.Mode, Is.EqualTo("Lydian"));
+    }
+
+    [Test]
+    public async Task GaArpeggioSuggestions_BorrowedChords_ClassifiedByWrittenQuality()
+    {
+        // 2. Key-blind degree mapping — wrong for borrowed / secondary chords must be fixed.
+        // Feed an A major chord in C major and it should NOT report Aeolian (with m3, putting a natural C against C#),
+        // it should report Ionian or Mixolydian (secondary dominant) and suggest A / A7 with M3.
+        // Also: A written A major chord in C major must not be labelled as diatonic vi; classify it explicitly as secondary/chromatic.
+        var chords = new[] { "C", "A", "Dm", "G" };
+        var json = await GaArpeggioSuggestionsTool.GaArpeggioSuggestions(chords, "C major");
+
+        var result = JsonSerializer.Deserialize<SuggestionResult>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        Assert.That(result, Is.Not.Null);
+        var aItem = result.Suggestions[1];
+        Assert.That(aItem.Chord, Is.EqualTo("A"));
+        Assert.That(aItem.ScaleDegree, Is.EqualTo("secondary"), "quality-mismatched chord must not retain diatonic Roman numeral 'vi'");
+        Assert.That(aItem.Arpeggio, Is.EqualTo("A"));
+        Assert.That(aItem.Mode, Is.EqualTo("Ionian (major)"));
+        Assert.That(aItem.Notes, Does.Contain("M3")); // Major 3rd (C# relative to A), NOT minor 3rd (m3)!
+        Assert.That(aItem.Notes, Does.Not.Contain("m3"));
+    }
+
+    [Test]
+    public async Task GaArpeggioSuggestions_SecondaryDominant_ClassifiedByWrittenQuality()
+    {
+        // Also: A written A7 chord in C major must not be labelled as diatonic vi; classify it explicitly as V/ii.
+        var chords = new[] { "C", "A7", "Dm", "G7" };
+        var json = await GaArpeggioSuggestionsTool.GaArpeggioSuggestions(chords, "C major");
+
+        var result = JsonSerializer.Deserialize<SuggestionResult>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        Assert.That(result, Is.Not.Null);
+        var a7Item = result.Suggestions[1];
+        Assert.That(a7Item.Chord, Is.EqualTo("A7"));
+        Assert.That(a7Item.ScaleDegree, Is.EqualTo("V/ii"), "A7 acts as a secondary dominant of the ii chord, so it must be explicitly labeled as V/ii rather than diatonic vi");
+        Assert.That(a7Item.Arpeggio, Is.EqualTo("A7"));
+        Assert.That(a7Item.Mode, Is.EqualTo("Mixolydian"));
+        Assert.That(a7Item.Notes, Does.Contain("M3")); // Major 3rd (C# relative to A), NOT minor 3rd (m3)!
+        Assert.That(a7Item.Notes, Does.Not.Contain("m3"));
+    }
+}

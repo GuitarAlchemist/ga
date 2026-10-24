@@ -59,6 +59,7 @@ public sealed class OrchestratorSkillIntent(IOrchestratorSkill skill) : IIntent
             // Production bug surfaced by the live-orchestrator e2e: without
             // this line, MemoryWriteHook never saw the write request and
             // RememberThis silently failed through the semantic dispatch.
-            Data: response.Data);
+            Data: response.Data,
+            Declined: response.Declined);
     }
 }

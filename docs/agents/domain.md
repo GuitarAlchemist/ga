@@ -5,6 +5,8 @@ How the engineering skills should consume this repo's domain documentation. **ga
 ## Before exploring, read these
 
 - **`CONTEXT.md`** at the repo root — the domain glossary (music theory + voicings + RAG).
+- **`docs/agents/nomenclature.md`** — the canonical agentic-engineering and
+  Cloud Factory control vocabulary.
 - **`docs/adr/`** — ADRs touching the area you're about to work in.
 - **`docs/architecture/`** — the layer map and existing architecture docs.
 
@@ -12,7 +14,7 @@ If `CONTEXT.md`/`docs/adr/` don't exist yet, **proceed silently** — `/grill-wi
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (issue title, refactor proposal, test name), use the term as defined in `CONTEXT.md` (and the canonical music-theory names — e.g. `DisplayName` vs `CanonicalName` for voicings). Don't drift to synonyms the glossary avoids.
+When your output names a domain concept (issue title, refactor proposal, test name), use the term as defined in `CONTEXT.md` (and the canonical music-theory names — e.g. `DisplayName` vs `CanonicalName` for voicings). For agentic engineering, orchestration, evidence, or factory controls, use `docs/agents/nomenclature.md`. Don't drift to synonyms either glossary avoids.
 
 ## Respect the five-layer model
 

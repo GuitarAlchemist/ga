@@ -222,6 +222,7 @@ public sealed class IcvShortestPathSkill(
 
     private static AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = AgentIds.Theory,
         Result     = "Ask for the shortest harmonic path between two chords, e.g. \"shortest path from Cmaj7 to G7\" or \"how do I get from C to F harmonically\".",
         Confidence = 0.1f,

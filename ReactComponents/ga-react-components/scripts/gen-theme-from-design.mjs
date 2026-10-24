@@ -49,18 +49,39 @@ function shaShort(text) {
 }
 
 function emitTheme(tokens, sha) {
-    const c = tokens.colors ?? {};
     const t = tokens.typography ?? {};
     const s = tokens.spacing ?? {};
     const r = tokens.rounded ?? {};
-    const need = (token, group) => {
-        if (!group[token]) fail(`DESIGN.md missing ${group === c ? 'colors' : group === t ? 'typography' : group === s ? 'spacing' : 'rounded'}.${token}`);
-        return group[token];
-    };
 
     // Defaults that are reasonable when a token is missing — MUI still requires
     // a 'contrastText'/'light'/'dark' chain on palette colors, so we let MUI
     // derive those from .main rather than hardcoding here.
+    const palette = (group, mode) => {
+        const c = tokens[group] ?? {};
+        const need = (token) => {
+            if (!c[token]) fail(`DESIGN.md missing ${group}.${token}`);
+            return c[token];
+        };
+        return `{
+    mode: '${mode}',
+    primary: { main: '${need('primary')}' },
+    secondary: { main: '${need('secondary')}' },
+    success: { main: '${need('success')}' },
+    warning: { main: '${need('warning')}' },
+    error: { main: '${need('error')}' },
+    background: {
+      default: '${need('neutral')}',
+      paper: '${need('surface')}',
+    },
+    text: {
+      primary: '${need('text-primary')}',
+      secondary: '${need('text-secondary')}',
+      disabled: '${need('text-disabled')}',
+    },
+    divider: '${c.divider ?? '#e0e0e0'}',
+  }`;
+    };
+
     const out = `// AUTO-GENERATED from /DESIGN.md (sha ${sha}). DO NOT EDIT.
 // Re-run: \`npm run gen:theme\` from ReactComponents/ga-react-components.
 // Source of truth: ${'/'.repeat(0)}DESIGN.md at the repo root.
@@ -69,27 +90,11 @@ function emitTheme(tokens, sha) {
 // Generator: scripts/gen-theme-from-design.mjs
 // Generated: ${new Date().toISOString()}
 
-import { createTheme } from '@mui/material/styles';
+import { createTheme, type ThemeOptions } from '@mui/material/styles';
 
-export const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: { main: '${need('primary', c)}' },
-    secondary: { main: '${need('secondary', c)}' },
-    success: { main: '${need('success', c)}' },
-    warning: { main: '${need('warning', c)}' },
-    error: { main: '${need('error', c)}' },
-    background: {
-      default: '${need('neutral', c)}',
-      paper: '${need('surface', c)}',
-    },
-    text: {
-      primary: '${need('text-primary', c)}',
-      secondary: '${need('text-secondary', c)}',
-      disabled: '${need('text-disabled', c)}',
-    },
-    divider: '${c.divider ?? '#e0e0e0'}',
-  },
+// Typography, shape and spacing are shared by the light and dark themes;
+// only the palette differs (DESIGN.md \`colors\` / \`colors-dark\`).
+const shared: ThemeOptions = {
   typography: {
     fontFamily: ${JSON.stringify(t.fontFamily ?? 'Inter, system-ui, sans-serif')},
     h1: { fontSize: ${JSON.stringify(t.h1?.fontSize ?? '28px')}, fontWeight: ${t.h1?.fontWeight ?? 700}, lineHeight: ${t.h1?.lineHeight ?? 1.2} },
@@ -106,7 +111,11 @@ export const theme = createTheme({
     borderRadius: ${parseInt(String(r.md ?? '6px'), 10)},
   },
   spacing: ${parseInt(String(s.sm ?? '8px'), 10)},  // base unit; sx={{ p: 2 }} => 16px === DESIGN.md spacing.md
-});
+};
+
+export const theme = createTheme({ ...shared, palette: ${palette('colors', 'light')} });
+
+export const darkTheme = createTheme({ ...shared, palette: ${palette('colors-dark', 'dark')} });
 
 // Exposed for components that need design tokens MUI's theme doesn't model
 // (border, surface-alt, primary-soft, rounded.pill / xl, elevation, etc.).

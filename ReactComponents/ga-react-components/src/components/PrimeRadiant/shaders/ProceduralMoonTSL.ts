@@ -216,6 +216,27 @@ export function createMirandaMaterialTSL(): MeshBasicNodeMaterial {
   return material;
 }
 
+// ── IX — Dune forge-world, metallic grid with industrial wear ──
+export function createIxMaterialTSL(): MeshBasicNodeMaterial {
+  const material = new MeshBasicNodeMaterial();
+  material.colorNode = Fn(() => {
+    const p = positionLocal;
+    const n = noise3(p.mul(6.0));
+    const fine = noise3(p.mul(18.0));
+    const gridX = abs(sin(p.x.mul(40.0)));
+    const gridY = abs(sin(p.y.mul(40.0)));
+    const gridZ = abs(sin(p.z.mul(40.0)));
+    const grid = max(gridX, max(gridY, gridZ));
+    const gridLines = smoothstep(0.92, 0.98, grid);
+    const base = vec3(0.18, 0.20, 0.22);
+    const metal = vec3(0.45, 0.48, 0.52);
+    const wear = n.mul(0.15).add(fine.mul(0.05));
+    const col = mix(base, metal, n.mul(0.4).add(gridLines.mul(0.5))).add(wear);
+    return col.mul(float(0.9).add(gridLines.mul(0.15)));
+  })();
+  return material;
+}
+
 // ── Generic grey placeholder for procedural planet fallback ──
 export function createProceduralPlaceholderMaterialTSL(): MeshBasicNodeMaterial {
   const material = new MeshBasicNodeMaterial();
@@ -241,5 +262,6 @@ export const MOON_TSL_FACTORIES: Record<string, () => MeshBasicNodeMaterial> = {
   IAPETUS_FRAG: createIapetusMaterialTSL,
   TRITON_FRAG: createTritonMaterialTSL,
   MIRANDA_FRAG: createMirandaMaterialTSL,
+  IX_FRAG: createIxMaterialTSL,
   PROC_PLACEHOLDER: createProceduralPlaceholderMaterialTSL,
 };

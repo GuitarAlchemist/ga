@@ -1,5 +1,6 @@
 namespace GA.Domain.Core.Tests.Theory.Atonal;
 
+using GA.Core.ValueObjects;
 using GA.Domain.Core.Theory.Atonal;
 using NUnit.Framework;
 
@@ -39,5 +40,27 @@ public class AtonalHotPathTests
 
         Assert.That(length, Is.EqualTo(40960));
         Assert.That(allocated, Is.LessThan(1024), "ItemsSpan copied the ids");
+    }
+
+    [Test]
+    public void ValueObjectItems_IsOneCollection_AndValuesDoNotBox()
+    {
+        Assert.That(PitchClass.Items, Is.SameAs(PitchClass.Items));
+        Assert.That(PitchClass.Values, Is.EqualTo(Enumerable.Range(0, 12)));
+        Assert.That(ValueObjectUtils<PitchClass>.ItemsFrozenSet, Has.Count.EqualTo(12));
+
+        _ = PitchClass.Items;
+        _ = PitchClass.Values;
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        var count = 0;
+        for (var i = 0; i < 100; i++)
+        {
+            count += PitchClass.Items.Count + PitchClass.Values.Count;
+        }
+
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        Assert.That(count, Is.EqualTo(2400));
+        Assert.That(allocated, Is.LessThan(1024), "Items or Values allocated on each read");
     }
 }

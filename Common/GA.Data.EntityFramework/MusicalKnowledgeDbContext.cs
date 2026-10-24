@@ -39,9 +39,11 @@ public class MusicalKnowledgeDbContext(DbContextOptions<MusicalKnowledgeDbContex
                     ? v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList()
                     : null
             );
+            // String lists are split without RemoveEmptyEntries so an empty element survives the round
+            // trip (it used to be dropped, shifting parallel lists); only an empty column reads as [].
             entity.Property(e => e.AlternateNames).HasConversion(
                 v => string.Join('|', v),
-                v => v.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split('|').ToList()
             );
         });
 
@@ -55,19 +57,19 @@ public class MusicalKnowledgeDbContext(DbContextOptions<MusicalKnowledgeDbContex
             entity.HasIndex(e => e.InKey);
             entity.Property(e => e.RomanNumerals).HasConversion(
                 v => string.Join(',', v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split(',').ToList()
             );
             entity.Property(e => e.Chords).HasConversion(
                 v => string.Join(',', v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split(',').ToList()
             );
             entity.Property(e => e.Function).HasConversion(
                 v => string.Join(',', v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split(',').ToList()
             );
             entity.Property(e => e.UsedBy).HasConversion(
                 v => string.Join('|', v),
-                v => v.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split('|').ToList()
             );
         });
 
@@ -81,15 +83,15 @@ public class MusicalKnowledgeDbContext(DbContextOptions<MusicalKnowledgeDbContex
             entity.HasIndex(e => e.Inventor);
             entity.Property(e => e.Artists).HasConversion(
                 v => string.Join('|', v),
-                v => v.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split('|').ToList()
             );
             entity.Property(e => e.Songs).HasConversion(
                 v => string.Join('|', v),
-                v => v.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split('|').ToList()
             );
             entity.Property(e => e.Benefits).HasConversion(
                 v => string.Join('|', v),
-                v => v.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split('|').ToList()
             );
         });
 
@@ -105,15 +107,15 @@ public class MusicalKnowledgeDbContext(DbContextOptions<MusicalKnowledgeDbContex
             );
             entity.Property(e => e.Applications).HasConversion(
                 v => string.Join('|', v),
-                v => v.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split('|').ToList()
             );
             entity.Property(e => e.Artists).HasConversion(
                 v => string.Join('|', v),
-                v => v.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split('|').ToList()
             );
             entity.Property(e => e.TonalCharacteristics).HasConversion(
                 v => string.Join('|', v),
-                v => v.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList()
+                v => v.Length == 0 ? new List<string>() : v.Split('|').ToList()
             );
         });
 

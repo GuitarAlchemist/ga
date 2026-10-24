@@ -10,6 +10,7 @@ using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
 using GA.Business.ML.Agents.Intents;
+using GA.Business.ML.Agents.Skills;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Retrieval;
 using GA.Business.ML.Tabs;
@@ -125,6 +126,14 @@ public class ProductionOrchestrator(
                 ["routing.note"]    = "no intent crossed MinConfidence; falling through to LLM agent path",
             });
     }
+
+    private void EmitDeclinedTrace(string intentId) =>
+        traceCapture.AddStep("routing.declined", "completed", 0,
+            new Dictionary<string, object?>
+            {
+                ["routing.declined_id"] = intentId,
+                ["routing.note"]        = "intent found no input it handles; falling through to LLM agent path",
+            });
     private static readonly string[] ExplicitVoicingKeywords =
     [
         "voicing",
@@ -244,6 +253,16 @@ public class ProductionOrchestrator(
                 Candidates: [],
                 Routing: deterministicRouting with { Confidence = Math.Max(deterministicRouting.Confidence, agentResponse.Confidence) },
                 DebugParams: new { Mode = "DeterministicAgent", Agent = deterministicAgent.AgentId });
+        }
+
+        // Invalid chord names only (ga#745): decline before the LLM agent path.
+        if (DeclineInvalidChordNames(message) is { } invalidChordResp)
+        {
+            foreach (var word in invalidChordResp.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                await onToken(word + " ");
+
+            historyStore.AddTurn(sessionId, "assistant", invalidChordResp.NaturalLanguageAnswer);
+            return invalidChordResp;
         }
 
         // Route the request and extract filters in parallel (same as AnswerAsync)
@@ -453,65 +472,71 @@ public class ProductionOrchestrator(
 
             var intentResult = await pick.Intent.ExecuteAsync(message, ct);
 
-            // Map IntentResult back to AgentResponse for hook compatibility.
-            // PR #185 (2026-05-12): forward Data so structured payloads
-            // (e.g. RememberThisSkill's MemoryWriteRequest) reach
-            // OnResponseSent hooks. Without this line — and the matching
-            // Data field on IntentResult + the forward in
-            // OrchestratorSkillIntent — durable-memory writes from the
-            // semantic-routing path silently fail because MemoryWriteHook
-            // pattern-matches on ctx.Response?.Data.
-            var skillRespForHooks = new AgentResponse
+            // A declined intent saw no input it handles; continue to the agent path with history.
+            if (!intentResult.Declined)
             {
-                AgentId    = pick.Intent.Id,
-                Result     = intentResult.Answer,
-                Confidence = intentResult.Confidence,
-                Evidence   = intentResult.Evidence ?? [],
-                Assumptions = [],
-                Data       = intentResult.Data,
-            };
+                // Map IntentResult back to AgentResponse for hook compatibility.
+                // PR #185 (2026-05-12): forward Data so structured payloads
+                // (e.g. RememberThisSkill's MemoryWriteRequest) reach
+                // OnResponseSent hooks. Without this line — and the matching
+                // Data field on IntentResult + the forward in
+                // OrchestratorSkillIntent — durable-memory writes from the
+                // semantic-routing path silently fail because MemoryWriteHook
+                // pattern-matches on ctx.Response?.Data.
+                var skillRespForHooks = new AgentResponse
+                {
+                    AgentId    = pick.Intent.Id,
+                    Result     = intentResult.Answer,
+                    Confidence = intentResult.Confidence,
+                    Evidence   = intentResult.Evidence ?? [],
+                    Assumptions = [],
+                    Data       = intentResult.Data,
+                };
 
-            // OnAfterSkill hooks
-            var afterCtx = new ChatHookContext
-            {
-                OriginalMessage  = req.Message,
-                CurrentMessage   = message,
-                MatchedSkillName = pick.Intent.Id,
-                Response         = skillRespForHooks,
-                CorrelationId    = correlationId,
-                SessionId        = sessionId,   // PR #157 Phase B
-            };
-            foreach (var hook in _hooks)
-                await hook.OnAfterSkill(afterCtx, ct);
+                // OnAfterSkill hooks
+                var afterCtx = new ChatHookContext
+                {
+                    OriginalMessage  = req.Message,
+                    CurrentMessage   = message,
+                    MatchedSkillName = pick.Intent.Id,
+                    Response         = skillRespForHooks,
+                    CorrelationId    = correlationId,
+                    SessionId        = sessionId,   // PR #157 Phase B
+                };
+                foreach (var hook in _hooks)
+                    await hook.OnAfterSkill(afterCtx, ct);
 
-            sw.Stop();
-            activity?.SetTag("orchestration.branch", pick.Intent.Id);
-            activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+                sw.Stop();
+                activity?.SetTag("orchestration.branch", pick.Intent.Id);
+                activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
 
-            var chatResp = new ChatResponse(
-                NaturalLanguageAnswer: intentResult.Answer,
-                Candidates: [],
-                Routing: new AgentRoutingMetadata(
-                    pick.Intent.Id,
-                    Math.Min(intentResult.Confidence, pick.Confidence),
-                    intentResult.RoutingMethodOverride ?? "semantic-intent"),
-                Grounding: BuildGrounding(intentResult));
+                var chatResp = new ChatResponse(
+                    NaturalLanguageAnswer: intentResult.Answer,
+                    Candidates: [],
+                    Routing: new AgentRoutingMetadata(
+                        pick.Intent.Id,
+                        Math.Min(intentResult.Confidence, pick.Confidence),
+                        intentResult.RoutingMethodOverride ?? "semantic-intent"),
+                    Grounding: BuildGrounding(intentResult));
 
-            // OnResponseSent hooks (memory writing, analytics)
-            var sentCtx = new ChatHookContext
-            {
-                OriginalMessage  = req.Message,
-                CurrentMessage   = message,
-                MatchedSkillName = pick.Intent.Id,
-                Response         = skillRespForHooks,
-                CorrelationId    = correlationId,
-                SessionId        = sessionId,   // PR #157 Phase B — load-bearing for MemoryHook session scope
-            };
-            foreach (var hook in _hooks)
-                await hook.OnResponseSent(sentCtx, ct);
+                // OnResponseSent hooks (memory writing, analytics)
+                var sentCtx = new ChatHookContext
+                {
+                    OriginalMessage  = req.Message,
+                    CurrentMessage   = message,
+                    MatchedSkillName = pick.Intent.Id,
+                    Response         = skillRespForHooks,
+                    CorrelationId    = correlationId,
+                    SessionId        = sessionId,   // PR #157 Phase B — load-bearing for MemoryHook session scope
+                };
+                foreach (var hook in _hooks)
+                    await hook.OnResponseSent(sentCtx, ct);
 
-            historyStore.AddTurn(sessionId, "assistant", chatResp.NaturalLanguageAnswer);
-            return chatResp;
+                historyStore.AddTurn(sessionId, "assistant", chatResp.NaturalLanguageAnswer);
+                return chatResp;
+            }
+
+            EmitDeclinedTrace(pick.Intent.Id);
         }
 
         if (TrySelectDeterministicAgent(message, out var deterministicAgent, out var deterministicRouting))
@@ -519,6 +544,35 @@ public class ProductionOrchestrator(
             return await DispatchDeterministicAgentAsync(
                 req, message, sessionId, correlationId, deterministicAgent, deterministicRouting,
                 activity, sw, ct);
+        }
+
+        // Invalid chord names only (ga#745): decline before the LLM agent path.
+        if (DeclineInvalidChordNames(message) is { } invalidChordResp)
+        {
+            sw.Stop();
+            activity?.SetTag("orchestration.branch", InvalidChordNames.RoutingMethod);
+            activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+
+            historyStore.AddTurn(sessionId, "assistant", invalidChordResp.NaturalLanguageAnswer);
+
+            // OnResponseSent for parity with every other dispatch path (MemoryHook, analytics).
+            var declineSentCtx = new ChatHookContext
+            {
+                OriginalMessage = req.Message,
+                CurrentMessage  = message,
+                CorrelationId   = correlationId,
+                SessionId       = sessionId,
+                Response        = new AgentResponse
+                {
+                    AgentId    = invalidChordResp.Routing!.AgentId,
+                    Result     = invalidChordResp.NaturalLanguageAnswer,
+                    Confidence = InvalidChordNames.DeclineConfidence,
+                },
+            };
+            foreach (var hook in _hooks)
+                await hook.OnResponseSent(declineSentCtx, ct);
+
+            return invalidChordResp;
         }
 
         // Parallelise — both calls consume req.Message with no mutual dependency
@@ -763,6 +817,29 @@ public class ProductionOrchestrator(
         return algebraResponse;
     }
 
+    /// <summary>
+    /// Declines an improvisation request that names only invalid chords ("which
+    /// arpeggio fits Hm Q7", ga#745). Such a request scores below every intent, and
+    /// the LLM agent path, or the chat fallback behind it, then invents theory about
+    /// the tokens. The routing confidence stays above the fallback threshold so the
+    /// decline is the answer. Returns null when the message is not such a request.
+    /// The caller records history and runs hooks, each at its path's usual point.
+    /// </summary>
+    private static ChatResponse? DeclineInvalidChordNames(string message)
+    {
+        var invalid = InvalidChordNames.Find(message);
+        if (invalid.Count == 0) return null;
+
+        return new ChatResponse(
+            NaturalLanguageAnswer: InvalidChordNames.Decline(invalid),
+            Candidates: [],
+            Routing: new AgentRoutingMetadata(
+                "skill.improvisation",
+                InvalidChordNames.DeclineConfidence,
+                InvalidChordNames.RoutingMethod),
+            DebugParams: new { Mode = "InvalidChordNames", Tokens = invalid });
+    }
+
     private bool TrySelectDeterministicAgent(
         string message,
         out GuitarAlchemistAgentBase agent,
@@ -780,6 +857,15 @@ public class ProductionOrchestrator(
         // phrase. Any prompt that passes that gate is unambiguously a
         // memory-write request whose voicing-keyword content is incidental.
         if (GA.Business.ML.Agents.Skills.RememberThisParser.LooksLikeRememberRequest(message))
+        {
+            agent = null!;
+            routing = null!;
+            return false;
+        }
+
+        // Invalid chord names (ga#745) are left to DeclineInvalidChordNames: the voicing
+        // agent's query extractor falls back to the LLM on chord symbols it cannot parse.
+        if (InvalidChordNames.Find(message).Count > 0)
         {
             agent = null!;
             routing = null!;
@@ -833,6 +919,12 @@ public class ProductionOrchestrator(
         if (IsTabIntentWithoutTab(pick.Intent.Id, executeMessage)) return null;
 
         var result = await pick.Intent.ExecuteAsync(executeMessage, ct);
+        if (result.Declined)
+        {
+            EmitDeclinedTrace(pick.Intent.Id);
+            return null;
+        }
+
         return new ChatResponse(
             NaturalLanguageAnswer: result.Answer,
             Candidates: [],

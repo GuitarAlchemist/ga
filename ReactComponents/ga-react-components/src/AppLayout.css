@@ -19,6 +19,9 @@
   top: 0;
   z-index: 1000;
   background-color: var(--mui-palette-background-paper, #fff);
+  /* Pinned with the background: a page that switches the body to a dark
+     theme must not leave light text on this white bar. */
+  color: var(--mui-palette-text-primary, #172033);
   border-bottom: 1px solid;
   border-color: var(--mui-palette-divider, #e0e0e0);
   padding: 8px 16px;

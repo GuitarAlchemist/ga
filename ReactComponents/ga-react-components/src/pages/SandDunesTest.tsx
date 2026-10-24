@@ -19,6 +19,34 @@ import SandDunes from '../components/SandDunes/SandDunes';
 import ResponsiveDemoShell, { useIsMobile } from '../components/Common/ResponsiveDemoShell';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
+/** Compass + wind arrow that tracks the current wind direction. */
+const SandDunesCompass: React.FC<{ windDeg: number }> = ({ windDeg }) => (
+  <svg width={88} height={88} viewBox="0 0 88 88">
+    <circle cx={44} cy={44} r={40} fill="rgba(20,12,6,0.7)" stroke="#6e4c1f" strokeWidth={1} />
+    <line x1={44} y1={8} x2={44} y2={80} stroke="#c8a47a" strokeWidth={1} opacity={0.5} />
+    <line x1={8} y1={44} x2={80} y2={44} stroke="#c8a47a" strokeWidth={1} opacity={0.5} />
+    <text x={44} y={18} textAnchor="middle" fill="#ff6b6b" fontSize="11" fontFamily="monospace" fontWeight={700}>
+      N
+    </text>
+    <text x={78} y={48} textAnchor="middle" fill="#f4ddc0" fontSize="11" fontFamily="monospace">
+      E
+    </text>
+    <text x={44} y={80} textAnchor="middle" fill="#f4ddc0" fontSize="11" fontFamily="monospace">
+      S
+    </text>
+    <text x={10} y={48} textAnchor="middle" fill="#f4ddc0" fontSize="11" fontFamily="monospace">
+      W
+    </text>
+    <g transform={`rotate(${windDeg} 44 44)`}>
+      <path d="M44 12 L38 32 L44 26 L50 32 Z" fill="#ffd58a" />
+      <path d="M44 76 L38 56 L44 62 L50 56 Z" fill="#c8a47a" opacity={0.6} />
+    </g>
+    <text x={44} y={56} textAnchor="middle" fill="#ffd58a" fontSize="8" fontFamily="monospace">
+      wind
+    </text>
+  </svg>
+);
+
 const labelForTod = (t: number): string => {
   if (t < 0.05 || t > 0.95) return 'Sunrise';
   if (t < 0.20) return 'Morning';
@@ -125,17 +153,34 @@ const SandDunesTest: React.FC = () => {
   );
 
   const viewport = (
-    <SandDunes
-      key={sceneKey}
-      fieldSize={fieldSize}
-      fieldSegments={fieldSegments}
-      windDirRad={(windDeg * Math.PI) / 180}
-      dayLengthSeconds={autoCycle ? dayLengthSeconds : 0}
-      fixedTimeOfDay={fixedTimeOfDay}
-      autoRotate={autoRotate}
-      sandParticles={sandParticles}
-      mirage={mirage}
-    />
+    <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+      <SandDunes
+        key={sceneKey}
+        fieldSize={fieldSize}
+        fieldSegments={fieldSegments}
+        windDirRad={(windDeg * Math.PI) / 180}
+        dayLengthSeconds={autoCycle ? dayLengthSeconds : 0}
+        fixedTimeOfDay={fixedTimeOfDay}
+        autoRotate={autoRotate}
+        sandParticles={sandParticles}
+        mirage={mirage}
+      />
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 16,
+          left: 16,
+          bgcolor: 'rgba(20,12,6,0.5)',
+          backdropFilter: 'blur(6px)',
+          borderRadius: '50%',
+          border: '1px solid #6e4c1f',
+          p: 0.5,
+          pointerEvents: 'none',
+        }}
+      >
+        <SandDunesCompass windDeg={windDeg} />
+      </Box>
+    </Box>
   );
 
   return (

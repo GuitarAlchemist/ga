@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import ChatMessage from '../components/Chat/ChatMessage';
 
 describe('ChatMessage Component', () => {
@@ -62,9 +62,12 @@ describe('ChatMessage Component', () => {
     expect(matches.length).toBeGreaterThan(0);
   });
 
-  // VexFlow requires real DOM SVG support (getBBox) which jsdom doesn't provide
-  // This test passes in real browsers (E2E tests) but fails in unit tests
-  it.skip('should detect VexTab code blocks', () => {
+  it('should draw VexTab code blocks', async () => {
+    // VexFlow measures fret numbers with getBBox, which jsdom lacks.
+    const proto = SVGElement.prototype as unknown as { getBBox?: () => DOMRect };
+    proto.getBBox ??= function (this: SVGElement) {
+      return { x: 0, y: 0, width: 7 * (this.textContent?.length ?? 0), height: 10 } as DOMRect;
+    };
     const vextabMessage = {
       ...mockMessage,
       role: 'assistant' as const,
@@ -72,9 +75,11 @@ describe('ChatMessage Component', () => {
     };
 
     const { container } = render(<ChatMessage message={vextabMessage} />);
-    // VexTabViewer should be rendered - check for the component or its container
-    const vextabElement = container.querySelector('[class*="vextab"]') || container.querySelector('svg');
-    expect(vextabElement).toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(container.querySelector('.vextab-block[data-renderer="vexflow"] svg')).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(/notes :q/)).toBeNull();
   });
 
   it('should render inline code', () => {

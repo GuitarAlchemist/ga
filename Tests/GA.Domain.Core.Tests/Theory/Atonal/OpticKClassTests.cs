@@ -15,8 +15,7 @@ public class OpticKClassTests
     // --- SetClass.Complement (the K operation) --------------------------------------------------
 
     [Test]
-    public void Complement_IsInvolution_ForEverySetClass()
-    {
+    public void Complement_IsInvolution_ForEverySetClass() =>
         Assert.Multiple(() =>
         {
             foreach (var sc in SetClass.Items)
@@ -25,11 +24,9 @@ public class OpticKClassTests
                     $"Complement is not involutive for {sc}");
             }
         });
-    }
 
     [Test]
-    public void Complement_Cardinality_IsTwelveMinusOriginal()
-    {
+    public void Complement_Cardinality_IsTwelveMinusOriginal() =>
         Assert.Multiple(() =>
         {
             foreach (var sc in SetClass.Items)
@@ -38,7 +35,6 @@ public class OpticKClassTests
                     $"Complement cardinality wrong for {sc}");
             }
         });
-    }
 
     // --- OPTIC-K grouping (the complement-rows) -------------------------------------------------
 
@@ -61,8 +57,7 @@ public class OpticKClassTests
     }
 
     [Test]
-    public void Items_EachClassIsComplementClosed()
-    {
+    public void Items_EachClassIsComplementClosed() =>
         Assert.Multiple(() =>
         {
             foreach (var group in OpticKClass.Items)
@@ -74,11 +69,9 @@ public class OpticKClassTests
                 }
             }
         });
-    }
 
     [Test]
-    public void SelfComplementaryClasses_AreAllHexachords()
-    {
+    public void SelfComplementaryClasses_AreAllHexachords() =>
         Assert.Multiple(() =>
         {
             foreach (var group in OpticKClass.Items.Where(g => g.IsSelfComplementary))
@@ -87,7 +80,6 @@ public class OpticKClassTests
                     $"Self-complementary OPTIC-K class {group} is not a hexachord");
             }
         });
-    }
 
     [Test]
     public void Items_Counts_MatchExhaustiveEnumeration()

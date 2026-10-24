@@ -179,6 +179,17 @@ public class TypedMusicalQueryExtractorTests
     }
 
     [Test]
+    public async Task Extract_FunctionWords_DoNotBecomeTags()
+    {
+        // Regression for 2026-10-03: the registry's substring fallback matched "the", so this
+        // question searched on tags [the] and returned ten unrelated Cadd9 shapes.
+        var q = await _typed.ExtractAsync("where do I play a C major barre chord using the A shape?");
+
+        Assert.That(q.ChordSymbol, Is.EqualTo("C"));
+        Assert.That(q.Tags ?? [], Has.No.Member("the").And.No.Member("where").And.No.Member("using"));
+    }
+
+    [Test]
     public async Task Extract_EmptyQuery_ReturnsEmpty()
     {
         var q = await _typed.ExtractAsync("");

@@ -53,9 +53,25 @@ public abstract class ScaleMode
             tuples.Add((note, semitones));
         }
 
-        var noteBySemitones = tuples.ToImmutableDictionary(tuple => tuple.Semitones, tuple => tuple.Note);
+        // First spelling wins: a scale may contain two notes at the same distance from the root (e.g. enharmonic
+        // spellings in exotic scales), which would make ToImmutableDictionary throw on the duplicate key.
+        var noteBySemitones = new Dictionary<Semitones, Note>();
+        foreach (var (note, semitones) in tuples)
+        {
+            noteBySemitones.TryAdd(semitones, note);
+        }
 
-        return [..characteristicIntervals.Select(colorTone => noteBySemitones[colorTone.ToSemitones()])];
+        // Characteristic intervals not present in the mode are skipped rather than throwing KeyNotFoundException.
+        List<Note> characteristicNotes = [];
+        foreach (var colorTone in characteristicIntervals)
+        {
+            if (noteBySemitones.TryGetValue(colorTone.ToSemitones(), out var note))
+            {
+                characteristicNotes.Add(note);
+            }
+        }
+
+        return [.. characteristicNotes];
     }
 }
 

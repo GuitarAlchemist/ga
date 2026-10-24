@@ -43,11 +43,21 @@ internal static class ValueObjectCache<T>
     // Ensure _count is initialized BEFORE we create items/values
     private static readonly int _count = Max - Min + 1;
     internal static readonly T[] AllItems = CreateItems();
-    internal static FrozenSet<T> ItemsSet { get; } = FrozenSet.Create<T>(AllItems);
     internal static readonly ImmutableArray<int> AllValues = CreateValues();
-    internal static FrozenSet<int> ValuesSet { get; } = [..AllValues];
+    internal static readonly IReadOnlyList<int> AllValuesList = AllValues;
+
+    // The frozen sets are built on first use: nothing in GA reads them, and building both on every
+    // type's first use cost 4,592 bytes for Str's 26 values.
+    internal static FrozenSet<T> ItemsSet => FrozenSets.Items;
+    internal static FrozenSet<int> ValuesSet => FrozenSets.Values;
     internal static ReadOnlySpan<T> ItemsSpan => AllItems;
 
     internal static ReadOnlySpan<int> ValuesSpan => AllValues.AsSpan();
+
+    private static class FrozenSets
+    {
+        internal static readonly FrozenSet<T> Items = FrozenSet.Create<T>(AllItems);
+        internal static readonly FrozenSet<int> Values = [.. AllValues];
+    }
     // ReSharper restore StaticMemberInGenericType
 }

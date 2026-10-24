@@ -45,11 +45,43 @@ export interface AgUiStreamCallbacks {
 
 // ── Input model (mirrors C# RunAgentInput) ───────────────────────────────────
 
+export interface AgUiMessage {
+  role: string;
+  content: string;
+  id?: string;
+}
+
 export interface AgUiRunInput {
   threadId: string;
   runId: string;
-  messages: Array<{ role: string; content: string; id?: string }>;
+  messages: AgUiMessage[];
   state?: unknown;
+}
+
+// Chat messages persist in localStorage, so bound the context sent with each run.
+export const MAX_AG_UI_HISTORY_TURNS = 12;
+
+/** Prior user/assistant turns, oldest first, as AG-UI messages. */
+export function toAgUiHistory(
+  messages: ReadonlyArray<{ id: string; role: string; content: string }>,
+): AgUiMessage[] {
+  return messages
+    .filter(m => (m.role === 'user' || m.role === 'assistant') && m.content.trim() !== '')
+    .slice(-MAX_AG_UI_HISTORY_TURNS)
+    .map(({ role, content, id }) => ({ role, content, id }));
+}
+
+/** AG-UI sends the thread; GaApi treats the last user message as the current turn. */
+export function buildAgUiRunInput(
+  userMessage: string,
+  history: readonly AgUiMessage[],
+  now: number = Date.now(),
+): AgUiRunInput {
+  return {
+    threadId: `thread_${now}`,
+    runId: `run_${now}`,
+    messages: [...history, { role: 'user', content: userMessage, id: `msg_${now}` }],
+  };
 }
 
 // ── Parser ───────────────────────────────────────────────────────────────────
@@ -74,15 +106,11 @@ function* parseAgUiFrames(chunk: string): Generator<AgUiEvent> {
 export async function streamAgUiChat(
   baseUrl: string,
   userMessage: string,
+  history: readonly AgUiMessage[],
   callbacks: AgUiStreamCallbacks,
   signal?: AbortSignal,
 ): Promise<void> {
-  const threadId = `thread_${Date.now()}`;
-  const input: AgUiRunInput = {
-    threadId,
-    runId: `run_${Date.now()}`,
-    messages: [{ role: 'user', content: userMessage, id: `msg_${Date.now()}` }],
-  };
+  const input = buildAgUiRunInput(userMessage, history);
 
   const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
   const response = await fetch(`${base}/api/chatbot/agui/stream`, {

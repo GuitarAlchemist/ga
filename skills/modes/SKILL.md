@@ -52,7 +52,7 @@ The major scale has 7 modes. Each starts on a successive degree of the parent sc
 | 4 | **Lydian** | `1 2 3 #4 5 6 7` | #4 | I — II — I (Lydian II vamp; the Simpsons theme) | Major with raised 4th — floating, dreamy |
 | 5 | **Mixolydian** | `1 2 3 4 5 6 b7` | b7 | I — bVII — IV — I (rock anthem) | Major with flat 7 — bluesy/rock |
 | 6 | **Aeolian** | `1 2 b3 4 5 b6 b7` | b6 | i — bVI — bVII — i | Natural minor |
-| 7 | **Locrian** | `1 b2 b3 4 b5 b6 b7` | b5 (tritone w/ root) | rare; i°7 vamps with bII colour | Half-diminished — rare as a tonic |
+| 7 | **Locrian** | `1 b2 b3 4 b5 b6 b7` | b5 (tritone w/ root) | rare; iø7 vamps with bII colour | Half-diminished — rare as a tonic |
 
 The **characteristic note** is the one degree that makes the mode unique against its parallel major/minor — emphasise it in melodies and chord voicings to make the mode audible. The **modal cadence** column gives a vamp or progression that establishes the mode without falling back to V→I (which would imply tonal motion away from the mode).
 

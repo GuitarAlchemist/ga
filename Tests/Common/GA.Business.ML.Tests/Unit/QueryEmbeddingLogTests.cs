@@ -97,4 +97,18 @@ public class QueryEmbeddingLogTests
         Assert.That(File.Exists(QueryEmbeddingLog.CurrentDayFile()), Is.False,
             "GA_QUERY_EMBEDDING_NO_LOG=1 must suppress all writes");
     }
+
+    // Codex review on #804: a theory-qa run would otherwise add 34-102 rows to the real-query corpus.
+    [Test]
+    public void LocalEvalTraffic_IsNotWritten_ButAPublicCallerTaggedSoIs()
+    {
+        using (RoutingTelemetryLog.BeginTrafficSource("theory-qa", fromLocalHost: true))
+            QueryEmbeddingLog.Append(SampleRouted());
+        Assert.That(File.Exists(QueryEmbeddingLog.CurrentDayFile()), Is.False, "the repo's own eval run stays out");
+
+        using (RoutingTelemetryLog.BeginTrafficSource("theory-qa", fromLocalHost: false))
+            QueryEmbeddingLog.Append(SampleRouted());
+        Assert.That(File.ReadAllLines(QueryEmbeddingLog.CurrentDayFile()), Has.Length.EqualTo(1),
+            "the tag alone is client input and cannot drop a real query");
+    }
 }

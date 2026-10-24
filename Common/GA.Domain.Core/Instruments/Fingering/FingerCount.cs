@@ -57,7 +57,7 @@ public readonly record struct FingerCount : IStaticValueObjectList<FingerCount>
     /// <summary>
     ///     Gets all FingerCount values (automatically memoized).
     /// </summary>
-    public static IReadOnlyList<int> Values => ValueObjectUtils<FingerCount>.Values;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<FingerCount>.ValuesList;
 
     /// <summary>
     ///     Gets the cached span representing the full finger count range.

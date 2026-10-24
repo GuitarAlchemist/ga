@@ -15,6 +15,11 @@ public class LazyWithExpiration<T>
     private readonly TimeProvider _timeProvider;
     private Entry _entry;
 
+    /// <summary>
+    ///     Initializes a new instance of the LazyWithExpiration class
+    /// </summary>
+    /// <param name="func">The factory function used to (re)compute the value</param>
+    /// <param name="expirationTime">The duration for which a computed value remains valid</param>
     public LazyWithExpiration(
         Func<T> func,
         TimeSpan expirationTime)
@@ -33,6 +38,9 @@ public class LazyWithExpiration<T>
         _entry = new(func);
     }
 
+    /// <summary>
+    ///     Gets the current value, recomputing it first if it is missing or has expired
+    /// </summary>
     public T Value
     {
         get

@@ -113,6 +113,27 @@ public sealed class OrchestratedChatApplicationServiceTests
     }
 
     [Test]
+    public async Task ChatAsync_FallbackKeepsInternalsPrivateAndDeclinesOffTopicRequests()
+    {
+        var directChatClient = new StubChatClient("direct fallback answer");
+        var service = CreateService(
+            new StubOrchestrator(Exception: new InvalidOperationException("boom")),
+            directChatClient: directChatClient);
+
+        var result = await service.ChatAsync(new ChatExecutionRequest("can you run a for loop?"));
+
+        AssertFallback(result, "error-fallback");
+        Assert.That(directChatClient.LastMessages, Is.Not.Null);
+        var system = directChatClient.LastMessages![0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(system.Role, Is.EqualTo(ChatRole.System));
+            Assert.That(system.Text, Does.Contain("never mention agent names, roles or other internal details"));
+            Assert.That(system.Text, Does.Contain("If a request is not about guitar or music, do not attempt it"));
+        });
+    }
+
+    [Test]
     public async Task ChatAsync_FallsBackWhenOrchestratorReturnsUngroundedNoMatchAnswer()
     {
         var service = CreateService(new StubOrchestrator(new ChatResponse(
@@ -194,7 +215,7 @@ public sealed class OrchestratedChatApplicationServiceTests
         Assert.Multiple(() =>
         {
             Assert.That(result.NaturalLanguageAnswer, Does.Contain("```vextab"));
-            Assert.That(result.NaturalLanguageAnswer, Does.Contain("6/10 5/13 4/10"));
+            Assert.That(result.NaturalLanguageAnswer, Does.Contain("notes :w (10/6.13/5.10/4)"));
             Assert.That(result.Trace?.Steps.Select(step => step.Name), Does.Contain("orchestration.route"));
             Assert.That(result.Trace?.Steps.Select(step => step.Name), Does.Contain("agent.semantic_result"));
             Assert.That(result.Trace?.Steps.Select(step => step.Name), Does.Contain("notation.vextab"));
@@ -206,6 +227,11 @@ public sealed class OrchestratedChatApplicationServiceTests
         {
             Assert.That(notationStep.Attributes["notation.diagram.count"], Is.EqualTo(1));
             Assert.That(notationStep.Attributes["notation.vextab.added_count"], Is.EqualTo(1));
+            // The block the service added is VexTab that GA's parser reads.
+            Assert.That(notationStep.Attributes["notation.vextab.block_count"], Is.EqualTo(1));
+            Assert.That(notationStep.Attributes["notation.vextab.valid_count"], Is.EqualTo(1));
+            // The server draws nothing, so the trace names no renderer.
+            Assert.That(notationStep.Attributes, Does.Not.ContainKey("notation.renderer"));
         });
     }
 
@@ -277,11 +303,16 @@ public sealed class OrchestratedChatApplicationServiceTests
 
     private sealed class StubChatClient(string responseText) : IChatClient
     {
+        public List<AiChatMessage>? LastMessages { get; private set; }
+
         public Task<AiChatResponse> GetResponseAsync(
             IEnumerable<AiChatMessage> messages,
             ChatOptions? options = null,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(new AiChatResponse(new AiChatMessage(ChatRole.Assistant, responseText)));
+            CancellationToken cancellationToken = default)
+        {
+            LastMessages = [.. messages];
+            return Task.FromResult(new AiChatResponse(new AiChatMessage(ChatRole.Assistant, responseText)));
+        }
 
         public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
             IEnumerable<AiChatMessage> messages,

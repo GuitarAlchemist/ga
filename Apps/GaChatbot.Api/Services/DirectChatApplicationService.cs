@@ -2,6 +2,7 @@ namespace GaChatbot.Api.Services;
 
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
+using GA.Business.ML.Agents;
 using GA.Business.ML.Notation;
 using GaChatbot.Api.Controllers;
 using Microsoft.Extensions.AI;
@@ -74,7 +75,9 @@ public sealed class DirectChatApplicationService(
         {
             new(ChatRole.System,
                 "You are Guitar Alchemist, a concise assistant for guitar, chords, voicings, and music theory. " +
-                "Answer clearly and directly. If the user asks about music, stay grounded in practical musical guidance." +
+                "Answer clearly and directly. If the user asks about music, stay grounded in practical musical guidance. " +
+                AssistantScopeRules.SpeakAsAssistant + ". " +
+                AssistantScopeRules.DeclineOffTopic + "." +
                 Environment.NewLine +
                 Environment.NewLine +
                 PlayableNotationFormatter.PromptGuidance)
@@ -107,7 +110,10 @@ public sealed class DirectChatApplicationService(
             {
                 ["notation.diagram.count"] = notation.DiagramCount,
                 ["notation.vextab.added_count"] = notation.AddedFenceCount,
-                ["notation.format"] = "vextab",
-                ["notation.renderer"] = "vexflow"
+                ["notation.vextab.block_count"] = notation.VexTabBlockCount,
+                // Blocks GA's VexTab parser reads. The server draws nothing: which renderer draws
+                // the blocks is up to the client, so the trace doesn't claim one.
+                ["notation.vextab.valid_count"] = notation.ValidVexTabBlockCount,
+                ["notation.format"] = "vextab"
             });
 }

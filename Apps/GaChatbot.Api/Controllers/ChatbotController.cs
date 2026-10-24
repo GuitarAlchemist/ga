@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
+using GA.Business.ML.Agents.Intents;
 using GaChatbot.Api.Helpers;
 using GaChatbot.Api.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +37,9 @@ public sealed class ChatbotController(
         // committed to the wire. Validation already ran above, so malformed
         // requests still don't get a cookie.
         var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
+
+        // Routing telemetry written while serving this request carries the page's ?ref= tag.
+        using var trafficSource = RoutingTelemetryLog.BeginTrafficSource(request.Source, LocalCaller.IsDirect(HttpContext));
 
         Response.StatusCode = StatusCodes.Status200OK;
         Response.Headers.Append("Content-Type", "text/event-stream");
@@ -126,6 +130,9 @@ public sealed class ChatbotController(
         // turned away with 503 should still carry a session into their retry,
         // otherwise a busy moment silently starts them a new conversation.
         var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
+
+        // Routing telemetry written while serving this request carries the page's ?ref= tag.
+        using var trafficSource = RoutingTelemetryLog.BeginTrafficSource(request.Source, LocalCaller.IsDirect(HttpContext));
 
         if (!await concurrencyGate.TryEnterAsync(cancellationToken))
         {
@@ -569,6 +576,15 @@ public sealed class ChatRequest
 
     public bool UseSemanticSearch { get; set; } = true;
 
+    /// <summary>
+    /// Optional traffic-source tag copied from the page URL's <c>?ref=</c> (e.g.
+    /// <c>reddit</c>), so routing telemetry can attribute each question to the
+    /// channel that brought it. Deliberately unvalidated: a malformed tag must
+    /// never turn a question away, so RoutingTelemetryLog.NormalizeTrafficSource
+    /// keeps a short <c>[a-z0-9-]</c> prefix and drops the rest.
+    /// </summary>
+    public string? Source { get; set; }
+
     public const int MaxConversationHistoryTurns = 50;
     public const int MaxConversationTurnContentChars = 2000;
 }
@@ -603,7 +619,8 @@ public sealed class ChatbotStatus
 {
     /// <summary>
     /// True iff the chatbot can serve a request: provider HTTP reachable AND
-    /// configured chat model installed AND configured embedding model installed.
+    /// configured chat model installed AND configured embedding model installed
+    /// AND the orchestrator round-trip and the embedding probe succeed.
     /// </summary>
     public bool IsAvailable { get; set; }
 
@@ -639,6 +656,15 @@ public sealed class ChatbotStatus
     /// <see cref="ProviderReachable"/>: catalog skills don't need Ollama.
     /// </summary>
     public bool? OrchestratorRoundTripOk { get; set; }
+
+    /// <summary>
+    /// True iff one real embedding with the routing embedder returned a vector
+    /// within the probe's timeout; <see langword="null"/> when no embedder is
+    /// registered. Catches a provider that lists its models but cannot load
+    /// them (e.g. its model runtime is missing), which
+    /// <see cref="EmbeddingModelInstalled"/> cannot see.
+    /// </summary>
+    public bool? EmbeddingRoundTripOk { get; set; }
 
     public DateTime Timestamp { get; set; }
 }

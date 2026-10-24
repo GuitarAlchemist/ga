@@ -93,7 +93,7 @@ public sealed class Tuning : IIndexer<Str, Pitch>
         var buffer = items as Pitch[] ?? [.. items];
         var result = new Pitch[buffer.Length];
 
-        if (buffer[0] < buffer[^1])
+        if (IsWrittenFromTheBassSide(buffer))
         {
             for (var i = 0; i < buffer.Length; i++)
             {
@@ -106,6 +106,35 @@ public sealed class Tuning : IIndexer<Str, Pitch>
         }
 
         return result;
+    }
+
+    /// <summary>
+    ///     True when the pitches are written from the bass side of the neck (last string first), so the
+    ///     array must be reversed to put string 1 first.
+    /// </summary>
+    /// <remarks>
+    ///     Comparing only the first pitch with the last fails on re-entrant tunings: a 5-string banjo is
+    ///     written G4 D3 G3 B3 D4, its drone (string 5) higher than string 1. Counting the rising and
+    ///     falling steps between adjacent strings follows the direction the list is actually written in;
+    ///     on a tie (e.g. octave courses) the first-vs-last comparison decides, as before.
+    /// </remarks>
+    private static bool IsWrittenFromTheBassSide(Pitch[] pitches)
+    {
+        var rising = 0;
+        var falling = 0;
+        for (var i = 1; i < pitches.Length; i++)
+        {
+            if (pitches[i - 1] < pitches[i])
+            {
+                rising++;
+            }
+            else if (pitches[i] < pitches[i - 1])
+            {
+                falling++;
+            }
+        }
+
+        return rising != falling ? rising > falling : pitches[0] < pitches[^1];
     }
 
     /// <inheritdoc />

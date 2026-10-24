@@ -27,13 +27,18 @@ public sealed class OllamaGenerateClient(IHttpClientFactory httpClientFactory, I
     /// Sends a prompt to Ollama and returns the raw <c>response</c> field from the JSON body.
     /// </summary>
     /// <param name="prompt">Prompt text.</param>
-    /// <param name="format">Optional response format (e.g. <c>"json"</c>).</param>
+    /// <param name="format">
+    /// Optional response format. Either the literal string <c>"json"</c> (Ollama's
+    /// free-form JSON mode) or a JSON Schema object (e.g. a <see cref="System.Text.Json.Nodes.JsonNode"/>)
+    /// for Ollama's native structured outputs — the schema is passed straight through
+    /// in the request's <c>format</c> field.
+    /// </param>
     /// <param name="temperature">Sampling temperature (default 0.7).</param>
     /// <param name="numPredict">Optional max token limit.</param>
     /// <param name="ct">Cancellation token.</param>
     public async Task<string> GenerateAsync(
         string        prompt,
-        string?       format      = null,
+        object?       format      = null,
         float         temperature = 0.7f,
         int?          numPredict  = null,
         CancellationToken ct      = default)
@@ -66,9 +71,26 @@ public sealed class OllamaGenerateClient(IHttpClientFactory httpClientFactory, I
         return JsonSerializer.Deserialize<T>(raw, _caseInsensitive);
     }
 
+    /// <summary>
+    /// Like <see cref="GenerateStructuredAsync{T}(string,float,CancellationToken)"/> but constrains
+    /// generation with a JSON Schema via Ollama's native structured-output <c>format</c> field, so the
+    /// model can only emit tokens that fit <paramref name="jsonSchema"/>. Returns <see langword="null"/>
+    /// when the response is empty or fails to deserialise into <typeparamref name="T"/>.
+    /// </summary>
+    public async Task<T?> GenerateStructuredAsync<T>(
+        string        prompt,
+        object        jsonSchema,
+        float         temperature = 0.1f,
+        CancellationToken ct      = default) where T : class
+    {
+        var raw = await GenerateAsync(prompt, format: jsonSchema, temperature: temperature, ct: ct);
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        return JsonSerializer.Deserialize<T>(raw, _caseInsensitive);
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
 
-    private object BuildRequestBody(string prompt, string? format, float temperature, int? numPredict)
+    private object BuildRequestBody(string prompt, object? format, float temperature, int? numPredict)
     {
         // Anonymous type with optional fields — use a dictionary so we can omit nulls cleanly.
         var body = new Dictionary<string, object>

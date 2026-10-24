@@ -69,33 +69,56 @@ function applySearch(data: unknown[], field: string, query: string): unknown[] {
   });
 }
 
+/**
+ * Stable identity for each row, so UI state (such as which rows are expanded)
+ * follows the row rather than its position when a filter or a poll changes
+ * the order. Uses the row's `id`, else its `key`, else the value of its title
+ * field; a repeated identity gets an occurrence suffix. Rows are `unknown`,
+ * so a row without any of these fields falls back to its position.
+ */
+function rowIdentities(data: unknown[], titleField: string): string[] {
+  const seen = new Map<string, number>();
+  return data.map((item, idx) => {
+    const candidate = [resolveField(item, 'id'), resolveField(item, 'key'), resolveField(item, titleField)]
+      .find(v => v != null && typeof v !== 'object');
+    const base = candidate == null ? `#${idx}` : `${typeof candidate}:${String(candidate)}`;
+    const n = seen.get(base) ?? 0;
+    seen.set(base, n + 1);
+    return n === 0 ? base : `${base}~${n}`;
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Layout renderers
 // ---------------------------------------------------------------------------
 
 const ListDetailLayout: React.FC<{ data: unknown[]; showFields: string[] }> = ({ data, showFields }) => {
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
-  const toggle = useCallback((idx: number) => {
+  // Expanded rows are remembered by row identity, not by position: a filter
+  // or a poll that reorders the rows must not expand a different row.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggle = useCallback((rowId: string) => {
     setExpanded(prev => {
       const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      if (next.has(rowId)) next.delete(rowId); else next.add(rowId);
       return next;
     });
   }, []);
 
   const titleField = showFields[0] ?? 'name';
   const detailFields = showFields.slice(1);
+  const ids = rowIdentities(data, titleField);
 
   return (
     <div className="prime-radiant__dynamic-list">
       {data.map((item, idx) => {
+        const rowId = ids[idx];
         const title = displayValue(resolveField(item, titleField));
-        const isOpen = expanded.has(idx);
+        const isOpen = expanded.has(rowId);
         return (
-          <div key={idx} className="prime-radiant__dynamic-list-item">
+          <div key={rowId} className="prime-radiant__dynamic-list-item">
             <div
               className="prime-radiant__dynamic-list-header"
-              onClick={() => toggle(idx)}
+              onClick={() => toggle(rowId)}
             >
               <span className="prime-radiant__dynamic-list-title">{title}</span>
               <span className="prime-radiant__dynamic-list-toggle">{isOpen ? '▼' : '▶'}</span>

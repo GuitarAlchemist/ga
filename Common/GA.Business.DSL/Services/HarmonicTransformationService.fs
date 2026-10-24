@@ -33,8 +33,10 @@ type HarmonicTransformationService() =
         pcs |> Set.map (fun pc -> normalize (sumAxis - pc))
 
     /// <summary>
-    /// Calculates the Forte Prime Form of a pitch class set.
-    /// (Simplified version: Normal order transposed to zero)
+    /// Calculates the normal order of a pitch class set, transposed to start on zero.
+    /// Unlike a Forte/Rahn prime form, it does not consider the inversion.
+    /// Ties of span are broken as Rahn does: compare the intervals from the first element
+    /// to the second-to-last, then to the third-to-last, and so on.
     /// </summary>
     member this.GetNormalForm(pcs: PitchClassSet) : int list =
         if Set.isEmpty pcs then
@@ -50,8 +52,11 @@ type HarmonicTransformationService() =
                     let rot =
                         List.append (List.skip i sorted) (List.take i sorted |> List.map (fun x -> x + 12))
 
-                    let span = List.last rot - List.head rot
-                    (span, rot))
+                    // Span first, then the Rahn tie-break: intervals from the first element to each
+                    // later one, from the right end inward. Keeping the first rotation of equal span
+                    // made the answer depend on transposition ({0,4,7,8} vs the same set at T8).
+                    let key = [ for k in n - 1 .. -1 .. 1 -> rot[k] - rot[0] ]
+                    (key, rot))
 
             let (_, bestRot) = rotations |> List.minBy fst
             let baseVal = List.head bestRot

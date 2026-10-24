@@ -463,7 +463,7 @@ Dulcimer:
   LydianMode:
     DisplayName: "Lydian Mode"
     FullName: Lydian Mode
-    Tuning: Bb C4 C4 F3 Bb2
+    Tuning: C4 C4 F3 Bb2
   MixolydianMode:
     DisplayName: "Mixolydian Mode"
     FullName: Mixolydian Mode
@@ -647,7 +647,7 @@ Huapanguera:
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
-    Tuning: Huapanguera
+    Tuning: G2 D3 D4 G3 G3 B3 B3 E3
 
 Jarana:
   DisplayName: "Jarana"
@@ -834,10 +834,10 @@ PedalSteelGuitar:
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   T1:
     DisplayName: "T 1"
-    Tuning: C6 C2 F2 2 C3 E3 G3 A3 C4 E4 G4
+    Tuning: C2 F2 A2 C3 E3 G3 A3 C4 E4 G4
   T2:
     DisplayName: "T 2"
-    Tuning: E9 B2 D3 3 F#3 G#3 B3 E4 G#4 Eb4 F#4
+    Tuning: B2 D3 E3 F#3 G#3 B3 E4 G#4 Eb4 F#4
   UniversalTwelveStrings:
     DisplayName: "Universal Twelve Strings"
     FullName: Universal 12 Strings
@@ -951,7 +951,7 @@ Saz:
   BaglamaBozukDuzenSevenStrings:
     DisplayName: "Baglama Bozuk Duzen Seven Strings"
     FullName: Baglama Bozuk Duzen 7 String
-    Tuning: Tuning G2 G3 D2 D3 A2 A3 A3
+    Tuning: G2 G3 D2 D3 A2 A3 A3
 
 Seis:
   DisplayName: "Seis"
@@ -1110,11 +1110,11 @@ Ukulele:
   SopranoConcertAndTenorC:
     DisplayName: "Soprano Concert And Tenor C"
     FullName: Soprano C, Concert & Tenor C
-    Tuning: C6 G4 C4 E4 A4
+    Tuning: G4 C4 E4 A4
   SopranoConcertAndTenorD:
     DisplayName: "Soprano Concert And Tenor D"
     FullName: Soprano, Concert & Tenor D
-    Tuning: D6 A4 D4 F#4 B4
+    Tuning: A4 D4 F#4 B4
   Baritone:
     DisplayName: "Baritone"
     Tuning: D4 G3 B4 E4
@@ -1124,11 +1124,11 @@ Ukulele:
   BanjoOrBanjoleteC:
     DisplayName: "Banjo Or Banjolete C"
     FullName: Ukulele Banjo or Banjolele C
-    Tuning: C6 G4 C4 E4 A4
+    Tuning: G4 C4 E4 A4
   BanjoOrBanjoleteD:
     DisplayName: "Banjo Or Banjolete D"
     FullName: Ukulele Banjo or Banjolele D
-    Tuning: D6 A4 D4 F#4 B4
+    Tuning: A4 D4 F#4 B4
 
 Vihuela:
   DisplayName: "Vihuela"

@@ -112,7 +112,14 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <!-- The trained ranker is tracked at the repository root (GaCLI's train command writes
+         models/naturalness_ranker.onnx relative to where it runs). A copy retrained next to this
+         project still takes precedence. -->
     <Content Include="models\naturalness_ranker.onnx" Condition="Exists('models\naturalness_ranker.onnx')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\models\naturalness_ranker.onnx" Link="models\naturalness_ranker.onnx"
+             Condition="!Exists('models\naturalness_ranker.onnx') And Exists('..\..\models\naturalness_ranker.onnx')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

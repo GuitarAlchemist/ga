@@ -24,8 +24,18 @@ module VexTabGenerator =
         | F -> "F"
         | G -> "G"
 
-    /// Format an accidental
+    /// Format the accidental of a note, as VexTab writes it ('@' is the flat)
     let formatAccidental (acc: VexAccidental) =
+        match acc with
+        | VexAccidental.Sharp -> "#"
+        | VexAccidental.DoubleSharp -> "##"
+        | VexAccidental.Flat -> "@"
+        | VexAccidental.DoubleFlat -> "@@"
+        | VexAccidental.Natural -> "n"
+
+    /// Format the accidental of a key signature or a tuning note, as VexFlow's key specs and
+    /// note names write it ('b' is the flat)
+    let formatKeyAccidental (acc: VexAccidental) =
         match acc with
         | VexAccidental.Sharp -> "#"
         | VexAccidental.DoubleSharp -> "##"
@@ -53,12 +63,12 @@ module VexTabGenerator =
         | DurationCode.Sixteenth -> "16"
         | DurationCode.ThirtySecond -> "32"
 
-    /// Format a duration
+    /// Format a duration: code, then 'S', then 'd', in VexTab's order
     let formatDuration (dur: Duration) =
         let code = formatDurationCode dur.Code
         let dot = if dur.Dotted then "d" else ""
         let slash = if dur.SlashNotation then "S" else ""
-        $":%s{code}%s{dot}%s{slash}"
+        $":%s{code}%s{slash}%s{dot}"
 
     // ============================================================================
     // TECHNIQUE FORMATTERS
@@ -116,28 +126,30 @@ module VexTabGenerator =
     // NOTE FORMATTERS
     // ============================================================================
 
-    /// Format a standard note
+    /// An articulation is written as an annotation after its note: `C/4 $.a./top.$`
+    let private formatNoteArticulation (art: Articulation option) =
+        art
+        |> Option.map (fun a -> " " + formatArticulation a)
+        |> Option.defaultValue ""
+
+    /// Format a standard note. Techniques go between the note name and the '/', as in VexTab.
     let formatStandardNote (note: StandardNote) =
         let letter = formatNoteLetter note.Letter
         let acc = note.Accidental |> Option.map formatAccidental |> Option.defaultValue ""
         let oct = string note.Octave
         let techs = formatTechniqueChain note.Techniques
+        let art = formatNoteArticulation note.Articulation
+        $"%s{letter}%s{acc}%s{techs}/%s{oct}%s{art}"
 
-        let art =
-            note.Articulation |> Option.map formatArticulation |> Option.defaultValue ""
-
-        $"%s{letter}%s{acc}/%s{oct}%s{techs}%s{art}"
-
-    /// Format a tab note
+    /// Format a tab note. Techniques go between the fret and the '/', as in VexTab (`5h7/3`,
+    /// `7b9b7/3`); a tap is written before the fret it taps (`t12p7/4`).
     let formatTabNote (note: TabNote) =
         let fret = formatFret note.Fret
         let str = string note.String
-        let techs = formatTechniqueChain note.Techniques
-
-        let art =
-            note.Articulation |> Option.map formatArticulation |> Option.defaultValue ""
-
-        $"%s{fret}/%s{str}%s{techs}%s{art}"
+        let tap = if note.Techniques |> List.contains Tap then "t" else ""
+        let techs = note.Techniques |> List.filter ((<>) Tap) |> formatTechniqueChain
+        let art = formatNoteArticulation note.Articulation
+        $"%s{tap}%s{fret}%s{techs}/%s{str}%s{art}"
 
     /// Format a chord note
     let formatChordNote (note: ChordNote) =
@@ -191,6 +203,7 @@ module VexTabGenerator =
         | BarLine barType -> formatBarLine barType
         | TupletMarker tuplet -> formatTuplet tuplet
         | AnnotationItem ann -> formatAnnotation ann
+        | DurationItem dur -> formatDuration dur
 
     // ============================================================================
     // STAVE CONFIGURATION FORMATTERS
@@ -205,11 +218,17 @@ module VexTabGenerator =
         | Bass -> "bass"
         | Percussion -> "percussion"
 
-    /// Format a key signature
+    /// Format a key signature as VexFlow's key specs write it: `Bb`, `F#m`
     let formatKeySignature (key: KeySignature) =
         let root = formatNoteLetter key.Root
-        let acc = key.Accidental |> Option.map formatAccidental |> Option.defaultValue ""
-        let mode = key.Mode |> Option.defaultValue ""
+        let acc = key.Accidental |> Option.map formatKeyAccidental |> Option.defaultValue ""
+
+        let mode =
+            match key.Mode with
+            | Some "minor"
+            | Some "m" -> "m"
+            | _ -> ""
+
         $"%s{root}%s{acc}%s{mode}"
 
     /// Format a time signature
@@ -229,7 +248,7 @@ module VexTabGenerator =
             notes
             |> List.map (fun (letter, acc, oct) ->
                 let l = formatNoteLetter letter
-                let a = acc |> Option.map formatAccidental |> Option.defaultValue ""
+                let a = acc |> Option.map formatKeyAccidental |> Option.defaultValue ""
                 let o = string oct
                 $"%s{l}%s{a}/%s{o}")
             |> String.concat ","
@@ -302,21 +321,24 @@ module VexTabGenerator =
         | FontModifier(face, size, style) -> $".font=%s{face}-%d{size}-%s{style}"
         | NewLine -> "++"
 
-    /// Format a text line
+    /// Format a text line: `text :h,G,C`
     let formatTextLine (dur: Duration option, items: TextItem list) =
-        let durStr = dur |> Option.map formatDuration |> Option.defaultValue ""
         let itemsStr = items |> List.map formatTextItem |> String.concat ","
-        $"text%s{durStr} %s{itemsStr}"
+
+        match dur with
+        | Some d -> $"text %s{formatDuration d},%s{itemsStr}"
+        | None -> $"text %s{itemsStr}"
 
     // ============================================================================
     // LINE FORMATTERS
     // ============================================================================
 
-    /// Format a notes line
+    /// Format a notes line: `notes :q 5/3 7/3`
     let formatNotesLine (dur: Duration option, items: NoteItem list) =
-        let durStr = dur |> Option.map formatDuration |> Option.defaultValue ""
-        let itemsStr = items |> List.map formatNoteItem |> String.concat " "
-        $"notes%s{durStr} %s{itemsStr}"
+        [ yield "notes"
+          yield! dur |> Option.map formatDuration |> Option.toList
+          yield! items |> List.map formatNoteItem ]
+        |> String.concat " "
 
     /// Format a VexTab line
     let formatLine (line: VexTabLine) =

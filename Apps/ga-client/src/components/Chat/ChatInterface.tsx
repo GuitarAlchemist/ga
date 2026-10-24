@@ -41,7 +41,6 @@ const ChatInterface: React.FC = () => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ChatbotStatusResponse | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
-  const [containerHeight, setContainerHeight] = useState<number>(600);
   const [suggestions, setSuggestions] = useState<string[]>([
     'Show me a C major scale in tab',
     'Explain the circle of fifths',
@@ -50,25 +49,9 @@ const ChatInterface: React.FC = () => {
   ]);
   const [showcaseOpen, setShowcaseOpen] = useState(false);
 
-  // Measure container height for virtualization
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    const updateHeight = () => {
-      if (messagesContainerRef.current) {
-        const height = messagesContainerRef.current.clientHeight;
-        setContainerHeight(height);
-      }
-    };
-
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-    return () => window.removeEventListener('resize', updateHeight);
-  }, []);
-
-  // Auto-scroll to bottom when new messages arrive (only for non-virtualized)
-  useEffect(() => {
-    if (messages.length < VIRTUALIZATION_THRESHOLD) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   // Keep track of backend status and suggested prompts
@@ -216,7 +199,7 @@ const ChatInterface: React.FC = () => {
         ref={messagesContainerRef}
         style={{
           flex: 1,
-          overflowY: messages.length >= VIRTUALIZATION_THRESHOLD ? 'hidden' : 'auto',
+          overflowY: 'auto',
           padding: '24px',
           backgroundColor: theme.palette.background.default,
         }}
@@ -250,17 +233,10 @@ const ChatInterface: React.FC = () => {
           </div>
         )}
 
-        {/* Use virtualization for large message lists */}
-        {messages.length >= VIRTUALIZATION_THRESHOLD ? (
-          <VirtualizedMessageList messages={messages} containerHeight={containerHeight - 100} />
-        ) : (
-          <>
-            {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
-            ))}
-            <div ref={messagesEndRef} />
-          </>
-        )}
+        {messages.map((message) => (
+          <ChatMessage key={message.id} message={message} />
+        ))}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Diatonic chord table — appears when agent identifies a key */}
