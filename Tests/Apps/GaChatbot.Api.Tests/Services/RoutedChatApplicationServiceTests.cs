@@ -58,8 +58,8 @@ public sealed class RoutedChatApplicationServiceTests
         {
             Assert.That(messages, Has.Count.EqualTo(4));
             Assert.That(messages[0].Role, Is.EqualTo(ChatRole.System));
-            Assert.That(messages[0].Text, Does.Contain("fenced `vextab` block"));
-            Assert.That(messages[0].Text, Does.Contain("string 6 = low E"));
+            Assert.That(messages[0].Text, Does.Contain("do not write fret numbers, tablature, chord diagrams"));
+            Assert.That(messages[0].Text, Does.Not.Contain("fenced `vextab` block"));
             Assert.That(messages[1].Role, Is.EqualTo(ChatRole.User));
             Assert.That(messages[1].Text, Is.EqualTo("Explain C major."));
             Assert.That(messages[2].Role, Is.EqualTo(ChatRole.Assistant));
