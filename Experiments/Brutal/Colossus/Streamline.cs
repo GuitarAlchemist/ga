@@ -7,7 +7,11 @@
 // When anything is missing or fails, Colossus says why and renders with 4x MSAA, as without --dlss.
 // Ray Reconstruction (--rr) is DLSS's denoiser for ray-traced light: its plugin and NGX's model load only when asked for,
 // under the same checks, and when they fail DLSS goes on without it.
-// The structures mirror Streamline's headers (sl_core_types.h, sl_consts.h, sl_dlss.h, sl_dlss_d.h, sl_helpers_vk.h)
+// Frame generation (--fg) is DLSS-G: it draws frames between the renderer's own. It needs Reflex and its latency markers,
+// and its own swapchain: the window's surface, the swapchain, its images, acquiring, presenting and waiting for the
+// device all go through Streamline's proxies. Its plugins load only when asked for, under the same checks.
+// The structures mirror Streamline's headers (sl_core_types.h, sl_consts.h, sl_dlss.h, sl_dlss_d.h, sl_dlss_g.h,
+// sl_reflex.h, sl_pcl.h, sl_helpers_vk.h)
 // field by field; Load compares their sizes with the ones MSVC gives the headers, and stops if one differs.
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
@@ -16,16 +20,21 @@ using SN = System.Numerics;
 internal sealed unsafe class Dlss
 {
     public const string DefaultFolder = @"C:\tmp\godot-sl214\bin";
-    private const uint FeatureDlss = 0, FeatureRay = 1001;
+    private const uint FeatureDlss = 0, FeatureRay = 1001, FeatureFrames = 1000, FeatureReflex = 3, FeaturePcl = 4;
     // Streamline 2.14.1 and its magic number, as sl_version.h builds kSDKVersion.
     private const ulong SdkVersion = (2ul << 48) | (14ul << 32) | (1ul << 16) | 0xfedc;
-    private const uint BufferDepth = 0, BufferMotion = 1, BufferInput = 3, BufferOutput = 4;
+    private const uint BufferDepth = 0, BufferMotion = 1, BufferHudLess = 2, BufferInput = 3, BufferOutput = 4;
     private const uint BufferAlbedo = 7, BufferSpecularAlbedo = 8, BufferNormalRoughness = 14, BufferSpecularHitDistance = 42;
     private const int ValidUntilPresent = 1;
     // Streamline's files that this loads, each checked first: the interposer, the common plugin, DLSS's plugin, NGX's DLSS.
     private static readonly string[] Files = ["sl.interposer.dll", "sl.common.dll", "sl.dlss.dll", "nvngx_dlss.dll"];
     // And with --rr: Ray Reconstruction's plugin and NGX's model.
     private static readonly string[] RayFiles = ["sl.dlss_d.dll", "nvngx_dlssd.dll"];
+    // And with --fg: frame generation's plugin and NGX's model, Reflex's plugin and its Vulkan driver, the latency markers.
+    private static readonly string[] FrameFiles = ["sl.dlss_g.dll", "nvngx_dlssg.dll", "sl.reflex.dll", "NvLowLatencyVk.dll", "sl.pcl.dll"];
+
+    // PCLMarker: where a frame is, for Reflex and frame generation.
+    public const uint SimulationStart = 0, SimulationEnd = 1, RenderSubmitStart = 2, RenderSubmitEnd = 3, PresentStart = 4, PresentEnd = 5;
     private static bool _verbose;
 
     // DLSS's settings by name, as Streamline numbers them (DLSSMode).
@@ -245,6 +254,96 @@ internal sealed unsafe class Dlss
         public uint RenderHeightMax;
     }
 
+    // DLSSGOptions: on or off, how many frames to draw between two of the renderer's.
+    [StructLayout(LayoutKind.Sequential)]
+    private struct FrameOptions
+    {
+        public Base Base;
+        public uint Mode;
+        public uint NumFramesToGenerate;
+        public uint Flags;
+        public uint DynamicResWidth;
+        public uint DynamicResHeight;
+        public uint NumBackBuffers;
+        public uint MvecDepthWidth;
+        public uint MvecDepthHeight;
+        public uint ColorWidth;
+        public uint ColorHeight;
+        public uint ColorBufferFormat;
+        public uint MvecBufferFormat;
+        public uint DepthBufferFormat;
+        public uint HudLessBufferFormat;
+        public uint UiBufferFormat;
+        public void* OnErrorCallback;
+        public byte Reserved15;
+        public uint QueueParallelismMode;
+        public byte EnableUserInterfaceRecomposition;
+        public float DynamicTargetFrameRate;
+    }
+
+    // DLSSGState: what frame generation did at the last present.
+    [StructLayout(LayoutKind.Sequential)]
+    private struct FrameState
+    {
+        public Base Base;
+        public ulong EstimatedVramUsageInBytes;
+        public uint Status;
+        public uint MinWidthOrHeight;
+        public uint NumFramesActuallyPresented;
+        public uint NumFramesToGenerateMax;
+        public byte Reserved4;
+        public byte IsVsyncSupportAvailable;
+        public void* InputsProcessingCompletionFence;
+        public ulong LastPresentInputsProcessingCompletionFenceValue;
+        public byte IsDynamicMfgSupported;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ReflexOptions
+    {
+        public Base Base;
+        public uint Mode;
+        public uint FrameLimitUs;
+        public byte UseMarkersToOptimize;
+        public ushort VirtualKey;
+        public uint IdThread;
+    }
+
+    // Vulkan's own VkSwapchainCreateInfoKHR and VkWin32SurfaceCreateInfoKHR, for Streamline's proxies.
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SwapchainInfo
+    {
+        public int SType;
+        public void* Next;
+        public uint Flags;
+        public ulong Surface;
+        public uint MinImageCount;
+        public int ImageFormat;
+        public int ImageColorSpace;
+        public uint Width;
+        public uint Height;
+        public uint ImageArrayLayers;
+        public uint ImageUsage;
+        public int ImageSharingMode;
+        public uint QueueFamilyIndexCount;
+        public uint* QueueFamilyIndices;
+        public int PreTransform;
+        public int CompositeAlpha;
+        public int PresentMode;
+        public uint Clipped;
+        public ulong OldSwapchain;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SurfaceInfo
+    {
+        public int SType;
+        public void* Next;
+        public uint Flags;
+        public nint Instance;
+        public nint Window;
+    }
+
     // Vulkan's own VkPresentInfoKHR, for Streamline's present proxy.
     [StructLayout(LayoutKind.Sequential)]
     private struct PresentInfo
@@ -277,6 +376,9 @@ internal sealed unsafe class Dlss
     private static readonly Guid OptionsType = new(0x6ac826e4, 0x4c61, 0x4101, 0xa9, 0x2d, 0x63, 0x8d, 0x42, 0x10, 0x57, 0xb8);
     private static readonly Guid OptimalSettingsType = new(0xef1d0957, 0xfd58, 0x4df7, 0xb5, 0x04, 0x8b, 0x69, 0xd8, 0xaa, 0x6b, 0x76);
     private static readonly Guid RayOptionsType = new(0x0ad87504, 0x774e, 0x4bf3, 0x96, 0x33, 0xa4, 0x4d, 0x1f, 0x7f, 0x9c, 0xb8);
+    private static readonly Guid FrameOptionsType = new(0xfac5f1cb, 0x2dfd, 0x4f36, 0xa1, 0xe6, 0x3a, 0x9e, 0x86, 0x52, 0x56, 0xc5);
+    private static readonly Guid FrameStateType = new(0xcc8ac8e1, 0xa179, 0x44f5, 0x97, 0xfa, 0xe7, 0x41, 0x12, 0xf9, 0xbc, 0x61);
+    private static readonly Guid ReflexOptionsType = new(0xf03af81a, 0x6d0b, 0x4902, 0xa6, 0x51, 0xc4, 0x96, 0x5e, 0x21, 0x54, 0x34);
 
     private readonly delegate* unmanaged<Preferences*, ulong, int> _init;
     private readonly delegate* unmanaged<int> _shutdown;
@@ -293,6 +395,21 @@ internal sealed unsafe class Dlss
     private delegate* unmanaged<ViewportHandle*, Options*, int> _setOptions;
     private delegate* unmanaged<ViewportHandle*, RayOptions*, int> _setRayOptions;
     private delegate* unmanaged<nint, PresentInfo*, int> _present;
+    private readonly delegate* unmanaged<nint, byte*, void*> _getInstanceProcAddr;
+    private delegate* unmanaged<ViewportHandle*, FrameOptions*, int> _setFrameOptions;
+    private delegate* unmanaged<ViewportHandle*, FrameState*, FrameOptions*, int> _getFrameState;
+    private delegate* unmanaged<ReflexOptions*, int> _setReflexOptions;
+    private delegate* unmanaged<nint, int> _reflexSleep;
+    private delegate* unmanaged<uint, nint, int> _setMarker;
+    private delegate* unmanaged<nint, SwapchainInfo*, void*, ulong*, int> _createSwapchain;
+    private delegate* unmanaged<nint, ulong, void*, void> _destroySwapchain;
+    private delegate* unmanaged<nint, ulong, uint*, ulong*, int> _getSwapchainImages;
+    private delegate* unmanaged<nint, ulong, ulong, ulong, ulong, uint*, int> _acquire;
+    private delegate* unmanaged<nint, int> _waitIdle;
+    private nint _token;
+    private uint _tokenFrame = uint.MaxValue;
+    private uint _framesToGenerate;
+    private bool _frameOptionsSet;
     private bool _initialised;
     private string? _failed;
 
@@ -308,6 +425,10 @@ internal sealed unsafe class Dlss
     public uint GraphicsQueues { get; private set; }
     public uint ComputeQueues { get; private set; }
 
+    // Whether frame generation loaded and runs here, and if not, why (empty when it was not asked for).
+    public bool FrameGeneration { get; private set; }
+    public string FrameNote { get; private set; } = "";
+
     private Dlss(nint module)
     {
         void* Export(string name) => NativeLibrary.TryGetExport(module, name, out var p) ? (void*)p : throw new EntryPointNotFoundException(name);
@@ -322,11 +443,12 @@ internal sealed unsafe class Dlss
         _getNewFrameToken = (delegate* unmanaged<nint*, uint*, int>)Export("slGetNewFrameToken");
         _setVulkanInfo = (delegate* unmanaged<VulkanInfo*, int>)Export("slSetVulkanInfo");
         _getDeviceProcAddr = (delegate* unmanaged<nint, byte*, void*>)Export("vkGetDeviceProcAddr");
+        _getInstanceProcAddr = (delegate* unmanaged<nint, byte*, void*>)Export("vkGetInstanceProcAddr");
     }
 
     // Checks and loads Streamline from the folder, starts it with DLSS (and Ray Reconstruction when asked for and its files
     // check out), and reads what they ask of Vulkan. Null, with the reason, when DLSS fails at any step.
-    public static Dlss? Load(string folder, bool verbose, bool rayReconstruction, out string why)
+    public static Dlss? Load(string folder, bool verbose, bool rayReconstruction, int frameGeneration, out string why)
     {
         _verbose = verbose;
         if (!OperatingSystem.IsWindows())
@@ -342,7 +464,8 @@ internal sealed unsafe class Dlss
             ("Resource", sizeof(Resource), 112), ("ResourceTag", sizeof(ResourceTag), 64), ("ViewportHandle", sizeof(ViewportHandle), 40),
             ("AdapterInfo", sizeof(AdapterInfo), 56), ("Constants", sizeof(Constants), 456), ("VulkanInfo", sizeof(VulkanInfo), 96),
             ("DLSSOptions", sizeof(Options), 88), ("DLSSOptimalSettings", sizeof(OptimalSettings), 64), ("VkPresentInfoKHR", sizeof(PresentInfo), 64),
-            ("DLSSDOptions", sizeof(RayOptions), 224),
+            ("DLSSDOptions", sizeof(RayOptions), 224), ("DLSSGOptions", sizeof(FrameOptions), 120), ("DLSSGState", sizeof(FrameState), 88),
+            ("ReflexOptions", sizeof(ReflexOptions), 48), ("VkSwapchainCreateInfoKHR", sizeof(SwapchainInfo), 104), ("VkWin32SurfaceCreateInfoKHR", sizeof(SurfaceInfo), 40),
         ];
         foreach (var (name, size, expected) in sizes)
         {
@@ -385,6 +508,23 @@ internal sealed unsafe class Dlss
         }
 
         rayReconstruction &= rayNote.Length == 0;
+        var frameNote = "";
+        foreach (var file in frameGeneration > 1 ? FrameFiles : [])
+        {
+            var path = Path.Combine(folder, file);
+            if (!File.Exists(path))
+            {
+                frameNote = $"{path} is missing";
+                break;
+            }
+
+            if (!SignedByNvidia(path, out frameNote))
+            {
+                break;
+            }
+        }
+
+        var frames = frameGeneration > 1 && frameNote.Length == 0;
         Dlss dlss;
         try
         {
@@ -400,9 +540,20 @@ internal sealed unsafe class Dlss
         var pluginPath = (char*)Marshal.StringToHGlobalUni(folder);
         var paths = (char**)NativeMemory.Alloc((nuint)sizeof(char*));
         paths[0] = pluginPath;
-        var features = (uint*)NativeMemory.Alloc(2 * sizeof(uint));
-        features[0] = FeatureDlss;
-        features[1] = FeatureRay;
+        var features = (uint*)NativeMemory.Alloc(5 * sizeof(uint));
+        var featureCount = 0u;
+        features[featureCount++] = FeatureDlss;
+        if (rayReconstruction)
+        {
+            features[featureCount++] = FeatureRay;
+        }
+
+        if (frames)
+        {
+            features[featureCount++] = FeatureFrames;
+            features[featureCount++] = FeatureReflex;
+            features[featureCount++] = FeaturePcl;
+        }
         var preferences = new Preferences
         {
             Base = Base.Of(PreferencesType, 1),
@@ -414,7 +565,7 @@ internal sealed unsafe class Dlss
             // eLoadDownloadedPlugins.
             Flags = 1ul | 4ul | 128ul,
             FeaturesToLoad = features,
-            NumFeaturesToLoad = rayReconstruction ? 2u : 1u,
+            NumFeaturesToLoad = featureCount,
             Engine = 0,
             EngineVersion = (byte*)Marshal.StringToHGlobalAnsi("Colossus"),
             // NGX's identifier for an engine of its own: a random UUID made for Colossus.
@@ -467,6 +618,29 @@ internal sealed unsafe class Dlss
             }
         }
 
+        // Frame generation's, Reflex's and the markers' asks, the same way. Without them, no frame generation.
+        foreach (var feature in frames ? new[] { FeatureFrames, FeatureReflex, FeaturePcl } : [])
+        {
+            var asks = new FeatureRequirements { Base = Base.Of(FeatureRequirementsType, 2) };
+            result = dlss._getFeatureRequirements(feature, &asks);
+            if (result != 0 || (asks.Flags & 4) == 0)
+            {
+                frameNote = result != 0 ? $"slGetFeatureRequirements({feature}) failed ({result})" : $"feature {feature} does not run on Vulkan here";
+                frames = false;
+                break;
+            }
+
+            dlss.InstanceExtensions = [.. dlss.InstanceExtensions.Union(Strings(asks.VkInstanceExtensions, asks.VkNumInstanceExtensions))];
+            dlss.DeviceExtensions = [.. dlss.DeviceExtensions.Union(Strings(asks.VkDeviceExtensions, asks.VkNumDeviceExtensions))];
+            dlss.Features12 = [.. dlss.Features12.Union(Strings(asks.VkFeatures12, asks.VkNumFeatures12))];
+            dlss.Features13 = [.. dlss.Features13.Union(Strings(asks.VkFeatures13, asks.VkNumFeatures13))];
+            dlss.GraphicsQueues = Math.Max(dlss.GraphicsQueues, asks.VkNumGraphicsQueuesRequired);
+            dlss.ComputeQueues = Math.Max(dlss.ComputeQueues, asks.VkNumComputeQueuesRequired);
+        }
+
+        dlss.FrameGeneration = frames;
+        dlss._framesToGenerate = (uint)Math.Max(1, frameGeneration - 1);
+        dlss.FrameNote = frameNote;
         dlss.RayNote = rayNote;
         why = "";
         return dlss;
@@ -527,6 +701,57 @@ internal sealed unsafe class Dlss
             return false;
         }
 
+        if (FrameGeneration)
+        {
+            void* Feature(uint feature, string name)
+            {
+                void* f = null;
+                var bytes = System.Text.Encoding.ASCII.GetBytes(name + "\0");
+                fixed (byte* n = bytes)
+                {
+                    var gpu = new AdapterInfo { Base = Base.Of(AdapterInfoType, 1), VkPhysicalDevice = (void*)physical };
+                    return _isFeatureSupported(feature, &gpu) == 0 && _getFeatureFunction(feature, n, &f) == 0 ? f : null;
+                }
+            }
+
+            void* Proxy(string name)
+            {
+                var bytes = System.Text.Encoding.ASCII.GetBytes(name + "\0");
+                fixed (byte* n = bytes)
+                {
+                    return _getDeviceProcAddr(device, n);
+                }
+            }
+
+            _setFrameOptions = (delegate* unmanaged<ViewportHandle*, FrameOptions*, int>)Feature(FeatureFrames, "slDLSSGSetOptions");
+            _getFrameState = (delegate* unmanaged<ViewportHandle*, FrameState*, FrameOptions*, int>)Feature(FeatureFrames, "slDLSSGGetState");
+            _setReflexOptions = (delegate* unmanaged<ReflexOptions*, int>)Feature(FeatureReflex, "slReflexSetOptions");
+            _reflexSleep = (delegate* unmanaged<nint, int>)Feature(FeatureReflex, "slReflexSleep");
+            _setMarker = (delegate* unmanaged<uint, nint, int>)Feature(FeaturePcl, "slPCLSetMarker");
+            _createSwapchain = (delegate* unmanaged<nint, SwapchainInfo*, void*, ulong*, int>)Proxy("vkCreateSwapchainKHR");
+            _destroySwapchain = (delegate* unmanaged<nint, ulong, void*, void>)Proxy("vkDestroySwapchainKHR");
+            _getSwapchainImages = (delegate* unmanaged<nint, ulong, uint*, ulong*, int>)Proxy("vkGetSwapchainImagesKHR");
+            _acquire = (delegate* unmanaged<nint, ulong, ulong, ulong, ulong, uint*, int>)Proxy("vkAcquireNextImageKHR");
+            _waitIdle = (delegate* unmanaged<nint, int>)Proxy("vkDeviceWaitIdle");
+            if (_setFrameOptions is null || _getFrameState is null || _setReflexOptions is null || _reflexSleep is null || _setMarker is null
+                || _createSwapchain is null || _destroySwapchain is null || _getSwapchainImages is null || _acquire is null || _waitIdle is null)
+            {
+                FrameNote = "frame generation, Reflex or the markers are not supported on this GPU or driver, or a proxy is missing";
+                FrameGeneration = false;
+            }
+            else
+            {
+                // Reflex in low-latency mode: frame generation needs it.
+                var reflex = new ReflexOptions { Base = Base.Of(ReflexOptionsType, 1), Mode = 1 };
+                result = _setReflexOptions(&reflex);
+                if (result != 0)
+                {
+                    FrameNote = $"slReflexSetOptions failed ({result})";
+                    FrameGeneration = false;
+                }
+            }
+        }
+
         if (RayReconstruction)
         {
             function = null;
@@ -549,6 +774,116 @@ internal sealed unsafe class Dlss
 
         why = "";
         return true;
+    }
+
+    // The window's surface, made through Streamline's proxy so that frame generation knows its window. Zero on failure.
+    public ulong CreateSurface(nint instance, nint window, nint module)
+    {
+        void* create;
+        fixed (byte* name = "vkCreateWin32SurfaceKHR"u8)
+        {
+            create = _getInstanceProcAddr(instance, name);
+        }
+
+        var info = new SurfaceInfo { SType = 1000009000, Instance = module, Window = window };
+        ulong surface = 0;
+        return create is not null && ((delegate* unmanaged<nint, SurfaceInfo*, void*, ulong*, int>)create)(instance, &info, null, &surface) == 0 ? surface : 0;
+    }
+
+    // The swapchain and its images, through Streamline's proxies, for frame generation. Zero on failure.
+    public ulong CreateSwapchain(nint device, ulong surface, int imageCount, int format, int colorSpace, int width, int height, uint usage, int transform, int presentMode)
+    {
+        var info = new SwapchainInfo
+        {
+            SType = 1000001000,
+            Surface = surface,
+            MinImageCount = (uint)imageCount,
+            ImageFormat = format,
+            ImageColorSpace = colorSpace,
+            Width = (uint)width,
+            Height = (uint)height,
+            ImageArrayLayers = 1,
+            ImageUsage = usage,
+            PreTransform = transform,
+            CompositeAlpha = 1,
+            PresentMode = presentMode,
+            Clipped = 1,
+        };
+        ulong swapchain = 0;
+        var result = _createSwapchain(device, &info, null, &swapchain);
+        if (result != 0)
+        {
+            Console.Error.WriteLine($"DLSS-G: vkCreateSwapchainKHR failed ({result})");
+        }
+
+        return result == 0 ? swapchain : 0;
+    }
+
+    public ulong[] SwapchainImages(nint device, ulong swapchain)
+    {
+        uint count = 0;
+        _getSwapchainImages(device, swapchain, &count, null);
+        var images = new ulong[count];
+        fixed (ulong* at = images)
+        {
+            _getSwapchainImages(device, swapchain, &count, at);
+        }
+
+        return images;
+    }
+
+    // Acquires the next image through the proxy; Vulkan's result.
+    public int Acquire(nint device, ulong swapchain, ulong semaphore, out uint index)
+    {
+        uint i = 0;
+        var result = _acquire(device, swapchain, ulong.MaxValue, semaphore, 0, &i);
+        index = i;
+        return result;
+    }
+
+    public void WaitIdle(nint device) => _waitIdle(device);
+
+    // When the surface or the swapchain could not go through the proxies: no frame generation.
+    public void NoFrameGeneration(string why) => (FrameGeneration, FrameNote) = (false, why);
+
+    public void DestroySwapchain(nint device, ulong swapchain) => _destroySwapchain(device, swapchain, null);
+
+    // A frame starts: its token, and with frame generation Reflex's sleep and the simulation's start.
+    public void BeginFrame(uint frame)
+    {
+        nint token = 0;
+        if (_getNewFrameToken(&token, &frame) == 0)
+        {
+            (_token, _tokenFrame) = (token, frame);
+        }
+
+        if (FrameGeneration && _token != 0)
+        {
+            _reflexSleep(_token);
+            _setMarker(SimulationStart, _token);
+        }
+    }
+
+    // Where the frame is, for Reflex and frame generation.
+    public void Mark(uint marker)
+    {
+        if (FrameGeneration && _token != 0)
+        {
+            _setMarker(marker, _token);
+        }
+    }
+
+    // How many frames the last present showed, the renderer's and the generated ones, and frame generation's status.
+    public (uint Presented, uint Status) FrameStatus()
+    {
+        if (!FrameGeneration)
+        {
+            return (1, 0);
+        }
+
+        var viewport = new ViewportHandle { Base = Base.Of(ViewportHandleType, 1) };
+        var state = new FrameState { Base = Base.Of(FrameStateType, 4) };
+        return _getFrameState(&viewport, &state, null) == 0 ? (state.NumFramesActuallyPresented, state.Status) : (0, uint.MaxValue);
     }
 
     // The size DLSS renders at for an output of width by height in this mode: the output itself for DLAA.
@@ -588,7 +923,7 @@ internal sealed unsafe class Dlss
     // Motion is in UV units, from where a pixel is to where it was. With guides, Ray Reconstruction runs in DLSS's place,
     // in the same mode. False, the first time only, when Streamline refuses.
     public bool Evaluate(nint commandBuffer, uint frame, uint mode, SN.Matrix4x4 view, SN.Matrix4x4 projection, SN.Matrix4x4 previousViewProjection,
-        SN.Vector2 jitter, bool reset, float fovY, float near, Image depth, Image motion, Image input, Image output, Guides? guides = null)
+        SN.Vector2 jitter, bool reset, float fovY, float near, Image depth, Image motion, Image input, Image output, Guides? guides = null, Image? hudLess = null)
     {
         var ray = guides is not null && RayReconstruction;
         var viewProjection = view * projection;
@@ -648,8 +983,8 @@ internal sealed unsafe class Dlss
             WorldToCameraView = view,
             CameraViewToWorld = camera,
         };
-        var resources = stackalloc Resource[8];
-        var tags = stackalloc ResourceTag[8];
+        var resources = stackalloc Resource[9];
+        var tags = stackalloc ResourceTag[9];
         static void Tag(Resource* resource, ResourceTag* tag, Image image, uint type)
         {
             *resource = new Resource
@@ -681,8 +1016,17 @@ internal sealed unsafe class Dlss
             Tag(&resources[7], &tags[7], guides.Value.HitDistance, BufferSpecularHitDistance);
         }
 
-        nint token = 0;
-        var result = _getNewFrameToken(&token, &frame);
+        // For frame generation, the final image without the panel and subtitles, so that it does not smear them.
+        var count = ray ? 8u : 4u;
+        if (hudLess is { } plain)
+        {
+            Tag(&resources[count], &tags[count], plain, BufferHudLess);
+            count++;
+        }
+
+        // The frame's token from BeginFrame, or a new one.
+        var token = _tokenFrame == frame ? _token : 0;
+        var result = token != 0 ? 0 : _getNewFrameToken(&token, &frame);
         var step = "slGetNewFrameToken";
         if (result == 0)
         {
@@ -696,10 +1040,19 @@ internal sealed unsafe class Dlss
             result = ray ? _setRayOptions(&viewport, &rayOptions) : _setOptions(&viewport, &options);
         }
 
+        // Frame generation on, once its viewport has its first constants: one frame or more between two of ours.
+        if (result == 0 && FrameGeneration && !_frameOptionsSet)
+        {
+            step = "slDLSSGSetOptions";
+            var frameOptions = new FrameOptions { Base = Base.Of(FrameOptionsType, 5), Mode = 1, NumFramesToGenerate = _framesToGenerate };
+            result = _setFrameOptions(&viewport, &frameOptions);
+            _frameOptionsSet = result == 0;
+        }
+
         if (result == 0)
         {
             step = "slSetTagForFrame";
-            result = _setTagForFrame(token, &viewport, tags, ray ? 8u : 4u, commandBuffer);
+            result = _setTagForFrame(token, &viewport, tags, count, commandBuffer);
         }
 
         if (result == 0)

@@ -315,7 +315,8 @@ Two traps in measuring this:
 - **Model:** Z-Image-Turbo (`Tongyi-MAI/Z-Image-Turbo`, Apache-2.0), in Comfy-Org's repackage (Apache-2.0), with the
   Qwen3-4B text encoder (Apache-2.0). These were already on the machine; nothing was downloaded.
 - **Workflow:** 8 steps, then the image offset by half and the seam cross repainted.
-- **Prompts and seeds:** they are in `generate_comfyui.py`; hull is seed 1207, facade seed 2026.
+- **Prompts and seeds:** they are in `comfyui/textures.go`; hull is seed 1207, facade seed 2026. From `Colossus/comfyui/`,
+  `go run . textures -workflow <09-seamless.api.json>` makes them; learn-visuals holds that workflow.
 - **Concrete and cladding** (2026-10-20, asked as « plus de verre, métal, béton », « utilise ComfyUI et Blender pour
   les textures »): two more, the same way and with the same model, seeds 1965 and 1972. One is board-formed concrete
   with tie holes, the other brushed metal panels.
@@ -324,7 +325,7 @@ Blender 5.2 then baked each albedo, headless with factory settings (`bake_blende
 - a tangent-space normal map, from a Bump node on its luminance;
 - a roughness map, from the same luminance.
 
-It packs normal X, normal Y, roughness and height into one RGBA map. The scene loads the eight PNGs into one texture
+It packs normal X, normal Y, roughness and height into one RGBA map. The scene loads the PNGs (twelve since the marble and terracotta of 2026-10-21) into one texture
 array with mips; its own PNG reader is in `Program.cs`.
 
 **Materials and RTX** (2026-10-20, asked as « une scène plus jolie (plus de verre, métal, béton) », « plus de features
@@ -353,8 +354,8 @@ NVIDIA »). One shader function gives every surface, and the reflections call it
 **The head** (`Colossus/head/`). The swarm now forms a sculpted head, generated locally rather than built from Gaussian
 bumps. The bumps remain the fallback when the file is missing.
 
-It is made in two steps (2026-10-20). First, `generate_comfyui.py` runs ComfyUI:
-- **Portrait:** Z-Image-Turbo paints a frontal portrait of an imaginary marble bust, seed 7311, prompt in the script.
+It is made in two steps (2026-10-20). First, `comfyui/` (`go run . head 7311`) runs ComfyUI:
+- **Portrait:** Z-Image-Turbo paints a frontal portrait of an imaginary marble bust, seed 7311, prompt in `head.go`.
   The bust is androgynous and ageless, and the prompt names no one.
 - **Cut-out:** BiRefNet (MIT) removes the background.
 - **Mesh:** TRELLIS.2 (`microsoft/TRELLIS.2-4B`, MIT; int8 build) turns the portrait into a mesh. It runs in ComfyUI's
@@ -754,3 +755,515 @@ Found on the way:
   the process, so the check records that and moves on.
 - **Not run:** NotCurses and NativeFileDialog only start and stop, because one takes over the terminal and the other
   waits for a user.
+
+## Lego: composable scenes (2026-10-21)
+
+Asked by gaia: « Prototype de scènes déclaratives composables, « Lego fractal » », a first slice that composes BRUTAL
+scenes from reusable, nested blocks, « comme on compose une vue avec une bibliothèque déclarative F# ». The demo is a
+column, then a colonnade of columns, then a temple of colonnades, then a sanctuary of temples around temples. No block
+copies another's logic: each one uses the others with its own arguments and transforms.
+
+![Sanctuary, level 2](evidence/lego-sanctuary-20261021.png)
+![Temple with column@2](evidence/lego-temple-20261021.png)
+
+| Where | What |
+|---|---|
+| `Lego/` (F#, a library) | Describes, generates and validates scenes, and draws nothing. Its only reference is FSharp.Core from the SDK. |
+| `Lego.Cli/` (F#) | Runs the logic tests, lists the blocks, and prints a scene's description or refusal as JSON. |
+| `HallSlice/` (C#, M2) | `--lego` materializes a validated scene with M2's own `Box`, vertex buffer and pipeline. |
+
+There is no second engine and no second registry. Lego has no parser and no text language: blocks are F# values.
+
+**Conventions.**
+- **Units and axes.** Lengths are in metres. +Y is up, +X east and +Z south. A yaw is in degrees and turns +X toward
+  −Z.
+- **Transforms.** A transform scales, then turns, then moves. Matrices are System.Numerics': a part's world matrix is its
+  local matrix times its parent's.
+- **Boxes.** A box stands on its frame's floor and is centred on its vertical axis. Its colour is linear RGB in [0, 1].
+- **Parts.** A block's function returns parts:
+  - `Box`;
+  - `Use` (a named instance of a block, with arguments);
+  - `Move`;
+  - `Group`;
+  - `Attach` (a part placed in the frame of a named anchor of an instance in the same block);
+  - `Clad` (a part whose boxes have a surface; see the city, below).
+
+**Three stages, kept apart.**
+1. **Generation** (`Generate.run`) expands the tree and never throws. Where it cannot go on (a missing block, bad
+   arguments, a cycle, a budget spent, a block function that throws), it records the problem on that instance, expands
+   nothing below it, and carries on with the rest.
+2. **Validation** (`Validate.check`) is the one gate. It collects every problem, checks every box (sizes finite and
+   above zero, placements finite, colours in [0, 1]) and the counts. Only validation makes a `Scene`, because its
+   constructor is internal.
+3. **Materialization** (`HallSlice/LegoAdapter.cs`) turns a `Scene`'s boxes into vertices, and `SliceMesh` puts them in
+   one vertex buffer. A refused scene never reaches the engine: HallSlice prints the reasons and exits with code 2 before
+   it opens a window.
+
+There is no hot reload and no reconciliation.
+
+**Seeds and versions.** Each instance draws its numbers from its own seed. That seed is SplitMix64 of the scene's seed
+mixed with FNV-1a of the instance's path and `name@version`. A block's version is part of its identity: `column@1` and
+`column@2` sit side by side, and a name alone means its highest version. The same block, arguments, seed, limits and
+versions give the same canonical JSON and the same SHA-256 (`lego-scene/1`, `hash`).
+
+**Budgets.** The standard limits are depth 8, 4,096 instances and 20,000 boxes. Once a budget is spent, nothing more
+expands, so the draft stops growing.
+
+**Refusals.** Each problem has a path, a block, a kind and a message, for example `column (column@2): argument 'height':
+50 is outside [2, 20]` (`lego-errors/1`). The kinds:
+
+| Group | Kinds |
+|---|---|
+| Arguments and blocks | bad-argument, missing-block, duplicate-block, build-failed |
+| Structure | missing-instance, missing-anchor, duplicate-name, cycle |
+| Limits | too-deep, too-many-instances, too-many-boxes |
+| Shape | bad-shape |
+
+A cycle is the same block with the same arguments on its own ancestor chain, and its message shows the chain:
+`ping@1 > pong@1 > ping@1`. A block that uses itself with other arguments, as the sanctuary does with its level, is
+recursion, bounded by the budgets.
+
+**The blocks.**
+
+| Block | What it is | Boxes |
+|---|---|---|
+| `column@1` | A plinth, 4 drums of 2 turned squares, an echinus and an abacus. Anchors: base, top. | 11 |
+| `column@2` | The same, with 4 squares a drum and a shaft that tapers, with a slight swell. | 19 |
+| `colonnade@1` | `count` columns along +X under an entablature set on the first column's `top` anchor. | 79 at the defaults |
+| `temple@1` | 6 × 11 columns as four colonnades, steps, a cella and a roof on the front colonnade's `top`. | 405 |
+| `sanctuary@1` | A temple, with a sanctuary one level lower scaled by 0.38 at each corner of its plaza. | 8,505 at level 2 |
+
+Level 3 of the sanctuary needs about 34,000 boxes and is refused with too-many-boxes.
+
+**Run.**
+```
+dotnet run -c Release --project Lego.Cli -- test
+dotnet run -c Release --project Lego.Cli -- blocks
+dotnet run -c Release --project Lego.Cli -- describe temple@1 --seed 7 --arg column=2
+HallSlice/bin/Release/net10.0/HallSlice.exe 8 --lego sanctuary --seed 7 [--arg level=2] [--hidden] [--capture FILE.png] [--cycles 100]
+HallSlice/bin/Release/net10.0/HallSlice.exe 180 --tour 6 --vsync --seed 7
+```
+
+`--tour SECONDS` shows the composition step by step, a step every SECONDS:
+1. `column@1`, then `column@2`;
+2. a colonnade;
+3. a temple, then a temple with `column=2`;
+4. a sanctuary of 5 temples, then one of 21;
+5. the city's chain: `temple@2`, a stoa, a tholos, the agora, the acropolis, then the polis.
+
+Each step is generated, validated and materialized while the window runs. The previous mesh is disposed once the GPU
+is idle, and the camera glides to the new framing. Each round after the first uses the next seed.
+
+**Logic tests** (`Lego.Cli test`, no engine): 17 passed, 0 failed; 20 with the city's three (below). They check:
+- that the same input gives the same JSON and hash;
+- that another seed changes the stones and not the plan;
+- versions;
+- yaw and transform order;
+- the colonnade's spacing and the temple's flanks, by position;
+- that the entablature and the roof follow their anchors when the height changes;
+- the three budgets;
+- every kind of refusal, with its message;
+- that a bad shape passes generation and stops at validation;
+- that 198 malformed requests throw nothing;
+- the three JSON formats;
+- that 20 repeated descriptions keep nothing in memory.
+
+**Graphic validation** (HallSlice, hidden window, RTX 5080, 1280 × 720, uncapped). This is separate from the logic tests:
+it shows that the scene renders and how fast, not that each pixel is right.
+
+| Scene | Boxes | Generated and validated | Frames | p99 |
+|---|---|---|---|---|
+| `sanctuary`, seed 7, level 2 | 8,505 | 214 ms | 2,223 fps | 0.82 ms |
+| `temple`, seed 7, `column=2` | 645 | 60 ms | 12,639 fps | 0.22 ms |
+
+`--cycles 100` on the sanctuary described the scene 100 more times, materialized each one and disposed it:
+- 0 hash mismatches;
+- live meshes were 1 before and 1 after, and 0 at exit;
+- private memory grew 10.7 MB over the first 10 cycles (allocator warm-up), then −9.3 MB over the next 90.
+
+M2's hall still draws as before through the new `Box`.
+
+**The smallest IX hook.** IX's registry can run `Lego.Cli describe <block[@version]> --seed N --arg name=value` and read
+standard output. The JSON carries a `format` tag (`lego-scene/1` or `lego-errors/1`) and, when valid, a `hash`. The exit
+code is 0 when the scene is valid and 2 when it is refused. `Lego.Cli blocks` (`lego-library/1`) lists what may be
+asked, with each parameter's kind, default and bounds. This is generation and validation only: nothing is drawn, and
+nothing in IXQL, ixctl or their contracts changes.
+
+**F# and BRUTAL.** No incompatibility found.
+- HallSlice (C#) references the F# project directly.
+- FSharp.Core comes from the SDK and reaches HallSlice's lock file as a transitive package.
+- No BRUTAL package changed, and nothing else was added.
+- The repository's C# style rules do not apply to F# files.
+
+**Limits.**
+- **Boxes only.** There are no meshes, textures or instancing. A surface is a hint a host may show or not. In HallSlice
+  every box is 36 vertices in one host-visible buffer, and identical blocks share no GPU resource.
+- **Validation checks shape, not sense.** It does not catch overlaps, such as columns through the cella with odd
+  arguments, or structures that could not stand.
+- **The sanctuary's spacing was computed, not proven.** The corner temples clear their parent up to level 2 at scale
+  0.38. Other scales are not proven.
+- **Renaming changes the stones.** Seeds follow paths, so renaming an instance changes its draws. That is by design.
+- **Reproducibility across machines is not verified.** The hash rests on float32 System.Numerics arithmetic. The same
+  run gives the same hash on this machine; x64 against ARM64 is not verified.
+- **GPU memory is not read.** `--cycles` measures live meshes and process memory, not VRAM: no
+  `VK_EXT_memory_budget`.
+- **New blocks need a rebuild.** Blocks are code; a new block means compiling the library.
+- **Framing is a host choice.** The ground under the scene and the camera framed on its bounds are HallSlice's, not
+  the scene's.
+
+## Lego: the city, on the Colossus's RTX (2026-10-21)
+
+Asked by the author: « tu augmenteras la qualité et tu essaieras de créer des chaînes encore plus complexes en
+appliquant le même principe », then « je veux tous les features NVIDIA qu'on avait fait pour … le Colosse ».
+
+![Acropolis on the Colossus, DLAA and Ray Reconstruction](evidence/lego-acropolis-rtx-20261021.jpg)
+![Polis on the Colossus, DLAA and Ray Reconstruction](evidence/lego-polis-rtx-20261021.jpg)
+
+**Surfaces.** `Clad(surface, part)` gives a part's boxes a surface: stone (the default), metal, glass, tile, water,
+leaves, or a glow of some strength. A surface passes down the uses, as a style does, and a block's own `Clad` wins.
+Validation refuses a glow outside [0, 100]. The JSON writes a box's surface only when it is not stone, so a scene
+without surfaces keeps its bytes and hash: a test pins the sanctuary's and temple@1's hashes from before.
+
+**The chain.** Each block places the others by name and version, in its own frame or on their anchors.
+
+| Block | Made of | Boxes, seed 7 |
+|---|---|---|
+| `brazier@1` | A bronze tripod and bowl (metal), three flames (glow 8). | 9 |
+| `cypress@1` | A trunk and seven tiers of leaves. | 15 |
+| `temple@2` | Four colonnades of column@2 and two braziers; ten tiers of tiles over a gilt band, gilt acroteria, bronze doors. Its cella and braziers can be left out. | 677 |
+| `stoa@1` | A colonnade, a back wall, a roof of tiles. | 263 |
+| `tholos@1` | 14 columns in a ring, twelve-sided steps, cella and conical roof. | 348 |
+| `propylon@1` | A temple@2 porch (5 × 3, no cella), a stoa on each side, set on its `front` anchor. | 509 |
+| `terrace@1`, `stair@1`, `wall@1`, `tower@1` | The pieces of the citadel and the walls; a tower can carry a brazier. | 17, 30, 25, 19 |
+| `rampart@1` | Towers about every 60 m, walls between them turned to face out, a gate between two taller towers. | 1,087 |
+| `house@1`, `insula@1` | A courtyard house; a block of six houses or gardens. | 11, 66 |
+| `agora@1` | Three stoas facing in, a fountain (water, a gilt figure), braziers, cypresses. | 972 |
+| `theatre@1` | 16 rows of 24 segments round an orchestra, a stage building. | 393 |
+| `acropolis@1` | A terrace, a stair, a propylon on the stair's `top`, and on the terrace's `top` a great temple (8 × 17), a lesser one, a tholos, an altar, cypresses and braziers. | 2,590 |
+| `polis@1` | The rampart, the acropolis, the agora, the theatre, an avenue of cypresses and braziers, and blocks of houses where the rest leave room (`density`). | 6,663 |
+
+The polis has 406 instances and nests five levels deep: polis > acropolis > propylon > temple@2 > colonnade > column.
+temple@1 and the sanctuary are unchanged; a bare `temple` now means `temple@2`.
+
+**On the Colossus.** `Colossus --lego BLOCK[@VERSION] [--lego-seed N] [--lego-arg name=value]` sets the validated scene
+on a mesa that rises from the abyss. The scene is turned to face north, away from the colossus. The city's towers keep
+off the mesa and off the camera's way to it.
+- **Rendering.** Every box is a static instance in the city's TLAS, so it gets the scene's ray-traced shadows and
+  reflections, DLSS (DLAA by default) with Ray Reconstruction under `--rr`, and HDR with bloom and ACES.
+- **Surfaces.** A Lego box is kind 5. Its seed carries its surface's code and a draw of its own. The shader gives each
+  surface its look:
+  - stone: courses and a grain;
+  - metal: a polish;
+  - tiles: their courses;
+  - water: a ripple;
+  - leaves: a rough finish.
+- **Glows.** A glow is a lamp, lit by its strength.
+- **Camera.** Preset 4 frames the mesa and sways slowly; C cycles the presets.
+
+Measured on an RTX 5080: hidden window, 1600 × 900, DLAA with Ray Reconstruction, 10,000 swarm bodies, GPU timestamps.
+
+| Scene | Lego boxes | GPU ms, p50 | Frames |
+|---|---|---|---|
+| `acropolis` | 2,590 | 4.60 | 60 fps under vsync, p95 17.3 ms |
+| `polis` | 6,663 | 3.94 | 60 fps under vsync, p95 17.4 ms |
+
+Uncapped (`--immediate`), the polis took 3.65 ms a frame at p50 with DLAA and 2.39 ms with DLSS Quality. That was
+measured before the twelve-sided rounds and the stone courses.
+
+*To verify.* In two earlier hidden-window runs under vsync, frames fell to about 30 ms after a capture while the GPU
+stayed near 5 ms. This was not seen in the two final runs or uncapped. It is still to check in a visible window.
+
+**Logic tests**: 20 passed, 0 failed. The three new tests check:
+- that the first chain keeps its hashes while the library grows;
+- that a surface passes down the uses unless a block clads its own, and that a glow over 100 is refused;
+- that the polis composes five levels deep, within the budgets, with fewer houses at density 0.
+
+**Limits.**
+- **The layout is a choice, not a solver.** The polis places its acropolis, agora and theatre by number and keeps houses
+  off them. Other widths and depths are bounded, but nothing checks them for overlaps.
+- **The swarm ignores the scene.** Its bodies pass through Lego boxes, which are drawn only, like the city.
+- **HallSlice shows no surfaces.** It only brightens glows.
+- **No assets.** Every surface was procedural, and no model, texture or asset was added. The next section adds two
+  textures, marble and terracotta.
+
+## The swarm builds; path tracing (2026-10-21)
+
+Asked by the author: « continue a ameliorer la scene the swarm - peut etre utilise le systeme de lego et
+Comfyui/blender », then « Fait un max out comme dans la scene de l'observatoir », with full path tracing chosen.
+
+![The swarm builds the propylon: visible window, DLSS Quality, path traced, Ray Reconstruction](evidence/swarm-propylon-pt-20261021.jpg)
+![The swarm builds the tholos, DLAA without path tracing](evidence/swarm-tholos-20261021.jpg)
+![Acropolis in marble and terracotta, DLAA and Ray Reconstruction](evidence/lego-acropolis-marble-20261021.jpg)
+![Acropolis path traced with Ray Reconstruction, before the marble](evidence/lego-acropolis-pt-20261021.jpg)
+
+**The swarm builds between two faces.** The auto cycle keeps its 32 s, so the cinematic stays in step. It runs a cloud,
+then a face from 6 s, then from 24 s a Lego block, a different one each cycle: `tholos`, `temple` (temple@2) and
+`propylon`.
+- **Points.** At start the Colossus asks `Lego.Api.Describe` for each block, seed 7. It spreads one point per machine
+  over the block's boxes, by area: on their sides and tops, not under them. No point lies inside another box, so two
+  boxes that touch take none where they meet.
+- **Placement.** Each block is centred on the face's centre and scaled to fit 28 m across and 22 m high. It turns
+  slowly.
+- **The machines.** A machine settles flat on its box's face. Its hull takes the box's colour, with a faint glow of that
+  colour, and a brazier's flames light theirs. The tint rides in the instance's kind, from 1 to 1.4, so the rays see it
+  too.
+- **Collisions.** Bodies do not collide while they build, as while they form the face.
+- **Timing.** The points are made on a worker at start, in 90 to 150 ms. In the auto cycle the colossus starts no line
+  after 19 s, since the face holds while it speaks and a late line would eat into the block's turn.
+
+**Path tracing.** `--pt` (with RTX) follows one path a pixel, up to three bounces, in place of the ambient, fill, rim,
+occlusion and mirror rays.
+- **Each bounce** picks the specular lobe (GGX) or the diffuse one (cosine), by how much the surface reflects.
+- **Where the path lands**, it adds that surface's glow and the sun, behind a shadow ray.
+- **A path that leaves the scene** brings the sky's light without the sun's disc, which the shadow rays already count.
+- **Unchanged:** the sun on the first surface and its highlight.
+
+One path a pixel is noisy: `--rr` denoises it.
+
+Measured on an RTX 5080: hidden window, 1600 × 900, 10,000 swarm bodies, GPU timestamps, vsync.
+
+| Run | GPU ms, p50 / p95 | Frame ms, p50 / p95 |
+|---|---|---|
+| `--cinematic --dlss` (DLAA, no path tracing), 36 s with the tholos | 2.54 / 4.28 | 16.66 / 17.67 |
+| `--dlss --rr --pt` (DLAA), 15 s | 12.72 / 13.71 | 16.53 / 33.04 |
+| `--lego acropolis --dlss --rr --pt` (DLAA), 15 s | 11.85 / 13.08 | 16.63 / 33.29 |
+| `--cinematic --dlss --rr --pt` (DLAA), 98 s with the three blocks | 12.43 / 20.68 | 16.90 / 33.98 |
+| `--cinematic --dlss quality --rr --pt`, 98 s with the three blocks | 7.24 / 11.74 | 16.64 / 17.95 |
+| The same, in a visible window streamed by demo-cast, 100 s | 7.14 / 13.05 | 16.64 / 25.80 |
+
+The full max out that holds 60 fps is therefore `--dlss quality --rr --pt`. At DLAA, the paths outgrow the frame at
+p95. In the visible window, 78 of the 88 full seconds after start drew exactly 60 frames. The others dipped to between
+23 and 44 frames, at start and around the captures.
+
+**Full screen** (asked as « on veux essayer en plein ecran »). `--fullscreen` opens a borderless window over the
+whole primary monitor, at its own resolution. In 4K (3840 × 2160) the path tracing no longer holds 60 fps; RTX without
+it does.
+
+| Run, 4K, cinematic | GPU ms, p50 / p95 | Frame ms, p50 / p95 |
+|---|---|---|
+| `--dlss quality` (2560 × 1440 drawn), no path tracing, hidden, 40 s | 6.20 / 9.86 | 16.79 / 33.68 |
+| `--dlss quality --rr --pt`, hidden, 40 s | 19.88 / 34.11 | 20.84 / 34.56 |
+| `--dlss performance --rr --pt` (1920 × 1080 drawn), hidden, 40 s | 17.63 / 32.60 | 20.18 / 40.97 |
+| `--dlss quality --rr --pt`, visible and streamed, 120 s | 20.93 / 35.40 | 21.04 / 35.45 |
+
+In the visible run, path traced, the face drew 40 to 60 frames a second. The Lego block, close to the camera, drew 26 to
+33. Each 4K capture stalled the frames for about 3 s while the PNG was written. That happens only in tests.
+
+**Frame generation** (asked as « c'est lent en full screen, non? », answered "Brancher DLSS-G"). `--fg` turns on
+DLSS-G, 2x by default (`--fg 3` or `--fg 4` for more). It needs `--dlss`, and it works best with `--fullscreen`. In
+manual hooking, the Colossus now gives Streamline:
+- **The window.** Its surface is made through Streamline's `vkCreateWin32SurfaceKHR`, once the device is attached.
+  Before that, the call crashed; with GLFW's surface, the swapchain failed with "Could not find a window corresponding
+  to this application".
+- **The swapchain.** It is created, read, acquired and destroyed through Streamline's proxies, in mailbox mode, since
+  Vulkan frame generation has no vsync.
+- **Reflex and the markers.** Reflex is in low-latency mode. Each frame sleeps in Reflex, then marks the simulation,
+  the submit and the present.
+- **The options.** They are set once, before the tags. Depth and motion vectors are already tagged until the present.
+
+Each second, the log gives the frames drawn and the frames shown. At the end, it prints `DLSS-G summary`.
+
+| Run, cinematic, `--dlss quality --rr --pt --fg` | GPU ms, p50 / p95 | Drawn a second | Shown a second |
+|---|---|---|---|
+| 1600 × 900, hidden, 25 s | 7.35 / 8.99 | 120 to 125 | the same: nothing generated |
+| 4K full screen, visible, 90 s | 23.82 / 41.03 | 33 on average (19 to 64) | 66 on average (38 to 128) |
+
+- **In 4K.** Every frame drawn was shown twice: 6,057 shown for 3,031 drawn. The same scene without `--fg` drew 26 to 60
+  a second. With it, the screen shows 46 to 128 a second through the face and the Lego block. That is the 59 Hz screen's
+  rate or more, most of the time.
+- **The cost.** The generated frames cost about 3 ms of GPU in 4K: 23.82 ms at p50, against 20.93 ms without
+  `--fg`. So the drawn rate falls a little.
+- **Hidden.** With the window hidden, nothing is generated, which is as expected: frame generation needs a visible,
+  focused window.
+- **Warnings.** Streamline warns that vsync interval 1 is not supported with frame generation. It warns too that no
+  backbuffer extent was given.
+
+**To verify:**
+- The panel and subtitles are drawn into the same image, so the generated frames interpolate them too. A HUD-less colour
+  tag would keep them sharp. The runs above had neither.
+- On a 59 Hz screen, mailbox drops what the screen cannot show, so frame pacing should be judged by eye.
+- Nothing was measured over 120 Hz.
+- Frame generation after the swapchain is made again. With `--fg`, it is made again through Streamline's proxies:
+  minimised and restored in 1600 × 900 and in 4K, the runs went on to their time limit. But those runs could not keep
+  the focus, so they generated nothing, before or after.
+
+**Night, HUD-less colour, fewer bounces in 4K** (asked as « tout? », after the choice of dusk, the NGX plugins, the
+HUD-less tag and adaptive quality).
+- **Night.** Every fourth cycle, the sun sinks below the horizon as the face forms, from 70 s into the four cycles to
+  82 s. Night holds through that cycle's Lego block, and the sun comes back over the next cloud, from 98 s to 110 s.
+  - **The sky.** It turns violet at the horizon and deep blue above, and stars come out where the smog is thin. The
+    abyss keeps its glow.
+  - **The light.** The sun's light fades with its height. Lamps, windows and Lego glows burn three times as bright,
+    and the machines keep theirs. The exposure opens by 60 %.
+  - **Testing.** `--night` keeps it night. With the sun at its usual height, the shaders give the same image as before.
+  - **Measured.** In a 112 s hidden run, path traced, night went from 0.02 at 78 s to 1.00 at 90 s and was back to
+    0.62 at 110 s. The run drew 60 frames a second through it, GPU 6.96 ms p50.
+- **HUD-less colour.** With `--fg`, the panel and subtitles are drawn in a render pass of their own. Before them, the
+  image is copied out and tagged as Streamline's HUD-less colour, so that the generated frames do not smear the text.
+  A hidden run with the panel showed it drawn as before.
+- **Fewer bounces in 4K.** With `--pt`, the paths lose a bounce while the GPU's time goes over 14 ms (16 ms until the
+  cinematic's closer shots of 2026-10-22, when a frame often missed the vsync before the budget tripped)
+  (`--gpu-budget`), down to one. They win it back below 65 % of that, no sooner than 20 s after losing it: in the streamed window, at 1600 × 900, the GPU went over the budget at two bounces and under it at one, and the light flickered between them every few seconds. DLSS's resolution was the
+  wrong lever: performance over quality took only 2.25 ms off 19.88. In 4K, hidden, 40 s, path traced with DLSS
+  quality:
+
+  | | GPU ms, p50 / p95 | Frames a second |
+  |---|---|---|
+  | Three bounces (before) | 19.88 / 34.11 | frame p50 20.84 ms |
+  | Adaptive: one bounce after 13 s | 13.76 / 21.82 | 58.1 on average; 21 of 27 seconds at 59 or 60 |
+
+  At 1600 × 900, the GPU stays near 7 ms, and the paths keep their three bounces.
+- **Streamline's plugins.** Streamline loads its six plugins in version 2.14.16 from the driver's own store
+  (`C:\ProgramData\NVIDIA\NGX\models\sl_*_override_0`), in place of the SDK's 2.14.1. It does this although
+  `eAllowOTA` and `eLoadDownloadedPlugins` are not set. All six carry a valid Authenticode signature from NVIDIA
+  Corporation. The Colossus neither downloads nor ships them.
+
+**To verify:**
+- Night in 4K with frame generation.
+- The HUD-less tag's effect, which needs a visible, focused window with the panel or subtitles.
+- How one bounce looks next to three in 4K. The indirect light is darker with fewer bounces.
+**A real night** (2026-10-22, asked as « Une vraie nuit »: the night looked like a brown dusk).
+- **The sky.** Deep blue down to the horizon, which the city's lights warm only near the ground. The abyss below dims to
+  an ember instead of keeping its orange glow, so the haze between the towers turns blue-grey rather than brown.
+- **The moon.** A procedural disc, a little larger than the real one, with darker seas, high behind the face and to its
+  left (`MoonDir`), in a soft halo. It shows in the cinematic's upward shots beside the head.
+- **Moonlight.** The sun's light is gone by mid-dusk (night 0.55), and only then does the moon's rise, from its own
+  direction (`LightDir`), with its own shadow rays: the swarm and the towers' tops get cool rims, and the shadows never
+  jump. Path traced, the moon's disc is taken out of the escaping rays, as the sun's is, since the shadow rays count it.
+- **Stars.** Brighter, and thicker along a faint, uneven Milky Way, drawn from noise; no photograph is used.
+- **Measured.** Hidden, path traced, DLSS Quality, 116 s through one night, without captures, against the build before:
+  night (84 to 104 s) at 60 frames every second, 21 of 21, against 58.7 on average before; day at 59.8 against 56.1.
+  GPU 6.66 ms p50 and 11.57 ms p95, against 6.99 and 12.46.
+- **To verify:** the moon's disc in 4K, and night in a visible window with frame generation.
+
+**The kraken** (2026-10-22, asked as « je veux que la sequence "lego" soit comme un kraken robotique geant plutot »).
+The temples gave way to one block, `kraken@1` (`Lego/Kraken.fs`), which the swarm builds every cycle.
+- **The kraken of the legends** (asked next as « le kraken doit ressembler un peu plus au kraken des legendes »). The
+  first version, a domed mantle on a neck with eight evenly placed arms, read as a tower with cables in a static
+  render. It became a colossal cephalopod rising from a churning sea:
+  - its plated head is a bag, 17 m wide, that hangs back over the eyes as an octopus's does, with a ridge of fins down
+    its back;
+  - two great round eyes on its flanks, 50 degrees either side of the front, each a glowing lens in a dark rim with a
+    pupil that swells in its middle (a plain bar read as a road sign);
+  - eight arms, 3 m thick at the root and half a metre at the tip, with a rust collar every third segment and a lit
+    sucker every other one. The arms within 70 degrees of the front sprawl towards the viewer and curl their tips; the
+    others rise behind the head, higher than it, and curl theirs in a spiral, so that none hides the face;
+  - the arm nearest 340 degrees climbs to a three-masted ship and coils a turn and a half round its hull, holding it
+    13 m out and 15 m up;
+  - rings of wave crests capped with foam run out from it.
+
+  In its own units it is about 34 m across (the static render's mesa, less its 8 m margins) and 31 m high; the swarm
+  scales it to 30 m high, against 22 for the temples. The design is original; the ship-seizing sea monster is the
+  public-domain legend, not any one picture of it.
+- **It writhes.** The swarm's targets move, not the block: past 9 m from the axis, each point turns about it and rises
+  and falls on a wave that runs out along the arms (`Writhe`), stronger towards the tips. The head, within about 9 m,
+  stays still; the ship and the waves move with the arms.
+- **Eyes by area.** The swarm samples the block by area, so the details must be metres wide: the eyes are 4.8 m
+  rims round 3.8 m lenses.
+- **Moiré.** The curtain walls' mullions had hard edges a fraction of a pixel wide in the distance, which shimmered as
+  the camera moved; they are now antialiased by their screen width. The stars, smaller than a pixel, are now larger and
+  dimmer.
+- **Measured.** Hidden, path traced, DLSS Quality: 60 frames every second while the first kraken formed (32 to 41 s),
+  apart from the seconds with a capture; the legend's kraken, in a 41 s run, frame p50 16.64 ms and p95 22.68 ms. Lego
+  tests: 21 pass, including the kraken's (more than 100 lit boxes, arms reaching past 18 m, a sea, something held
+  above 20 m, and a valid six-armed variant).
+- **To verify:** the writhing and the moiré in a visible window, at 60 fps, from a recording.
+
+**Machines, not cubes** (2026-10-22, asked as « chaque machine devrait etre plus qu'un cube si possible et avoir sa vie
+propre »). Each machine of the swarm is now a small craft (`Machine`), built in code rather than in Blender, so that no
+asset has to ship: a hull with its corners cut, swelling behind the nose and narrowing to the tail, a pod down each
+flank, an eye over the nose and thrusters at the tails, in 116 flat-shaded triangles. It is drawn in its own draw call
+and has its own bottom-level structure for the rays. It is chunky on purpose: a machine is a few pixels across most of
+the time, and thin parts would shimmer.
+- **Its own life.** Its eye blinks on its own clock. Its thrusters burn with its speed, which rides in the seed's whole
+  part, and go dark once it settles. In flight it banks into its turns and sways a little, each on its own phase.
+- **Measured.** Hidden, path traced, DLSS Quality, 42 s: frame p50 16.65 ms, p95 18.29 ms; GPU 7.33 ms p50 and 9.93 ms
+  p95, against 6.40 and 10.10 with cubes in the kraken's run before.
+- **To verify:** whether the eyes' specks twinkle on the face at a distance, in a recording.
+
+**Cooler cinematics** (2026-10-22, asked as « et les cinematiques pourraient etre un peu plus cool »). A shot can now
+orbit what it looks at (`Arc`) instead of moving in a straight line, change its focal length as it moves (`FovEnd`),
+and lean the horizon (`Roll` to `RollEnd`). The focal length moves by the tangent of half the angle of view, so that a
+push in that widens is a true dolly zoom: the subject holds its size while the world behind it swells.
+- **Kept, and moved.** The orbit round the head is now an arc, banking like a drone; the push in on the eyes and the
+  push in face on are dolly zooms; the face from below leans.
+- **New, for the kraken** (it stands from 21 to 29 s and from 53 to 61 s of the 64 s loop): from the level of its sea
+  on a wide lens, looking up as it stands, the horizon leaning; an orbit round it past the ship in its coils; and one
+  of its eyes in a dolly zoom until the swarm lets go.
+- **Clear of the towers.** The check that keeps the camera out of the towers now follows each shot's real path,
+  arcs included; it moved four shots in toward what they look at.
+- **Measured.** Hidden, path traced, DLSS Quality, 72 s, the new shots with a 16 ms budget: GPU 10.70 ms p50 and
+  16.11 ms p95 (against 7.81 and 11.39 before them), and 44 of 52 seconds at 59 frames or more outside capture
+  seconds, the others at 54 to 58. Hence the 14 ms budget. A second hidden run with it had lower GPU times (8.62 and
+  13.05 ms) but worse frames, so something outside the scene held them (a desktop-automation process was running); its
+  frame counts are not used. The live view that followed held 47 of 49 seconds at 59 or more, with one spike to 26 ms
+  of GPU on a cut to the high shot.
+- **To verify:** the 14 ms budget over a whole loop in a quiet machine, and how often it costs a bounce.
+
+**A living city** (2026-10-22, asked as « fait moi tout ca », after seven ideas for the city). The first slice is in
+`City.cs`; like the towers, all of it is drawn only, and none of it exists without `towers.glb`.
+- **Skyline.** The towers stand taller toward the face (1.2 times near it, 0.85 at the edge), and one in 53 within
+  120 m of it is a supertall, a third taller again.
+- **Roofs.** Every roof over 40 m carries a red warning light that blinks on its own clock. Five roofs between 30 and
+  75 m carry a crane: a mast, and a jib with its counterweight and a lit tip, turning slowly one way or the other.
+- **Skybridges.** Up to 14 glass corridors, 4 m wide, walled as the box towers are, between towers 25 to 70 m apart
+  and far from the face. They are solid boxes, not cables: a thin line would shimmer.
+- **Air traffic.** Six lanes round the face, one way and the other by turns, a craft every 18 m. Each lane rises 7 m
+  over any roof and 10 m over any bridge in its way, smoothed so that it climbs before and comes down after. The craft
+  are the swarm's machines, longer, leaning into the curve, thrusters at cruise.
+- **Measured.** Hidden, path traced, DLSS Quality, 62 s: 281 roof lights, 11 bridges, 5 cranes and 281 craft; frame
+  p50 16.66 ms, p95 20.54 ms; GPU 7.45 ms p50 and 9.51 ms p95; 44 of 44 seconds outside captures at 59 frames or more.
+  The taller towers moved five shots out of their way.
+- **To verify:** the traffic's lanes against every tower, from above, in a recording.
+- **The city reacts to the kraken.** While the swarm builds it, the push constants carry a new `city` vector: the alarm,
+  up in 1.5 s and down in 3, and a blackout that spreads from the face at 45 m a second. The offices go out pane by pane
+  as it passes, and come back from the edge at 60 m a second once the kraken is gone. Every roof light flashes together,
+  twice a second. Four searchlights sweep the kraken's head from about 50 m out, on its flanks and behind it, clear of
+  the walkway where most shots stand. Their beams are analytic: the light scattered toward the eye where a view ray
+  passes closest to each beam's axis, and a pool where a beam lands. A first version blinded every shot near the face:
+  the beams started on the walkway, so the cameras stood inside them. They were moved, and the light seen along a beam
+  is now capped at three times the light seen across it.
+- **Offices come and go.** Each pane draws its light again every 25 to 85 s, on its own clock, and a few more are lit
+  at night.
+- **Rain at night.** Once night has mostly fallen it rains: whatever faces up turns darker and glossy, more so where
+  puddles gather, and faint streaks fall over the image in three layers. The rain's clouds hide most of the stars and
+  the moon. Lightning flashes every 9 s or so, a stroke and its return, lighting the smog from within, with a bolt in
+  the sky at its own bearing.
+- **Measured.** Hidden, path traced, DLSS Quality, `--night`: in 72 s with rain, GPU 8.14 ms p50 and 11.18 ms p95, and
+  52 of 52 seconds outside captures at 59 frames or more. In 46 s centred on the kraken, with the beams as narrowed
+  last, GPU 8.17 ms p50 and 10.62 ms p95, and 25 of 26 seconds at 59 or more, the other at 58; a run with the wider
+  beams before had 15.60 ms p95, enough for the budget to cost a bounce. One capture fell in a flash: the streaks then
+  covered the image, so a flash now brightens them a quarter as much.
+- **To verify:** a bolt in a capture (the flash captured had its bolt out of frame), the searchlights by day, and
+  whether the rain's streaks shimmer in a recording.
+
+**Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
+made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They
+come from `comfyui/textures.go` (seeds 480 and 432) and `bake_blender.py`.
+- **Stone.** It now carries the marble's veins and honed finish, a tile every 3 m, under its courses.
+- **Roof tiles.** They carry the terracotta's burns and cracks, a tile every 2 m, under their ribs.
+- **Colour.** Each surface takes only its texture's detail: its brightness over the texture's mean, read from the last
+  mip. The box keeps its own colour.
+
+The texture array grows from 8 layers to 12.
+
+**Limits.**
+- **Points by area, not by eye.** A column gets as many machines as a wall of the same area. Thin parts, such as the
+  acroteria, can get none.
+- **The block floats.** It stands at the face's height, not on the walkway.
+- **Only Lego statics show the marble.** The swarm's machines keep their hull texture, tinted by the box's colour.
+- **The acropolis's path-traced image** was taken before the marble.
+
+**ComfyUI clients in Go** (2026-10-22, asked as « j'aimerais me débarrasser de Python », « tout écrire en Go »).
+`Colossus/comfyui/`, in Go with its standard library only, replaces the two `generate_comfyui.py` scripts of `head/`
+and `textures/`.
+- **Same graphs.** Before the scripts went, the graphs of the Go port were compared with theirs: two heads (64 nodes)
+  and the six textures (174 nodes) are the same, value for value.
+- **Stricter.** An unknown texture name, a graph ComfyUI refuses (its reason is printed), a failed run or a timeout ends
+  with an error. The texture workflow's path is now given with `-workflow`; no machine path is assumed. `-print`
+  writes the graphs without queueing them.
+- **Tests.** A fake ComfyUI checks the queue, the polling, a failed run and the timeout; every link of the head's
+  graph points at a node of the graph.
+- **Still Python:** the Blender scripts (`bake_blender.py`, `build_towers.py`), which run inside Blender, and
+  `voice/render.py`, which runs Chatterbox on PyTorch.
+- **To verify:** a run against a real ComfyUI. None was made, to leave the GPU to the live view.

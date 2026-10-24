@@ -19,4 +19,9 @@
     <PackageReference Include="Ahwoo.Brutal.ShaderC" Version="[2026.10.2]" />
   </ItemGroup>
 
+  <!-- Lego scenes (the lego option): generated and validated by the F# library, materialized here as the hall's boxes. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Lego\Lego.fsproj" />
+  </ItemGroup>
+
 </Project>
