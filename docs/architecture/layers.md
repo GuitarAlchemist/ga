@@ -48,7 +48,7 @@ documented invariance contract in `GA.Business.ML`.
 ### Known Core dependency exceptions and bounded follow-up
 
 The layer diagram is a target, not proof that the current assembly is I/O-free.
-`GA.Domain.Core.csproj` references `GA.Business.Config`: `Theory/Tonal/ModeCatalog.cs`
+`GA.Domain.Core.csproj` references `GA.Business.Config`: `Common/GA.Domain.Core/Theory/Tonal/ModeCatalog.cs`
 calls `ModesConfig.GetModalFamilies()` from its static initialization. That F#
 module locates and reads `Modes.yaml`, supports reload, and maintains caches;
 `ModeCatalog` then freezes its own snapshot. Simply removing the reference would
