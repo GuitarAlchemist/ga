@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "c3e75651e71ac1a244eb5fd7187a4c5dfb1a39e2",
-    "generatedAt": "2026-10-29T05:09:05.840957+00:00",
+    "commitSha": "8f5baf3bc7d53ec2fdc75ec186feaef40690a4ad",
+    "generatedAt": "2026-10-29T11:56:29.453519+00:00",
     "repoCount": 5,
     "totalPRs": 56
   },
@@ -296,7 +296,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/811"
         },
         {
-          "ageDays": 24,
+          "ageDays": 25,
           "author": "spareilleux",
           "createdAt": "2026-10-04T07:07:35Z",
           "failingChecks": 0,
@@ -308,7 +308,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/810"
         },
         {
-          "ageDays": 24,
+          "ageDays": 25,
           "author": "spareilleux",
           "createdAt": "2026-10-04T06:32:26Z",
           "failingChecks": 0,
@@ -462,7 +462,7 @@
           "failingChecks": 0,
           "headRef": "ci/gate-hardening",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 439,
           "title": "ci: lint every workflow, and withdraw the review label on protected pushes",
           "url": "https://github.com/GuitarAlchemist/ix/pull/439"
@@ -474,7 +474,7 @@
           "failingChecks": 0,
           "headRef": "test/ix-ctl-dead-port-flake",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 438,
           "title": "test(ix-ctl): a dead address no other test can take",
           "url": "https://github.com/GuitarAlchemist/ix/pull/438"
@@ -486,7 +486,7 @@
           "failingChecks": 0,
           "headRef": "fix/sessionstart-compact-noise",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 434,
           "title": "fix(hooks): no manifest after a compaction, no automatic digest stub",
           "url": "https://github.com/GuitarAlchemist/ix/pull/434"
@@ -498,7 +498,7 @@
           "failingChecks": 0,
           "headRef": "feat/doctor-rustfmt-touched",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 433,
           "title": "feat(doctor): rustfmt-touched, the format of the Rust files a change touches",
           "url": "https://github.com/GuitarAlchemist/ix/pull/433"
@@ -510,7 +510,7 @@
           "failingChecks": 0,
           "headRef": "test/agent-blackbox-gate-p2",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 432,
           "title": "test(agent-blackbox): pin the gate's re-run triggers and exact jq filters",
           "url": "https://github.com/GuitarAlchemist/ix/pull/432"
@@ -522,7 +522,7 @@
           "failingChecks": 0,
           "headRef": "docs/pr-coordination-protocol",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 396,
           "title": "docs(contracts): coord block schema, fixtures, dedup and recovery rules",
           "url": "https://github.com/GuitarAlchemist/ix/pull/396"
@@ -534,7 +534,7 @@
           "failingChecks": 0,
           "headRef": "exp/polyglot-s1",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 395,
           "title": "feat(ix-wasm): WASI pipeline stages in wasmi, on main without the loop stack",
           "url": "https://github.com/GuitarAlchemist/ix/pull/395"
@@ -546,7 +546,7 @@
           "failingChecks": 0,
           "headRef": "chore/allowlist-read-only-2026-10-18",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 392,
           "title": "chore(claude): allow thirteen more read-only tools without a prompt",
           "url": "https://github.com/GuitarAlchemist/ix/pull/392"
@@ -558,7 +558,7 @@
           "failingChecks": 0,
           "headRef": "prototype/ix-control",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 391,
           "title": "prototype(ix-control): control-plane feeds and the scene cast",
           "url": "https://github.com/GuitarAlchemist/ix/pull/391"
@@ -570,7 +570,7 @@
           "failingChecks": 0,
           "headRef": "prototype/probes",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 390,
           "title": "prototype(probes): hot-reloading Go probe host, template probes and DuckDB views",
           "url": "https://github.com/GuitarAlchemist/ix/pull/390"
@@ -582,7 +582,7 @@
           "failingChecks": 0,
           "headRef": "docs/pr-coordination-room",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 388,
           "title": "docs(contracts): PR coordination room pilot \u2014 draft, do not merge",
           "url": "https://github.com/GuitarAlchemist/ix/pull/388"
@@ -594,7 +594,7 @@
           "failingChecks": 0,
           "headRef": "codex/mission-scope-refinement",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 377,
           "title": "feat(ixql): preview mission scope and pinned dispatch without authority",
           "url": "https://github.com/GuitarAlchemist/ix/pull/377"
@@ -606,7 +606,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 356,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/ix/pull/356"
@@ -618,7 +618,7 @@
           "failingChecks": 0,
           "headRef": "claude/ix-216-attention-budget",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 335,
           "title": "docs(metrics): human attention budget and rubber-stamp detection (#216)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/335"
@@ -630,7 +630,7 @@
           "failingChecks": 0,
           "headRef": "claude/ix-219-guard-metrics",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 334,
           "title": "feat(ix-quality-trend): Methodology Guard usefulness metrics (#219)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/334"
@@ -642,7 +642,7 @@
           "failingChecks": 0,
           "headRef": "feat/ix-204-fractal-operators",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 333,
           "title": "feat(ix-evolution): fractal mutation and recursive crossover operators (#204)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/333"
@@ -688,7 +688,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/392"
         },
         {
-          "ageDays": 24,
+          "ageDays": 25,
           "author": "spareilleux",
           "createdAt": "2026-10-04T07:19:24Z",
           "failingChecks": 1,
@@ -760,7 +760,7 @@
           "failingChecks": 0,
           "headRef": "fix/1251-enforce-rung-coupling",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1256,
           "title": "fix(manifest): enforce the rung coupling that logic/hexavalent-logic.md claims",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1256"
@@ -772,7 +772,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1126,
           "title": "ci: run under the merge queue",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
@@ -784,7 +784,7 @@
           "failingChecks": 1,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
@@ -796,7 +796,7 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
@@ -808,7 +808,7 @@
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -820,7 +820,7 @@
           "failingChecks": 1,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -832,7 +832,7 @@
           "failingChecks": 3,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
