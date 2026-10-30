@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-10-29T10:14:01.525705Z",
+  "generated_at": "2026-10-30T16:02:50.473233Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "green",
   "limbs": [
@@ -9,8 +9,8 @@
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-28T12:57:14Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/40692104707",
+      "last_heartbeat": "2026-10-30T12:57:35Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/41059309681",
       "detail": "latest completed run: success"
     },
     {
@@ -18,8 +18,8 @@
       "kind": "delegation-lane",
       "workflow": "claude.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-28T11:46:06Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/40682497849",
+      "last_heartbeat": "2026-10-30T11:48:12Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/41050694283",
       "detail": "latest completed run: skipped"
     },
     {
@@ -45,8 +45,8 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-29T04:06:04Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/40815822320",
+      "last_heartbeat": "2026-10-30T14:30:21Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/41072102020",
       "detail": "latest completed run: success"
     },
     {
@@ -63,8 +63,8 @@
       "kind": "sensor",
       "workflow": "fleet-status.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-29T05:08:30Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/40821659296",
+      "last_heartbeat": "2026-10-30T11:49:37Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/41050861635",
       "detail": "latest completed run: success"
     },
     {
@@ -103,7 +103,7 @@
       "id": "sensor:algedonic-inbox",
       "kind": "sensor",
       "status": "green",
-      "last_heartbeat": "2026-10-28T11:46:00Z",
+      "last_heartbeat": "2026-10-30T11:48:06Z",
       "evidence": "state/algedonic/inbox.jsonl",
       "detail": "last 24h: critical=0 fail=0 warn=1 (warn does not degrade presence)"
     }
