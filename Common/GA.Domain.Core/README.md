@@ -1,7 +1,9 @@
 # GA.Domain.Core
 
 Pure domain primitives for Guitar Alchemist. This is **Layer 1** in the five-layer model —
-the foundation everything else depends on. No business logic, no I/O, no services.
+the foundation everything else depends on. Purity is the intended boundary;
+the current assembly still has catalog/configuration and metadata I/O exceptions.
+See [the layer boundary notes](../../docs/architecture/layers.md#musical-objects-analysis-and-realization).
 
 ## Folder Guide
 
@@ -31,7 +33,7 @@ Tuning → Fretboard → Position → Voicing
 ## Architecture
 
 - **Layer**: 1 (Core — alongside `GA.Core`)
-- **Dependencies**: `GA.Core`
+- **Dependencies**: `GA.Core`, plus the existing `GA.Business.Config` dependency for `ModeCatalog` (a boundary exception to extract separately)
 - **Consumers**: `GA.Business.Core`, `GA.Business.Config`, `GA.Business.ML`, and all applications
 
 ## Conventions
