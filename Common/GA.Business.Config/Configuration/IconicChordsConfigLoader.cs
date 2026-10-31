@@ -1,6 +1,5 @@
 namespace GA.Domain.Services;
 
-using System.Reflection;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -9,7 +8,7 @@ using YamlDotNet.Serialization.NamingConventions;
 /// </summary>
 public static class IconicChordsConfigLoader
 {
-    private static readonly Lazy<IconicChordsConfiguration> _configuration = new(() => LoadConfiguration());
+    private static Lazy<IconicChordsConfiguration> _configuration = new(() => LoadConfiguration());
 
     public static IconicChordsConfiguration Configuration => _configuration.Value;
 
@@ -105,10 +104,9 @@ public static class IconicChordsConfigLoader
     }
 
     public static void ReloadConfiguration() =>
-        // Force reload by creating a new lazy instance
-        typeof(IconicChordsConfigLoader)
-            .GetField("_configuration", BindingFlags.NonPublic | BindingFlags.Static)
-            ?.SetValue(null, new Lazy<IconicChordsConfiguration>(() => LoadConfiguration()));
+        // Force reload by creating a new lazy instance. The field isn't readonly: setting a static readonly field
+        // through FieldInfo.SetValue throws FieldAccessException since .NET Core 3.0
+        _configuration = new(() => LoadConfiguration());
 }
 
 /// <summary>

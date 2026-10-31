@@ -35,7 +35,9 @@ public class GenerateNaturalnessDataCommand
         
         await File.WriteAllTextAsync(outputPath, csvContent);
         
-        Console.WriteLine($"Successfully generated {csvContent.Split('\n').Length - 1} rows.");
+        // The non-empty lines, minus the header
+        var rows = csvContent.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length - 1;
+        Console.WriteLine($"Successfully generated {rows} rows.");
         Console.WriteLine($"Saved to: {Path.GetFullPath(outputPath)}");
     }
 
