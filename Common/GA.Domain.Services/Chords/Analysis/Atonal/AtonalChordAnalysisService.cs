@@ -221,14 +221,14 @@ public static class AtonalChordAnalysisService
     {
         var intervals = pitchClassSet.OrderBy(pc => pc.Value).ToList();
 
-        // Check for equal divisions of the octave
+        // Check for equal divisions of the octave, the step from the last pitch class back to the first included
         if (intervals.Count <= 1)
         {
             return false;
         }
 
         var firstInterval = (intervals[1].Value - intervals[0].Value + 12) % 12;
-        return intervals.Zip(intervals.Skip(1), (a, b) => (b.Value - a.Value + 12) % 12)
+        return intervals.Zip(intervals.Skip(1).Append(intervals[0]), (a, b) => (b.Value - a.Value + 12) % 12)
             .All(interval => interval == firstInterval);
     }
 
