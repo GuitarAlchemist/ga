@@ -83,7 +83,7 @@ public static class VoicingAnalyzer
     public const string AnalysisEngineName = "VoicingAnalyzer.AnalyzeEnhanced";
 
     /// <summary>Version stamp (update when analysis logic changes)</summary>
-    public const string AnalysisVersionStamp = "2026-01-25-v4"; // Restored real sub-analyzer calls
+    public const string AnalysisVersionStamp = "2026-10-04-v5"; // Drop voicings named by their lowered voices, shells by their notes
 
     /// <summary>
     ///     Analyzes a voicing and returns comprehensive musical information
