@@ -6,10 +6,24 @@ using Core.Primitives.Notes;
 /// <summary>
 ///     Parses chord symbols into Chord objects
 /// </summary>
+/// <remarks>
+///     A symbol it can't read is rejected, never read as a major triad: SpectralRagOrchestrator tries it on a whole
+///     chat message and on each of its words.
+/// </remarks>
 public class ChordSymbolParser
 {
+    // The root is a capital letter, as chord symbols write it: "a", "am" or "and" in a sentence are not chords
     private static readonly Regex _chordSymbolRegex = new(
-        @"^([A-G][#b]?)(.*)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        @"^([A-G][#b]?)(.*)$", RegexOptions.Compiled);
+
+    // A bass note after a slash, as in "C/E"; "6/9" has none
+    private static readonly Regex _bassRegex = new(@"^(.*)/([A-G][#b]?)$", RegexOptions.Compiled);
+
+    // A capital M alone or before a number is major, as in "CM7"; lower-cased, it would read as minor
+    private static readonly Regex _majorMRegex = new(@"^M(?=\d|$)", RegexOptions.Compiled);
+
+    // An altered fifth, ninth, eleventh or thirteenth, read where the previous one ends
+    private static readonly Regex _alterationRegex = new(@"\G([b#])(5|9|11|13)", RegexOptions.Compiled);
 
     /// <summary>
     ///     Parses a chord symbol string into a Chord object
@@ -21,19 +35,33 @@ public class ChordSymbolParser
             throw new ArgumentException("Chord symbol cannot be null or empty", nameof(symbol));
         }
 
-        var match = _chordSymbolRegex.Match(symbol.Trim());
+        // ♯ and ♭ as # and b, and the triangles that mean a major seventh as one
+        var normalized = symbol.Trim().Replace('♯', '#').Replace('♭', 'b').Replace('Δ', '△').Replace('∆', '△');
+        var match = _chordSymbolRegex.Match(normalized);
         if (!match.Success)
         {
             throw new ArgumentException($"Invalid chord symbol: {symbol}", nameof(symbol));
         }
 
-        var rootName = match.Groups[1].Value;
+        var root = Note.Accidented.Parse(match.Groups[1].Value, null);
         var suffix = match.Groups[2].Value;
+        Note.Accidented? bass = null;
+        if (_bassRegex.Match(suffix) is { Success: true } slash)
+        {
+            suffix = slash.Groups[1].Value;
+            bass = Note.Accidented.Parse(slash.Groups[2].Value, null);
+        }
 
-        var root = Note.Accidented.Parse(rootName, null);
-        var formula = ParseChordSuffix(suffix);
+        var formula = ParseChordSuffix(suffix)
+                      ?? throw new ArgumentException($"Unknown chord symbol: {symbol}", nameof(symbol));
+        if (bass is null)
+        {
+            return new(root, formula, symbol);
+        }
 
-        return new(root, formula, symbol);
+        // The bass note comes first, as in an inversion: C/E is E G C, so its Bass is E
+        var chord = new Chord(root, WithBass(formula, (bass.PitchClass.Value - root.PitchClass.Value + 12) % 12), symbol);
+        return chord.ToInversion(chord.Notes.ToList().FindIndex(n => n.PitchClass == bass.PitchClass));
     }
 
     /// <summary>
@@ -53,32 +81,38 @@ public class ChordSymbolParser
         }
     }
 
-    private ChordFormula ParseChordSuffix(string suffix)
+    private static ChordFormula? ParseChordSuffix(string suffix)
     {
-        if (string.IsNullOrEmpty(suffix))
-        {
-            return CommonChordFormulas.Major;
-        }
+        suffix = _majorMRegex.Replace(suffix.Trim(), "maj");
 
-        // Normalize the suffix
-        suffix = suffix.ToLowerInvariant().Replace(" ", "");
+        // Normalize the suffix; parentheses and commas only group alterations: "7(b9,#11)" is "7b9#11"
+        suffix = suffix.ToLowerInvariant().Replace(" ", "").Replace("(", "").Replace(")", "").Replace(",", "");
 
-        return suffix switch
+        return KnownSuffix(suffix) ?? ParseAlteredSuffix(suffix);
+    }
+
+    private static ChordFormula? KnownSuffix(string suffix) =>
+        suffix switch
         {
             "" or "maj" or "major" => CommonChordFormulas.Major,
-            "m" or "min" or "minor" or "-" => CommonChordFormulas.Minor,
+            "m" or "min" or "minor" or "mi" or "-" => CommonChordFormulas.Minor,
             "dim" or "°" => CommonChordFormulas.Diminished,
             "aug" or "+" => CommonChordFormulas.Augmented,
+            "5" => ChordFormula.FromSemitones("Power Chord", 7),
             "sus2" => CreateSus2Formula(),
             "sus4" or "sus" => CreateSus4Formula(),
             "6" => CreateSixthFormula(),
             "m6" => CreateMinorSixthFormula(),
             "7" => CommonChordFormulas.Dominant7,
-            "maj7" or "△7" => CommonChordFormulas.Major7,
-            "m7" or "min7" or "-7" => CommonChordFormulas.Minor7,
-            "dim7" or "°7" => CreateDiminished7Formula(),
-            "m7b5" or "ø7" => CreateHalfDiminished7Formula(),
+            "maj7" or "ma7" or "△" or "△7" => CommonChordFormulas.Major7,
+            "m7" or "min7" or "mi7" or "-7" => CommonChordFormulas.Minor7,
+            "mmaj7" or "minmaj7" => ChordFormula.FromSemitones("Minor Major 7th", 3, 7, 11),
+            "dim7" or "°7" or "o7" => CreateDiminished7Formula(),
+            "m7b5" or "ø" or "ø7" => CreateHalfDiminished7Formula(),
+            "+7" or "aug7" => ChordFormula.FromSemitones("Augmented 7th", 4, 8, 10),
+            "7sus4" or "7sus" => ChordFormula.FromSemitones("Dominant 7th Sus4", 5, 7, 10),
             "9" => CreateDominant9Formula(),
+            "9sus4" or "9sus" => ChordFormula.FromSemitones("Dominant 9th Sus4", 5, 7, 10, 14),
             "maj9" or "△9" => CreateMajor9Formula(),
             "m9" or "min9" or "-9" => CreateMinor9Formula(),
             "11" => CreateDominant11Formula(),
@@ -88,55 +122,47 @@ public class ChordSymbolParser
             "maj13" or "△13" => CreateMajor13Formula(),
             "m13" or "min13" or "-13" => CreateMinor13Formula(),
             "add9" => CreateAdd9Formula(),
+            "add2" => ChordFormula.FromSemitones("Add2", 2, 4, 7),
             "madd9" => CreateMinorAdd9Formula(),
             "6/9" or "69" => CreateSixNineFormula(),
             "m6/9" or "m69" => CreateMinorSixNineFormula(),
-            _ => ParseComplexSuffix(suffix)
+            "alt" or "7alt" => CreateAlteredDominantFormula(),
+            _ => null
         };
+
+    /// <summary>
+    ///     A chord followed by altered tones, each replacing its natural tone: "7b9#11", "9#11", "maj7#11", "mb5"
+    /// </summary>
+    private static ChordFormula? ParseAlteredSuffix(string suffix)
+    {
+        var start = suffix.IndexOfAny(['b', '#']);
+        if (start < 0 || (start == 0 ? CommonChordFormulas.Major : KnownSuffix(suffix[..start])) is not { } chord)
+        {
+            return null;
+        }
+
+        var semitones = chord.Intervals.Select(i => i.Interval.Semitones.Value).ToList();
+        var position = start;
+        for (var alteration = _alterationRegex.Match(suffix, position); alteration.Success; alteration = _alterationRegex.Match(suffix, position))
+        {
+            var natural = alteration.Groups[2].Value switch { "5" => 7, "9" => 14, "11" => 17, _ => 21 };
+            semitones.Remove(natural);
+            semitones.Add(natural + (alteration.Groups[1].Value == "#" ? 1 : -1));
+            position += alteration.Length;
+        }
+
+        return position == suffix.Length ? ChordFormula.FromSemitones(suffix, [.. semitones.Distinct().Order()]) : null;
     }
 
-    private static ChordFormula ParseComplexSuffix(string suffix)
+    /// <summary>
+    ///     A slash chord keeps its chord and adds its bass when the bass isn't a chord tone: C/F# is C E F# G
+    /// </summary>
+    private static ChordFormula WithBass(ChordFormula formula, int bass)
     {
-        // Handle more complex chord symbols
-        // This is a simplified implementation - a full parser would be much more complex
-
-        if (suffix.Contains("alt"))
-        {
-            return CreateAlteredDominantFormula();
-        }
-
-        if (suffix.Contains("b5"))
-        {
-            return CreateFlatFiveFormula(suffix);
-        }
-
-        if (suffix.Contains("#5"))
-        {
-            return CreateSharpFiveFormula(suffix);
-        }
-
-        if (suffix.Contains("b9"))
-        {
-            return CreateFlatNineFormula(suffix);
-        }
-
-        if (suffix.Contains("#9"))
-        {
-            return CreateSharpNineFormula(suffix);
-        }
-
-        if (suffix.Contains("#11"))
-        {
-            return CreateSharpElevenFormula(suffix);
-        }
-
-        if (suffix.Contains("b13"))
-        {
-            return CreateFlatThirteenFormula(suffix);
-        }
-
-        // Default to major if unknown
-        return CommonChordFormulas.Major;
+        var semitones = formula.Intervals.Select(i => i.Interval.Semitones.Value).ToList();
+        return bass == 0 || semitones.Any(s => s % 12 == bass)
+            ? formula
+            : ChordFormula.FromSemitones(formula.Name, [.. semitones, bass]);
     }
 
     // Implementation via ChordFormula.FromSemitones to avoid direct Interval construction here
@@ -173,17 +199,7 @@ public class ChordSymbolParser
     private static ChordFormula CreateSixNineFormula() => ChordFormula.FromSemitones("6/9", 4, 7, 9, 14);
     private static ChordFormula CreateMinorSixNineFormula() => ChordFormula.FromSemitones("Minor 6/9", 3, 7, 9, 14);
 
+    // The third and seventh with the four altered tones, as ChordAlterationService describes it: b9, #9, #11, b13
     private static ChordFormula CreateAlteredDominantFormula() =>
-        ChordFormula.FromSemitones("Altered Dominant", 4, 7, 10, 13, 15);
-
-    private static ChordFormula CreateFlatFiveFormula(string _) => ChordFormula.FromSemitones("Flat5", 4, 6);
-    private static ChordFormula CreateSharpFiveFormula(string _) => ChordFormula.FromSemitones("Sharp5", 4, 8);
-    private static ChordFormula CreateFlatNineFormula(string _) => ChordFormula.FromSemitones("Flat9", 4, 7, 10, 13);
-    private static ChordFormula CreateSharpNineFormula(string _) => ChordFormula.FromSemitones("Sharp9", 4, 7, 10, 15);
-
-    private static ChordFormula CreateSharpElevenFormula(string _) =>
-        ChordFormula.FromSemitones("Sharp11", 4, 7, 11, 18);
-
-    private static ChordFormula CreateFlatThirteenFormula(string _) =>
-        ChordFormula.FromSemitones("Flat13", 4, 7, 10, 20);
+        ChordFormula.FromSemitones("Altered Dominant", 4, 10, 13, 15, 18, 20);
 }
