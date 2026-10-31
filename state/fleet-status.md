@@ -18,68 +18,68 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#846](https://github.com/GuitarAlchemist/ga/pull/846) | ci(frontend): install with npm 11.6.0, past npm 10's edgesOut crash | 2d | UNKNOWN | 1 | spareilleux |
-| [#845](https://github.com/GuitarAlchemist/ga/pull/845) | fix: clarify scale validation and repair frontend CI (draft) | 3d | UNKNOWN | 1 | spareilleux |
-| [#840](https://github.com/GuitarAlchemist/ga/pull/840) | Experiments/Brutal: Lego, composable scenes from typed nested blocks ( (draft) | 8d | MERGEABLE | 3 | spareilleux |
-| [#839](https://github.com/GuitarAlchemist/ga/pull/839) | Experiments/Brutal: BRUTAL evaluation prototype, M1 window lifecycle ( (draft) | 10d | UNKNOWN | 4 | spareilleux |
-| [#835](https://github.com/GuitarAlchemist/ga/pull/835) | fix(config): NeoRiemannianConfig loads its catalogue; invariant 15 and | 17d | UNKNOWN | 1 | spareilleux |
-| [#833](https://github.com/GuitarAlchemist/ga/pull/833) | fix(frontend): correct low E fretboard demo note (draft) | 18d | UNKNOWN | 0 | spareilleux |
-| [#826](https://github.com/GuitarAlchemist/ga/pull/826) | feat(prime-radiant): forward IXQL RENDER GROMMET to the Godot scene | 23d | UNKNOWN | 0 | spareilleux |
-| [#823](https://github.com/GuitarAlchemist/ga/pull/823) | fix(chords): GenerateAllPossibleChords yields each template once | 25d | UNKNOWN | 0 | spareilleux |
-| [#820](https://github.com/GuitarAlchemist/ga/pull/820) | fix(chords): ChordSymbolParser rejects what it can't read, and reads e | 25d | UNKNOWN | 0 | spareilleux |
-| [#819](https://github.com/GuitarAlchemist/ga/pull/819) | fix(voicings): name drop voicings by their lowered voices, and shells  | 25d | UNKNOWN | 0 | spareilleux |
-| [#818](https://github.com/GuitarAlchemist/ga/pull/818) | fix(config): mode names after a sharp, triad inversions, and alternate | 25d | UNKNOWN | 0 | spareilleux |
-| [#817](https://github.com/GuitarAlchemist/ga/pull/817) | fix(domain): embed scale_video_urls.json, so scales find their video U | 25d | UNKNOWN | 0 | spareilleux |
-| [#816](https://github.com/GuitarAlchemist/ga/pull/816) | fix: print a chord template's name, and run the Business.Core test set | 25d | UNKNOWN | 0 | spareilleux |
-| [#812](https://github.com/GuitarAlchemist/ga/pull/812) | build(ci): apply the package Update items, run three orphaned test pro | 25d | UNKNOWN | 4 | spareilleux |
-| [#811](https://github.com/GuitarAlchemist/ga/pull/811) | fix: knowledge reload, artist breakdown, naturalness CSV, GaCLI exit c | 25d | UNKNOWN | 0 | spareilleux |
-| [#810](https://github.com/GuitarAlchemist/ga/pull/810) | fix(domain): tritone scale notes, diminished mode names, equal divisio | 26d | UNKNOWN | 0 | spareilleux |
-| [#808](https://github.com/GuitarAlchemist/ga/pull/808) | fix(config): load the three music-knowledge YAML files (#797) | 26d | UNKNOWN | 0 | spareilleux |
-| [#807](https://github.com/GuitarAlchemist/ga/pull/807) | fix(chatbot): stop ungrounded chat prompts from inviting invented fret | 26d | UNKNOWN | 0 | spareilleux |
-| [#780](https://github.com/GuitarAlchemist/ga/pull/780) | fix(keys): read the progression as written — sharps before a space, ♭/ | 29d | UNKNOWN | 0 | spareilleux |
-| [#779](https://github.com/GuitarAlchemist/ga/pull/779) | fix(skills): name the relative key by key signature, and theoretical k | 29d | UNKNOWN | 0 | spareilleux |
-| [#766](https://github.com/GuitarAlchemist/ga/pull/766) | fix(chat): type the stream's error event and stop the page from render | 30d | UNKNOWN | 0 | spareilleux |
-| [#738](https://github.com/GuitarAlchemist/ga/pull/738) | ci: push to main over the deploy key, and run CI under the merge queue | 34d | UNKNOWN | 2 | spareilleux |
-| [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates | 88d | UNKNOWN | 1 | spareilleux |
+| [#846](https://github.com/GuitarAlchemist/ga/pull/846) | ci(frontend): install with npm 11.6.0, past npm 10's edgesOut crash | 3d | UNKNOWN | 1 | spareilleux |
+| [#845](https://github.com/GuitarAlchemist/ga/pull/845) | fix: clarify scale validation and repair frontend CI (draft) | 4d | UNKNOWN | 1 | spareilleux |
+| [#840](https://github.com/GuitarAlchemist/ga/pull/840) | Experiments/Brutal: Lego, composable scenes from typed nested blocks ( (draft) | 9d | MERGEABLE | 3 | spareilleux |
+| [#839](https://github.com/GuitarAlchemist/ga/pull/839) | Experiments/Brutal: BRUTAL evaluation prototype, M1 window lifecycle ( (draft) | 11d | UNKNOWN | 4 | spareilleux |
+| [#835](https://github.com/GuitarAlchemist/ga/pull/835) | fix(config): NeoRiemannianConfig loads its catalogue; invariant 15 and | 18d | UNKNOWN | 1 | spareilleux |
+| [#833](https://github.com/GuitarAlchemist/ga/pull/833) | fix(frontend): correct low E fretboard demo note (draft) | 19d | UNKNOWN | 0 | spareilleux |
+| [#826](https://github.com/GuitarAlchemist/ga/pull/826) | feat(prime-radiant): forward IXQL RENDER GROMMET to the Godot scene | 24d | UNKNOWN | 0 | spareilleux |
+| [#823](https://github.com/GuitarAlchemist/ga/pull/823) | fix(chords): GenerateAllPossibleChords yields each template once | 26d | UNKNOWN | 0 | spareilleux |
+| [#820](https://github.com/GuitarAlchemist/ga/pull/820) | fix(chords): ChordSymbolParser rejects what it can't read, and reads e | 26d | UNKNOWN | 0 | spareilleux |
+| [#819](https://github.com/GuitarAlchemist/ga/pull/819) | fix(voicings): name drop voicings by their lowered voices, and shells  | 26d | UNKNOWN | 0 | spareilleux |
+| [#818](https://github.com/GuitarAlchemist/ga/pull/818) | fix(config): mode names after a sharp, triad inversions, and alternate | 26d | UNKNOWN | 0 | spareilleux |
+| [#817](https://github.com/GuitarAlchemist/ga/pull/817) | fix(domain): embed scale_video_urls.json, so scales find their video U | 26d | UNKNOWN | 0 | spareilleux |
+| [#816](https://github.com/GuitarAlchemist/ga/pull/816) | fix: print a chord template's name, and run the Business.Core test set | 26d | UNKNOWN | 0 | spareilleux |
+| [#812](https://github.com/GuitarAlchemist/ga/pull/812) | build(ci): apply the package Update items, run three orphaned test pro | 26d | UNKNOWN | 4 | spareilleux |
+| [#811](https://github.com/GuitarAlchemist/ga/pull/811) | fix: knowledge reload, artist breakdown, naturalness CSV, GaCLI exit c | 26d | UNKNOWN | 0 | spareilleux |
+| [#810](https://github.com/GuitarAlchemist/ga/pull/810) | fix(domain): tritone scale notes, diminished mode names, equal divisio | 27d | UNKNOWN | 0 | spareilleux |
+| [#808](https://github.com/GuitarAlchemist/ga/pull/808) | fix(config): load the three music-knowledge YAML files (#797) | 27d | UNKNOWN | 0 | spareilleux |
+| [#807](https://github.com/GuitarAlchemist/ga/pull/807) | fix(chatbot): stop ungrounded chat prompts from inviting invented fret | 27d | UNKNOWN | 0 | spareilleux |
+| [#780](https://github.com/GuitarAlchemist/ga/pull/780) | fix(keys): read the progression as written — sharps before a space, ♭/ | 30d | UNKNOWN | 0 | spareilleux |
+| [#779](https://github.com/GuitarAlchemist/ga/pull/779) | fix(skills): name the relative key by key signature, and theoretical k | 30d | UNKNOWN | 0 | spareilleux |
+| [#766](https://github.com/GuitarAlchemist/ga/pull/766) | fix(chat): type the stream's error event and stop the page from render | 31d | UNKNOWN | 0 | spareilleux |
+| [#738](https://github.com/GuitarAlchemist/ga/pull/738) | ci: push to main over the deploy key, and run CI under the merge queue | 35d | UNKNOWN | 2 | spareilleux |
+| [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates | 89d | UNKNOWN | 1 | spareilleux |
 
 ### ix (11 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#481](https://github.com/GuitarAlchemist/ix/pull/481) | docs(adr): durable runs in Starlark, agent DSLs by Earley, durable mod (draft) | 0d | UNKNOWN | 0 | spareilleux |
-| [#478](https://github.com/GuitarAlchemist/ix/pull/478) | refactor!: call IX tools "tool" in code, not "skill" (draft) | 1d | UNKNOWN | 0 | spareilleux |
-| [#477](https://github.com/GuitarAlchemist/ix/pull/477) | Add provisional Node relay with durable native ACK capture (#473) (draft) | 1d | UNKNOWN | 0 | spareilleux |
-| [#476](https://github.com/GuitarAlchemist/ix/pull/476) | docs(context): an IX tool is not a Claude skill (draft) | 1d | UNKNOWN | 0 | spareilleux |
-| [#396](https://github.com/GuitarAlchemist/ix/pull/396) | docs(contracts): coord block schema, fixtures, dedup and recovery rule (draft) | 10d | UNKNOWN | 0 | spareilleux |
-| [#392](https://github.com/GuitarAlchemist/ix/pull/392) | chore(claude): allow thirteen more read-only tools without a prompt (draft) | 11d | UNKNOWN | 0 | spareilleux |
-| [#391](https://github.com/GuitarAlchemist/ix/pull/391) | prototype(ix-control): control-plane feeds and the scene cast (draft) | 11d | UNKNOWN | 0 | spareilleux |
-| [#390](https://github.com/GuitarAlchemist/ix/pull/390) | prototype(probes): hot-reloading Go probe host, template probes and Du (draft) | 11d | UNKNOWN | 0 | spareilleux |
-| [#388](https://github.com/GuitarAlchemist/ix/pull/388) | docs(contracts): PR coordination room pilot — draft, do not merge (draft) | 12d | UNKNOWN | 0 | spareilleux |
-| [#377](https://github.com/GuitarAlchemist/ix/pull/377) | feat(ixql): preview mission scope and pinned dispatch without authorit (draft) | 19d | UNKNOWN | 0 | spareilleux |
-| [#356](https://github.com/GuitarAlchemist/ix/pull/356) | ci: push to main over the deploy key, and run CI under the merge queue | 34d | UNKNOWN | 1 | spareilleux |
+| [#496](https://github.com/GuitarAlchemist/ix/pull/496) | feat(router-spike): offline stream-json classifier for #484 | 0d | MERGEABLE | 0 | spareilleux |
+| [#495](https://github.com/GuitarAlchemist/ix/pull/495) | docs(research): Kakeya in R^3 as a teaching case for agent rigour (draft) | 0d | MERGEABLE | 0 | spareilleux |
+| [#494](https://github.com/GuitarAlchemist/ix/pull/494) | feat(ixctl): host the plane as a Windows service, first slice (SCM or  (draft) | 0d | UNKNOWN | 0 | spareilleux |
+| [#481](https://github.com/GuitarAlchemist/ix/pull/481) | docs(adr): durable runs in Starlark, agent DSLs by Earley, durable mod (draft) | 1d | UNKNOWN | 0 | spareilleux |
+| [#477](https://github.com/GuitarAlchemist/ix/pull/477) | Add provisional Node relay with durable native ACK capture (#473) (draft) | 2d | UNKNOWN | 0 | spareilleux |
+| [#476](https://github.com/GuitarAlchemist/ix/pull/476) | docs(context): an IX tool is not a Claude skill (draft) | 2d | UNKNOWN | 0 | spareilleux |
+| [#396](https://github.com/GuitarAlchemist/ix/pull/396) | docs(contracts): coord block schema, fixtures, dedup and recovery rule (draft) | 11d | UNKNOWN | 0 | spareilleux |
+| [#391](https://github.com/GuitarAlchemist/ix/pull/391) | prototype(ix-control): control-plane feeds and the scene cast (draft) | 12d | UNKNOWN | 0 | spareilleux |
+| [#390](https://github.com/GuitarAlchemist/ix/pull/390) | prototype(probes): hot-reloading Go probe host, template probes and Du (draft) | 12d | UNKNOWN | 0 | spareilleux |
+| [#388](https://github.com/GuitarAlchemist/ix/pull/388) | docs(contracts): PR coordination room pilot — draft, do not merge (draft) | 13d | UNKNOWN | 0 | spareilleux |
+| [#356](https://github.com/GuitarAlchemist/ix/pull/356) | ci: push to main over the deploy key, and run CI under the merge queue | 35d | UNKNOWN | 1 | spareilleux |
 
 ### tars (6 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#402](https://github.com/GuitarAlchemist/tars/pull/402) | docs: ADR 0005 records the Claude call count measured after the govern | 10d | MERGEABLE | 0 | spareilleux |
-| [#392](https://github.com/GuitarAlchemist/tars/pull/392) | feat: check the constraints that name code against the code | 17d | CONFLICTING | 1 | spareilleux |
-| [#381](https://github.com/GuitarAlchemist/tars/pull/381) | feat: let evolve's teacher run on a paid API with openai:, gemini: or  | 26d | CONFLICTING | 1 | spareilleux |
-| [#346](https://github.com/GuitarAlchemist/tars/pull/346) | docs: stop calling a project file a one-way door | 31d | MERGEABLE | 1 | spareilleux |
-| [#337](https://github.com/GuitarAlchemist/tars/pull/337) | fix: let the required check run on a pull request that is not based on | 32d | MERGEABLE | 1 | spareilleux |
-| [#319](https://github.com/GuitarAlchemist/tars/pull/319) | ci: push to main over the deploy key, and run CI under the merge queue | 34d | MERGEABLE | 2 | spareilleux |
+| [#402](https://github.com/GuitarAlchemist/tars/pull/402) | docs: ADR 0005 records the Claude call count measured after the govern | 11d | MERGEABLE | 0 | spareilleux |
+| [#392](https://github.com/GuitarAlchemist/tars/pull/392) | feat: check the constraints that name code against the code | 18d | CONFLICTING | 1 | spareilleux |
+| [#381](https://github.com/GuitarAlchemist/tars/pull/381) | feat: let evolve's teacher run on a paid API with openai:, gemini: or  | 27d | CONFLICTING | 1 | spareilleux |
+| [#346](https://github.com/GuitarAlchemist/tars/pull/346) | docs: stop calling a project file a one-way door | 32d | MERGEABLE | 1 | spareilleux |
+| [#337](https://github.com/GuitarAlchemist/tars/pull/337) | fix: let the required check run on a pull request that is not based on | 33d | MERGEABLE | 1 | spareilleux |
+| [#319](https://github.com/GuitarAlchemist/tars/pull/319) | ci: push to main over the deploy key, and run CI under the merge queue | 35d | MERGEABLE | 2 | spareilleux |
 
 ### Demerzel (7 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#1256](https://github.com/GuitarAlchemist/Demerzel/pull/1256) | fix(manifest): enforce the rung coupling that logic/hexavalent-logic.m | 5d | UNKNOWN | 0 | spareilleux |
-| [#1126](https://github.com/GuitarAlchemist/Demerzel/pull/1126) | ci: run under the merge queue | 34d | UNKNOWN | 1 | spareilleux |
-| [#1114](https://github.com/GuitarAlchemist/Demerzel/pull/1114) | feat(contracts): validate Gaia continuity receipts | 39d | UNKNOWN | 1 | spareilleux |
-| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 45d | UNKNOWN | 1 | spareilleux |
-| [#1084](https://github.com/GuitarAlchemist/Demerzel/pull/1084) | ci(registry-check): gate capability-registry breaking changes with ix- | 45d | UNKNOWN | 1 | spareilleux |
-| [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 76d | UNKNOWN | 1 | spareilleux |
-| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 103d | UNKNOWN | 3 | spareilleux |
+| [#1256](https://github.com/GuitarAlchemist/Demerzel/pull/1256) | fix(manifest): enforce the rung coupling that logic/hexavalent-logic.m | 6d | UNKNOWN | 0 | spareilleux |
+| [#1126](https://github.com/GuitarAlchemist/Demerzel/pull/1126) | ci: run under the merge queue | 35d | UNKNOWN | 1 | spareilleux |
+| [#1114](https://github.com/GuitarAlchemist/Demerzel/pull/1114) | feat(contracts): validate Gaia continuity receipts | 40d | UNKNOWN | 1 | spareilleux |
+| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 46d | UNKNOWN | 1 | spareilleux |
+| [#1084](https://github.com/GuitarAlchemist/Demerzel/pull/1084) | ci(registry-check): gate capability-registry breaking changes with ix- | 46d | UNKNOWN | 1 | spareilleux |
+| [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 77d | UNKNOWN | 1 | spareilleux |
+| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 104d | UNKNOWN | 3 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -113,6 +113,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-10-30T11:50:12.616106+00:00 UTC_
+_Generated: 2026-10-31T11:23:50.044267+00:00 UTC_
 
-_Commit: `e01cae1de4d0`_
+_Commit: `86af064f8843`_
