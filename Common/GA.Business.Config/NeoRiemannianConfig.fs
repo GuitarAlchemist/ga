@@ -37,21 +37,25 @@ module NeoRiemannianConfig =
         { Name: string
           Triads: Triad list }
 
-    // ── Internal YAML shape (CLIMutable for YamlDotNet) ───────────────────────
+    // ── YAML shape ────────────────────────────────────────────────────────────
+    // Public, like the YAML records of the other config modules: YamlDotNet creates
+    // them through the public parameterless constructor [<CLIMutable>] gives them.
+    // While they were private, that constructor was internal, YamlDotNet threw, and
+    // the catalog loaded empty.
 
     [<CLIMutable>]
-    type private TransformYaml =
+    type TransformYaml =
         { Description: string
           VoiceLeadingCost: int
           Mappings: Dictionary<string, string> }
 
     [<CLIMutable>]
-    type private CycleYaml =
+    type CycleYaml =
         { Name: string
           Triads: ResizeArray<string> }
 
     [<CLIMutable>]
-    type private NeoRiemannianYaml =
+    type NeoRiemannianYaml =
         { Transforms: Dictionary<string, TransformYaml>
           HexatonicCycles: ResizeArray<CycleYaml>
           OctatonicCycles: ResizeArray<CycleYaml> }
@@ -119,9 +123,18 @@ module NeoRiemannianConfig =
                             |> Seq.toList
 
                     transforms, toCycles data.HexatonicCycles, toCycles data.OctatonicCycles
-            with _ ->
+            with ex ->
+                eprintfn "NeoRiemannianConfig load failed at %s: %s — %s" path (ex.GetType().Name) ex.Message
+                let mutable inner = ex.InnerException
+                let mutable depth = 1
+                while not (isNull inner) && depth < 5 do
+                    eprintfn "  inner [%d]: %s — %s" depth (inner.GetType().Name) inner.Message
+                    inner <- inner.InnerException
+                    depth <- depth + 1
                 [], [], []
-        | None -> [], [], []
+        | None ->
+            eprintfn "NeoRiemannianConfig: NeoRiemannian.yaml not found in any search path"
+            [], [], []
 
     let private catalog = lazy (loadCatalog ())
 
