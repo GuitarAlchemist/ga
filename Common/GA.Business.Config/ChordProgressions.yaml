@@ -90,10 +90,10 @@ ChordProgressions:
     RomanNumerals: [ "I", "vi", "ii", "V", "I" ]
     Category: "Jazz"
     Difficulty: "Intermediate"
-    Function: "Each chord's root moves down a fifth (up a fourth)"
+    Function: [ "Tonic", "Relative minor", "Subdominant", "Dominant", "Tonic" ]
     InKey: "C Major"
     Chords: [ "C", "Am", "Dm", "G", "C" ]
-    Theory: "Strongest possible harmonic motion in tonal music"
+    Theory: "From vi on, each chord's root moves down a fifth (up a fourth): the strongest possible harmonic motion in tonal music"
     Variations:
       - Name: "Extended Circle"
         RomanNumerals: [ "I", "vi", "ii", "V", "iii", "vi", "ii", "V", "I" ]
@@ -133,13 +133,15 @@ ChordProgressions:
     Structure: "AABA form with specific harmonic rhythm"
     Category: "Jazz"
     Difficulty: "Advanced"
-    ASection:
-      RomanNumerals: [ "I", "vi", "ii", "V" ]
-      Chords: [ "Bb", "Gm", "Cm", "F" ]
-    BSection:
-      RomanNumerals: [ "III", "VI", "ii", "V" ]
-      Chords: [ "D", "G", "Cm", "F" ]
+    InKey: "Bb Major"
+    RomanNumerals: [ "I", "vi", "ii", "V" ]
+    Chords: [ "Bb", "Gm", "Cm", "F" ]
     Theory: "Combines circle of fifths with chromatic harmony"
+    Variations:
+      - Name: "B section (bridge)"
+        RomanNumerals: [ "III", "VI", "ii", "V" ]
+        Chords: [ "D", "G", "Cm", "F" ]
+        Context: "The B of the AABA form; the A sections use the main progression"
     Examples:
       - Song: "I Got Rhythm"
         Artist: "George Gershwin"
@@ -296,6 +298,7 @@ ChordProgressions:
     Category: "Jazz (Advanced)"
     Difficulty: "Expert"
     InKey: "B Major (typical starting point)"
+    RomanNumerals: [ "Imaj7", "V7/bVI", "bVImaj7", "V7/III", "IIImaj7", "ii7/bVI", "V7/bVI", "bVImaj7", "V7/III", "IIImaj7", "V7", "Imaj7" ]
     Chords: [ "Bmaj7", "D7", "Gmaj7", "Bb7", "Ebmaj7", "Am7", "D7", "Gmaj7", "Bb7", "Ebmaj7", "F#7", "Bmaj7" ]
     Theory: "Symmetric division of octave; dominating ii–V links"
     Variations:
