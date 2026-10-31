@@ -197,6 +197,7 @@ jobs:
           PYEOF
 
       - name: Commit artifact
+        id: commit
         if: always()
         shell: bash
         env:
@@ -214,15 +215,17 @@ jobs:
             exit 0
           fi
           git commit -m "chore(quality): post-merge smoke ${ARTIFACT##*/} [skip ci]"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push the artifact to main
+        if: always() && steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
           # Retry once if there was a concurrent push race.
-          for attempt in 1 2; do
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            echo "Push failed (attempt ${attempt}); pulling --rebase and retrying."
-            git pull --rebase origin main || true
-          done
-          echo "::warning::Could not push smoke artifact after 2 attempts; artifact remains on the workflow run."
+          attempts: 2
+          # A push that never lands leaves the artifact on the workflow run.
+          required: 'false'
 
       - name: Comment on merge commit (only on per-URL regression)
         if: steps.smoke.outputs.all_passed != 'true' && steps.smoke.outputs.tunnel_down != 'true'

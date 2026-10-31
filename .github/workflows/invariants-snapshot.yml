@@ -99,6 +99,7 @@ jobs:
             --out docs/quality/invariant-coverage.md
 
       - name: Commit snapshot if new
+        id: commit
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           SNAP: ${{ steps.stage.outputs.snapshot_path }}
@@ -112,7 +113,14 @@ jobs:
             exit 0
           fi
           git commit -m "chore(quality): invariants snapshot ${DATE} [skip ci]"
-          git push
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push the snapshot
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          refspec: HEAD
 
       - name: Upload snapshot artifact
         if: always()
