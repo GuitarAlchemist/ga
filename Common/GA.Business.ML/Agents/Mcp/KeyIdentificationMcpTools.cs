@@ -64,9 +64,12 @@ public sealed class KeyIdentificationMcpTools
             return KeyIdentificationResult.Failure(
                 $"No candidate key matches the progression [{string.Join(", ", chords)}].");
 
-        var topScore = candidates[0].MatchCount;
+        // Tied on Identify's score, not on the match count: its cadence weight can put first a key
+        // that matches fewer chords ("C D G C": C major 2/3 ahead of G major 3/3), and on the count
+        // alone Bm7b5 E7 Am ties A minor with C major (#771).
+        var topScore = candidates[0].Score;
         var topTied  = candidates
-            .Where(c => c.MatchCount == topScore)
+            .TakeWhile(c => c.Score == topScore)
             .Select(ToCandidate)
             .ToArray();
         var partial  = candidates
@@ -78,7 +81,8 @@ public sealed class KeyIdentificationMcpTools
         // Align top-level TotalChords with candidate-level TotalChords. The
         // KeyIdentificationService internally calls .Distinct() before computing
         // per-key match counts, so candidate.TotalChords reflects the de-duped
-        // count. Using `chords.Count` here would silently disagree with each
+        // count. RecognizedChords keeps the progression as written, repeats
+        // included (#771), so `chords.Count` would disagree with each
         // candidate's `TotalChords` for inputs like "C Am F G C" (5 vs 4),
         // confusing the LLM payload. Bug surfaced by PR #88 review.
         return new KeyIdentificationResult
@@ -97,6 +101,7 @@ public sealed class KeyIdentificationMcpTools
         MatchCount     = c.MatchCount,
         TotalChords    = c.TotalChords,
         DiatonicSet    = c.DiatonicSet,
+        AuthenticCadence = c.CadenceWeight > 0,
     };
 }
 
@@ -117,6 +122,12 @@ public sealed record KeyCandidateInfo
 
     /// <summary>The seven diatonic chords of this key, in order I…vii°.</summary>
     public string[] DiatonicSet { get; init; } = [];
+
+    /// <summary>
+    /// True when the progression ends on this key's V then I. It ranks the key ahead of keys that
+    /// match as many chords, or one more.
+    /// </summary>
+    public bool AuthenticCadence { get; init; }
 }
 
 /// <summary>
@@ -128,16 +139,17 @@ public sealed record KeyCandidateInfo
 /// branch on <see cref="Error"/> first.
 ///
 /// On success, <see cref="TopCandidates"/> is the set of keys tied at the
-/// highest match count (often 1 element; sometimes 2 — e.g. C major and A
-/// minor will tie because they share a diatonic set). <see cref="PartialMatches"/>
+/// highest score — match count plus the authentic-cadence weight (often 1
+/// element; sometimes 2 — e.g. C major and A minor tie on "C Am F G" because
+/// they share a diatonic set and neither closes on its V–I). <see cref="PartialMatches"/>
 /// is up to <c>3</c> partial-match keys ranked behind the top set.
 /// </remarks>
 public sealed record KeyIdentificationResult
 {
-    /// <summary>The chord symbols the parser actually recognised in the query.</summary>
+    /// <summary>The chord symbols the parser recognised in the query, in order, repeats included.</summary>
     public string[] RecognizedChords { get; init; } = [];
 
-    /// <summary>Keys tied at the highest match count.</summary>
+    /// <summary>Keys tied at the highest score (match count plus cadence weight).</summary>
     public KeyCandidateInfo[] TopCandidates { get; init; } = [];
 
     /// <summary>Up to 3 partial-match keys ranked behind the top set.</summary>

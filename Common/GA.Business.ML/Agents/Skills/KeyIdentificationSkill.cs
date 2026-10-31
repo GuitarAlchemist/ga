@@ -61,8 +61,10 @@ public sealed class KeyIdentificationSkill(IChatClient chatClient, ILogger<KeyId
                 Declined    = chords.Count == 0
             };
 
-        var topScore      = candidates[0].MatchCount;
-        var topCandidates = candidates.Where(c => c.MatchCount == topScore).ToList();
+        // Tied on Identify's score, as in KeyIdentificationMcpTools: the cadence weight can rank
+        // first a key that matches fewer chords than the next one.
+        var topScore      = candidates[0].Score;
+        var topCandidates = candidates.TakeWhile(c => c.Score == topScore).ToList();
 
         var prompt       = BuildPrompt(message, chords, topCandidates, candidates);
         var responseText = await ChatAsync(message, prompt, cancellationToken).ConfigureAwait(false);
@@ -102,7 +104,7 @@ public sealed class KeyIdentificationSkill(IChatClient chatClient, ILogger<KeyId
         sb.AppendLine("── TOP MATCHES (all tied at the highest score) ──");
         foreach (var c in top)
         {
-            sb.AppendLine($"• {c.Key}  ({c.MatchCount}/{c.TotalChords} chords diatonic)");
+            sb.AppendLine($"• {c.Key}  ({c.MatchCount}/{c.TotalChords} chords diatonic{(c.CadenceWeight > 0 ? ", ends on its V–I" : "")})");
             sb.AppendLine($"  Relative key : {c.RelativeKey}");
             sb.AppendLine($"  Diatonic set : {string.Join(", ", c.DiatonicSet)}");
         }
