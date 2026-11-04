@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-11-03T15:59:19Z_
+_Generated: 2026-11-04T16:03:29Z_
 
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `${VITE_GA_API_URL ?? 'https://localhost:7001'}`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.agent/skills/react-frontend-engineering/SKILL.md`
