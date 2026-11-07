@@ -74,6 +74,7 @@
     <Folder Name="/F# Libraries/">
         <Project Path="Common/GA.Business.Config/GA.Business.Config.fsproj" />
         <Project Path="Common/GA.Business.DSL/GA.Business.DSL.fsproj" />
+        <Project Path="Common/GA.Business.ProbabilisticGrammar/GA.Business.ProbabilisticGrammar.fsproj" />
     </Folder>
     <Folder Name="/Interactive &amp; Tools/">
         <Project Path="Common/GA.Interactive/GA.Interactive.csproj" />
@@ -84,6 +85,7 @@
         <Project Path="Common/GA.Business.Assets/GA.Business.Assets.csproj" />
         <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.Generated.fsproj" />
         <Project Path="Common/GA.Business.DSL.SourceGen/GA.Business.DSL.SourceGen.csproj" />
+        <Project Path="Common/GA.Business.Graphiti/GA.Business.Graphiti.csproj" />
     </Folder>
     <Folder Name="/Data &amp; Integration/">
         <Project Path="Common/GA.Testing.Semantic/GA.Testing.Semantic.csproj" />
@@ -263,9 +265,12 @@
         <Project Path="Tests/Common/GA.InteractiveExtension/GA.InteractiveExtension.Tests.csproj" />
         <Project Path="Tests/Common/GA.Business.DSL.Tests/GA.Business.DSL.Tests.csproj" />
         <Project Path="Tests/Apps/GA.MusicTheory.Service.Tests/GA.MusicTheory.Service.Tests.csproj" />
+        <Project Path="Tests/Apps/GA.TabConversion.Api.Tests/GA.TabConversion.Api.Tests.csproj" />
     </Folder>
     <Folder Name="/Tests/Common/">
         <Project Path="Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj" />
+        <Project Path="Tests/Common/GA.Business.Core.Graphiti.Tests/GA.Business.Core.Graphiti.Tests.csproj" />
+        <Project Path="Tests/Common/GA.Business.ProbabilisticGrammar.Tests/GA.Business.ProbabilisticGrammar.Tests.csproj" />
     </Folder>
     <Folder Name="/Notebooks/Local NuGet Tests/">
         <File Path="Notebooks/MusicTheory/_Local Ga.Interactive NuGet/Local NuGet smoke test.ipynb" />

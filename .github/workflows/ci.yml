@@ -395,10 +395,13 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore AllProjects.slnx
       
+    - name: Test the security scan check
+      run: pwsh -NoProfile -File Scripts/check-vulnerable-packages.test.ps1
+
+    # dotnet list package exits 0 even when it finds a vulnerable package. The script fails on one that
+    # .github/vulnerability-baseline.txt doesn't list, and puts the table of vulnerable packages in the job summary
     - name: Run security scan
-      run: |
-        dotnet list AllProjects.slnx package --vulnerable --include-transitive
-      continue-on-error: true
+      run: pwsh -NoProfile -File Scripts/check-vulnerable-packages.ps1
 
   # ============================================
   # SUMMARY JOB
@@ -423,6 +426,7 @@ jobs:
       if: |
         needs.build.result == 'failure' ||
         needs.test-backend.result == 'failure' ||
-        needs.test-playwright.result == 'failure'
+        needs.test-playwright.result == 'failure' ||
+        needs.security-scan.result == 'failure'
       run: exit 1
 
