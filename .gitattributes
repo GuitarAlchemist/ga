@@ -28,3 +28,4 @@ ReactComponents/ga-react-components/public/textures/planets/bathymetry_*.png fil
 # kernel cannot spawn ("cannot spawn .githooks/pre-commit: No such file or
 # directory"). This is exactly how pre-commit got bricked once already.
 .githooks/** text eol=lf
+Scripts/cloud-validate.sh text eol=lf
