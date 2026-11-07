@@ -5,6 +5,8 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  # The merge queue on main runs the required jobs on each merge group.
+  merge_group:
   workflow_dispatch:
 
 env:
