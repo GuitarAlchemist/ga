@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A tour of every BRUTAL package (GuitarAlchemist/gaia#257): one small check a package, run in one process, with
+       its result printed as a table. Exact versions and a lock file. FMOD is left out: see the README. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ahwoo.Brutal.Box2D" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Collections" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Concurrency" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Core" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.FreeType" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Glfw" Version="[2026.10.4]" />
+    <PackageReference Include="Ahwoo.Brutal.Gli" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Gltf" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ImGui" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ImGui.Abstractions" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ImGui.Backends" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ImGui.Extensions" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ImGui.FreeType" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ImPlot" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Interop" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Jolt" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Ktx" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Localization" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Logging" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Maths" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Memory" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.MeshOptimizer" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Monitor.Common" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Monitor.Host" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.NativeFileDialog" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.NotCurses" Version="[2026.10.0]" />
+    <PackageReference Include="Ahwoo.Brutal.Numerics" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.OpenAl" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.OpenGl" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.RakNet" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Render.Common" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Render.Debug" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Render.Mesh" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.RenderDoc" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.RenderDoc.ImGui" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Sdl" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Sdl.Image" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Sdl.Mixer" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Sdl.Ttf" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ShaderC" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Slang" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Stb" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Strings" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Texture" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Texture.Abstractions" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Vulkan" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Vulkan.Vma" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ZLib" Version="[2026.10.1]" />
+  </ItemGroup>
+
+</Project>
