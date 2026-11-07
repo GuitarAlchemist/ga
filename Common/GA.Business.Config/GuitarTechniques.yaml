@@ -21,9 +21,9 @@ GuitarTechniques:
         Description: "G note over different G chord qualities"
         Fretboard: "15th fret high E string"
     Applications:
-      - "Melodic development over static harmony"
-      - "Creating tension without changing the melody"
-      - "Exploring chord qualities and extensions"
+      - Description: "Melodic development over static harmony"
+      - Description: "Creating tension without changing the melody"
+      - Description: "Exploring chord qualities and extensions"
     Songs: [ "Surfing with the Alien", "Always with Me, Always with You" ]
 
   - Name: "Sweep Picking"
@@ -57,10 +57,14 @@ GuitarTechniques:
     Technique: "Minimal picking with emphasis on fretting hand articulation"
     Theory: "Creates flowing melodic lines with sustained character"
     Applications:
-      - HammerOns: "Ascending notes without picking"
-      - PullOffs: "Descending notes without picking"
-      - Slides: "Smooth pitch transitions"
-      - Trills: "Rapid alternation between two notes"
+      - Name: "Hammer-ons"
+        Description: "Ascending notes without picking"
+      - Name: "Pull-offs"
+        Description: "Descending notes without picking"
+      - Name: "Slides"
+        Description: "Smooth pitch transitions"
+      - Name: "Trills"
+        Description: "Rapid alternation between two notes"
     Examples:
       - Pattern: "Hammer-on sequence"
         Frets: [ 5, 7, 8 ]
@@ -97,9 +101,12 @@ GuitarTechniques:
     Technique: "Pick for bass notes, fingers for treble strings"
     Theory: "Allows simultaneous bass and melody lines"
     Applications:
-      - CountryLicks: "Banjo-style rolls on guitar"
-      - JazzComping: "Bass note with chord on top"
-      - FingerstyleFusion: "Classical technique in electric context"
+      - Name: "Country licks"
+        Description: "Banjo-style rolls on guitar"
+      - Name: "Jazz comping"
+        Description: "Bass note with chord on top"
+      - Name: "Fingerstyle fusion"
+        Description: "Classical technique in electric context"
     Examples:
       - Pattern: "Alternating bass with melody"
         Bass: "Pick on 6th string"
@@ -137,7 +144,7 @@ GuitarTechniques:
     Examples:
       - AscendingPattern: "Up-down-sweep down-up"
         Strings: [ 3, 3, 2, 1 ]
-        Direction: [ "Up", "Down", "Down", "Up" ]
+        Direction: "Up, Down, Down, Up"
     Artists: [ "Frank Gambale", "Brett Garsed", "Rusty Cooley" ]
 
 # Technical Categories
