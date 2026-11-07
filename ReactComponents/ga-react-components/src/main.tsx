@@ -73,8 +73,8 @@ const DemoApp = () => {
     { string: 2, fret: 0, label: 'G', color: '#51cf66' },           // G string - open (G note)
     { string: 3, fret: 2, label: 'E', color: '#4dabf7' },           // D string - 2nd fret (E note)
     { string: 4, fret: 3, label: 'C', color: '#ff6b6b', emphasized: true }, // A string - 3rd fret (C note - root)
-    // Low E string (string 5) - not played in standard C major, or optionally 3rd fret for C
-    { string: 5, fret: 3, label: 'C', color: '#ff6b6b', emphasized: true }, // Low E string - 3rd fret (C note - optional)
+    // Low E string (string 5) - not played in standard open C major; 3rd fret adds G as the bass
+    { string: 5, fret: 3, label: 'G', color: '#51cf66' }, // Low E string - 3rd fret (G note)
   ];
 
   // Example: C Major scale positions
