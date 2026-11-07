@@ -23,9 +23,10 @@ public readonly record struct DiminishedScaleDegree : IRangeValueObject<Diminish
     public static IReadOnlyCollection<DiminishedScaleDegree> Items => ValueObjectUtils<DiminishedScaleDegree>.Items;
     public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
-    // Static instances for convenience
-    public static DiminishedScaleDegree HalfWhole => new(1);
-    public static DiminishedScaleDegree WholeHalf => new(2);
+    // Static instances for convenience: Scale.Diminished starts with a whole step (C D Eb ...), so its first
+    // degree is the whole-half scale and its second the half-whole scale
+    public static DiminishedScaleDegree WholeHalf => new(1);
+    public static DiminishedScaleDegree HalfWhole => new(2);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DiminishedScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) =>
@@ -46,15 +47,15 @@ public readonly record struct DiminishedScaleDegree : IRangeValueObject<Diminish
 
     public string ToName() => Value switch
     {
-        1 => "Half-whole diminished",
-        2 => "Whole-half diminished",
+        1 => "Whole-half diminished",
+        2 => "Half-whole diminished",
         _ => $"Diminished mode {Value}"
     };
 
     public string ToShortName() => Value switch
     {
-        1 => "H-W",
-        2 => "W-H",
+        1 => "W-H",
+        2 => "H-W",
         _ => $"Dim{Value}"
     };
 

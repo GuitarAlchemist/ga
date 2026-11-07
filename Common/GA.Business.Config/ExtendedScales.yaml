@@ -10915,7 +10915,6 @@ ScaleId_723:
   Perfections: 3
   IsPrime_Forte: true
   IsPrime_Rahn: true
-  WellKnownName: "Tritone"
 
 ScaleId_724:
   BinaryScaleId: 724
@@ -18602,6 +18601,7 @@ ScaleId_1235:
   Perfections: 2
   IsPrime_Forte: false
   IsPrime_Rahn: false
+  WellKnownName: "Tritone"
 
 ScaleId_1236:
   BinaryScaleId: 1236

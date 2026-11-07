@@ -46,6 +46,12 @@ public class ScaleTests
     }
 
     [Test]
+    public void Tritone_HasThePitchClassesOfThePetrushkaChord() =>
+        // Two major triads a tritone apart, C E G and Gb Bb Db (https://en.wikipedia.org/wiki/Tritone_scale)
+        Assert.That(Scale.Tritone.PitchClassSet.Id,
+            Is.EqualTo(new PitchClassSet(new[] { 0, 1, 4, 6, 7, 10 }.Select(PitchClass.FromValue)).Id));
+
+    [Test]
     public void Constructor_FromNoteString_RoundTripsCardinality()
     {
         var scale = new Scale("C D E F G A B");
