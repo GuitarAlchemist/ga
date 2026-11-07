@@ -130,7 +130,8 @@ public sealed class RoutedChatApplicationService(
             """ +
             Environment.NewLine +
             Environment.NewLine +
-            PlayableNotationFormatter.PromptGuidance;
+            // Routed answers carry no grounding, so the model must not write frets.
+            PlayableNotationFormatter.UngroundedGuidance;
 
         return promptProfile switch
         {
