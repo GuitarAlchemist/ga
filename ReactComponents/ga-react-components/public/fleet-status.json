@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "3834ad52dd0a3d9be0ec6c6b9570ab353d40b270",
-    "generatedAt": "2026-11-11T04:12:18.108940+00:00",
+    "commitSha": "fbd8dce69ea6a8de47d0a717c4fe5ad7058a93f2",
+    "generatedAt": "2026-11-11T13:09:46.950310+00:00",
     "repoCount": 5,
-    "totalPRs": 57
+    "totalPRs": 55
   },
   "repos": [
     {
@@ -169,7 +169,7 @@
           "createdAt": "2026-10-11T22:01:56Z",
           "failingChecks": 0,
           "headRef": "codex/fretboard-demo-note",
-          "isDraft": true,
+          "isDraft": false,
           "mergeable": "UNKNOWN",
           "number": 833,
           "title": "fix(frontend): correct low E fretboard demo note",
@@ -284,7 +284,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/811"
         },
         {
-          "ageDays": 37,
+          "ageDays": 38,
           "author": "spareilleux",
           "createdAt": "2026-10-04T07:07:35Z",
           "failingChecks": 0,
@@ -296,7 +296,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/810"
         },
         {
-          "ageDays": 37,
+          "ageDays": 38,
           "author": "spareilleux",
           "createdAt": "2026-10-04T06:32:26Z",
           "failingChecks": 0,
@@ -371,7 +371,7 @@
           "ageDays": 100,
           "author": "spareilleux",
           "createdAt": "2026-08-02T21:29:06Z",
-          "failingChecks": 1,
+          "failingChecks": 0,
           "headRef": "codex/629-policy-readiness",
           "isDraft": false,
           "mergeable": "UNKNOWN",
@@ -393,20 +393,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 22,
+      "prCount": 20,
       "prs": [
-        {
-          "ageDays": 4,
-          "author": "spareilleux",
-          "createdAt": "2026-11-07T01:57:58Z",
-          "failingChecks": 0,
-          "headRef": "feat/ixmux",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 515,
-          "title": "feat(ixmux): at-most-once mandate delivery to Claude sessions, with a durable log and a resumable stream",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/515"
-        },
         {
           "ageDays": 4,
           "author": "spareilleux",
@@ -414,7 +402,7 @@
           "failingChecks": 0,
           "headRef": "fix/doctor-uninit-submodule",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 514,
           "title": "fix(doctor): name an uninitialized governance submodule, with its init command",
           "url": "https://github.com/GuitarAlchemist/ix/pull/514"
@@ -426,7 +414,7 @@
           "failingChecks": 0,
           "headRef": "feat/claude-hooks-go",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 512,
           "title": "feat(hooks): the harness hooks are one Go binary, no shell",
           "url": "https://github.com/GuitarAlchemist/ix/pull/512"
@@ -450,7 +438,7 @@
           "failingChecks": 0,
           "headRef": "ci/run-ix-console-example-tests",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 509,
           "title": "ci: run the ix_console example tests",
           "url": "https://github.com/GuitarAlchemist/ix/pull/509"
@@ -462,7 +450,7 @@
           "failingChecks": 0,
           "headRef": "claude/gifted-archimedes-8o9lxy",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 508,
           "title": "[EXPERIMENTAL] IXQL \u2192 Go WASI validator prototype + WASI 0.3 feasibility spike",
           "url": "https://github.com/GuitarAlchemist/ix/pull/508"
@@ -471,10 +459,10 @@
           "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-11-02T15:01:44Z",
-          "failingChecks": 0,
+          "failingChecks": 1,
           "headRef": "feat/ixctl-need",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 507,
           "title": "feat(ixctl): needs, a durable question a blocked task asks the plane, with an accounting token budget (#486)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/507"
@@ -486,7 +474,7 @@
           "failingChecks": 0,
           "headRef": "codex/ix-baseline-protocol-20261101",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 506,
           "title": "docs: anchor agentic vocabulary, baseline and bounded IXQL plan",
           "url": "https://github.com/GuitarAlchemist/ix/pull/506"
@@ -498,7 +486,7 @@
           "failingChecks": 0,
           "headRef": "feat/ixctl-claude-sessions-probe",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 501,
           "title": "feat(ixctl): claude-sessions@1 probe kind, which Claude sessions could take work, verified",
           "url": "https://github.com/GuitarAlchemist/ix/pull/501"
@@ -510,7 +498,7 @@
           "failingChecks": 0,
           "headRef": "feat/ixctl-d13-proofs",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 499,
           "title": "test(ixctl): D13 proofs with a real descendant (#450 A4) and a real hard plane stop (#453 B4)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/499"
@@ -522,7 +510,7 @@
           "failingChecks": 0,
           "headRef": "fix/router-spike-clippy",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 498,
           "title": "fix(router-spike): clean clippy on router-spike and lint the crate in CI",
           "url": "https://github.com/GuitarAlchemist/ix/pull/498"
@@ -534,34 +522,22 @@
           "failingChecks": 0,
           "headRef": "feat/context-artifact-list",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 497,
           "title": "feat(router-spike): #485 checks 1, 2 and 4, offline",
           "url": "https://github.com/GuitarAlchemist/ix/pull/497"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-10-31T06:07:21Z",
           "failingChecks": 0,
           "headRef": "docs/kakeya-exploration",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 495,
           "title": "docs(research): Kakeya in R^3 as a teaching case for agent rigour",
           "url": "https://github.com/GuitarAlchemist/ix/pull/495"
-        },
-        {
-          "ageDays": 10,
-          "author": "spareilleux",
-          "createdAt": "2026-10-31T05:23:30Z",
-          "failingChecks": 0,
-          "headRef": "feat/ix-windows-service",
-          "isDraft": true,
-          "mergeable": "CONFLICTING",
-          "number": 494,
-          "title": "feat(ixctl): host the plane as a Windows service, first slice (SCM or console, bounded stop, explicit install plan)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/494"
         },
         {
           "ageDays": 12,
@@ -570,7 +546,7 @@
           "failingChecks": 0,
           "headRef": "docs/adr-durable-agents",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 481,
           "title": "docs(adr): durable runs in Starlark, agent DSLs by Earley, durable modules like bzlmod (ADR-0016..0018)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/481"
@@ -582,7 +558,7 @@
           "failingChecks": 0,
           "headRef": "codex/native-relay-capture-reference",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 477,
           "title": "Add provisional Node relay with durable native ACK capture (#473)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/477"
@@ -594,7 +570,7 @@
           "failingChecks": 0,
           "headRef": "docs/context-tool-term",
           "isDraft": true,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 476,
           "title": "docs(context): an IX tool is not a Claude skill",
           "url": "https://github.com/GuitarAlchemist/ix/pull/476"
@@ -606,7 +582,7 @@
           "failingChecks": 0,
           "headRef": "docs/pr-coordination-protocol",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 396,
           "title": "docs(contracts): coord block schema, fixtures, dedup and recovery rules",
           "url": "https://github.com/GuitarAlchemist/ix/pull/396"
@@ -618,7 +594,7 @@
           "failingChecks": 0,
           "headRef": "prototype/ix-control",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 391,
           "title": "prototype(ix-control): control-plane feeds and the scene cast",
           "url": "https://github.com/GuitarAlchemist/ix/pull/391"
@@ -630,7 +606,7 @@
           "failingChecks": 0,
           "headRef": "prototype/probes",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 390,
           "title": "prototype(probes): hot-reloading Go probe host, template probes and DuckDB views",
           "url": "https://github.com/GuitarAlchemist/ix/pull/390"
@@ -642,7 +618,7 @@
           "failingChecks": 0,
           "headRef": "docs/pr-coordination-room",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 388,
           "title": "docs(contracts): PR coordination room pilot \u2014 draft, do not merge",
           "url": "https://github.com/GuitarAlchemist/ix/pull/388"
@@ -654,7 +630,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 356,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/ix/pull/356"
@@ -676,7 +652,7 @@
       "prCount": 6,
       "prs": [
         {
-          "ageDays": 21,
+          "ageDays": 22,
           "author": "spareilleux",
           "createdAt": "2026-10-20T04:48:36Z",
           "failingChecks": 0,
@@ -700,7 +676,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/392"
         },
         {
-          "ageDays": 37,
+          "ageDays": 38,
           "author": "spareilleux",
           "createdAt": "2026-10-04T07:19:24Z",
           "failingChecks": 1,
@@ -724,7 +700,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
         },
         {
-          "ageDays": 43,
+          "ageDays": 44,
           "author": "spareilleux",
           "createdAt": "2026-09-28T05:06:46Z",
           "failingChecks": 1,
@@ -778,7 +754,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1256"
         },
         {
-          "ageDays": 46,
+          "ageDays": 47,
           "author": "spareilleux",
           "createdAt": "2026-09-25T12:30:30Z",
           "failingChecks": 1,
@@ -814,7 +790,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
         },
         {
-          "ageDays": 57,
+          "ageDays": 58,
           "author": "spareilleux",
           "createdAt": "2026-09-14T13:05:50Z",
           "failingChecks": 1,
