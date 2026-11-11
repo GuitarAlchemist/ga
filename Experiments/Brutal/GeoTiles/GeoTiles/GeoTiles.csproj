@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- OGC 3D Tiles (Google's Photorealistic 3D Tiles, or a synthetic tileset when there is no key) drawn with Vulkan
+       through BRUTAL's bindings. The loading is in GeoTiles.Core; this project is the window. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ahwoo.Brutal.Core" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Glfw" Version="[2026.10.4]" />
+    <PackageReference Include="Ahwoo.Brutal.Vulkan" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ShaderC" Version="[2026.10.2]" />
+    <!-- JPEG and PNG decoding in managed code (public domain), for the tiles' textures. -->
+    <PackageReference Include="StbImageSharp" Version="[2.30.15]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GeoTiles.Core\GeoTiles.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "Openize.Drako": {
+        "type": "Direct",
+        "requested": "[1.4.4, 1.4.4]",
+        "resolved": "1.4.4",
+        "contentHash": "EXPtXBM36W9y3QTZHxGBJTVUcn4cMK4w9teATVQnBpz95Q3YkUVP+SHENG+Z0I1LlF5laszPWGh5+Jq4ESyKGw=="
+      }
+    }
+  }
+}
