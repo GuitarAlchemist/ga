@@ -75,6 +75,45 @@ $staleEvidenceContract.evidence.schema = 'afk-evidence-manifest-v0.1'
 $result = Test-GaLoopPolicy -Policy $staleEvidenceContract
 Assert ((-not $result.Valid) -and ($result.Problems -contains 'evidence_contract_not_v0.2')) 'GA evidence is pinned to the Agent Blackbox v0.2 contract'
 
+foreach ($pattern in @('Common/GA.Business.ML/Agents/**', 'Tests/**/*.cs', '../Common/**', '**', 'docs/**/../../Common/**')) {
+    $variant = Copy-Policy $policy
+    $variant.allow_edit += $pattern
+    Assert (-not (Test-GaLoopPolicy $variant).Valid) "unapproved edit pattern is rejected: $pattern"
+}
+
+foreach ($path in $policy.protected_paths) {
+    $variant = Copy-Policy $policy
+    $variant.protected_paths = @($variant.protected_paths | Where-Object { $_ -cne $path })
+    Assert (-not (Test-GaLoopPolicy $variant).Valid) "required protection cannot be removed: $path"
+}
+
+foreach ($value in @('false', 'true', 0, 1, $null)) {
+    $variant = Copy-Policy $policy
+    $variant.promotion_gates.autonomous_merge = $value
+    Assert (-not (Test-GaLoopPolicy $variant).Valid) 'autonomous_merge must be a Boolean false'
+    $variant = Copy-Policy $policy
+    $variant.postflight.required_before_ready = $value
+    Assert (-not (Test-GaLoopPolicy $variant).Valid) 'required_before_ready must be a Boolean true'
+    $variant = Copy-Policy $policy
+    $variant.independent_review.author_comment_satisfies = $value
+    Assert (-not (Test-GaLoopPolicy $variant).Valid) 'author_comment_satisfies must be a Boolean false'
+}
+
+$variant = Copy-Policy $policy
+$variant.verification_levels.L1.commands = @('echo smoke')
+Assert (-not (Test-GaLoopPolicy $variant).Valid) 'L1 focused project verification cannot be replaced'
+foreach ($command in @('npm run build', 'npm run lint')) {
+    $variant = Copy-Policy $policy
+    $variant.verification_levels.L3.conditional_commands.frontend_changed = @($variant.verification_levels.L3.conditional_commands.frontend_changed | Where-Object { $_ -cne $command })
+    Assert (-not (Test-GaLoopPolicy $variant).Valid) "frontend command cannot be removed: $command"
+}
+$variant = Copy-Policy $policy
+$variant.verification_levels.L3.PSObject.Properties.Remove('conditional_commands')
+Assert (-not (Test-GaLoopPolicy $variant).Valid) 'missing frontend conditions fail closed without throwing'
+$variant = Copy-Policy $policy
+$variant.verification_levels.L3.conditional_commands.frontend_working_directory = 'Experiments'
+Assert (-not (Test-GaLoopPolicy $variant).Valid) 'frontend verification directory is pinned'
+
 if ($failures.Count -gt 0) {
     Write-Host "`n$($failures.Count) failure(s)." -ForegroundColor Red
     exit 1
