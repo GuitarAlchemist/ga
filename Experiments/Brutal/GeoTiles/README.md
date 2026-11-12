@@ -35,9 +35,13 @@ dotnet test Experiments/Brutal/GeoTiles/GeoTiles.Tests
 | `--synthetic` | | use the synthetic tileset even when a key is set |
 | `--osm` | | OpenStreetMap buildings (Overpass) instead of tiles; wins over the key |
 | `--no-window` | | load, print the counts and exit |
+| `--drone` | | the camera flies an oval above the place, looking ahead, instead of orbiting it |
 | `--fullscreen` | | the primary monitor at its current mode, instead of a 1280 x 720 window |
 
-In the window: the camera orbits; the arrow keys turn and tilt it, W and S move it in and out, Esc closes.
+In the window the camera orbits, or flies with `--drone`; the arrow keys turn and tilt the orbit. A click or a
+movement key takes the controls, as in the Observatory's fly camera: the mouse looks; W A S D, Z Q S D or the
+arrows move; E or Space climbs, C sinks; Shift is three times faster; the wheel changes the speed; Tab gives the
+camera back; Esc closes. The automatic flight is verified; the manual controls were not driven by their author.
 
 ## How it works
 
@@ -74,7 +78,8 @@ In the window: the camera orbits; the arrow keys turn and tilt it, W and S move 
 - **One selection, at start.** The tiles are chosen once for the first camera position; moving the camera does not
   fetch finer tiles. There is no frustum culling and no streaming, and coarse tiles stay at the edge of the place.
 - **JPEG and PNG only.** KTX2 and WebP images do not decode; such a tile is drawn grey.
-- **Attribution is in the title bar and on the console**, not in the picture, and Google's logo is not shown.
+- **Attribution is a line of text in the picture**, bottom left: "Google Maps" and the providers the tiles name,
+  in a built-in 5 by 7 font (`Caption.cs`). Google's logo itself is not drawn.
 - **OpenStreetMap:** flat roofs, one colour, no ground; rings of a relation that are split over several ways are
   skipped and counted.
 
@@ -89,8 +94,8 @@ needs more:
   read back from one run to the next. Do not commit captures of Google's imagery to this repository; the captures
   here are of the synthetic tileset and of OpenStreetMap.
 - **Attribution must be visible with the imagery.** The tiles name their data providers (`asset.copyright`); the
-  demo collects them and shows them with "Google" in the title bar. Showing them inside the viewport with Google's
-  logo is required before any picture or build of this leaves the machine, and is not done yet.
+  demo collects them and draws them in the picture after "Google Maps", the text Google's policy accepts where
+  its logo does not fit. Check that policy again before publishing more than a short capture.
 - Requests are billed past the free quota: a run makes one root request and a few dozen to a few hundred tile
   requests, bounded by `--max-tiles`.
 

@@ -210,6 +210,36 @@ public class TilesetTests
     }
 }
 
+public class CaptionTests
+{
+    [Fact]
+    public void An_attribution_is_drawn_in_capitals_without_accents_and_with_the_copyright_spelled()
+    {
+        Assert.Equal("(C) OPENSTREETMAP CONTRIBUTORS", Caption.Drawn("\u00a9 OpenStreetMap contributors"));
+        Assert.Equal("GOOGLE MAPS; AEROPORTS ?", Caption.Drawn("Google Maps; A\u00e9roports \u2603"));
+    }
+
+    [Fact]
+    public void A_letter_is_its_five_by_seven_glyph_scaled_on_a_dark_band()
+    {
+        var band = Caption.Render("L", 2);
+        Assert.Equal(((1 * 6 + 3) * 2, 11 * 2, 4), (band.Width, band.Height, band.Channels));
+
+        // An L: a column of seven on the left, a row of five at the bottom; nothing else is white.
+        bool White(int column, int row) => band.Data[(((2 + row) * 2 * band.Width) + ((2 + column) * 2)) * 4] == 255;
+        for (var row = 0; row < 7; row++)
+        {
+            for (var column = 0; column < 5; column++)
+            {
+                Assert.Equal(column == 0 || row == 6, White(column, row));
+            }
+        }
+
+        Assert.Equal(16, band.Data[0]); // the margin is the band's own colour
+        Assert.Equal((7 + 4) * 4, Enumerable.Range(0, band.Width * band.Height).Count(i => band.Data[i * 4] == 255));
+    }
+}
+
 public class OsmTests
 {
     // An L-shaped footprint of 20 m by 20 m with a 10 m notch, drawn clockwise, 4 levels; and an open way.

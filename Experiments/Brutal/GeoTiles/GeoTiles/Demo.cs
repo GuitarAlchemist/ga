@@ -44,8 +44,10 @@ internal static class Demo
         var frame = new EnuFrame(lat, lon, height);
         var options = new SelectionOptions
         {
-            // The eye of the first frame: up and to the side of the place, at the orbit's distance.
-            Camera = frame.ToEcef(new Vec3d(radius, radius, radius)),
+            // The eye the tiles are chosen for: the orbit's first frame, up and to the side of the place; or,
+            // for the drone that flies low over it, a point at its height above the place, which asks for finer
+            // tiles.
+            Camera = frame.ToEcef(args.Contains("--drone") ? new Vec3d(0, 0, 150) : new Vec3d(radius, radius, radius)),
             Target = frame.Origin,
             Radius = radius,
             MaxScreenSpaceError = Number("--sse", 16),
@@ -117,8 +119,10 @@ internal static class Demo
         }
 
         var seconds = Number("--seconds", 20).ToString(CultureInfo.CurrentCulture);
-        string[] view = args.Contains("--fullscreen") ? [seconds, "--vsync", "--fullscreen"] : [seconds, "--vsync"];
-        return TileView.Run(view, vertices, batches, $"GeoTiles (BRUTAL): {attribution}", (minY + maxY) / 2,
+        string[] view = [seconds, "--vsync", .. args.Where(a => a is "--fullscreen" or "--drone")];
+        // In the picture: "Google Maps" stands for the logo where there is no room for it, then the providers.
+        var caption = google is null ? attribution : string.Join("; ", scene.Attributions.Where(a => a != "Google").Prepend("Google Maps"));
+        return TileView.Run(view, vertices, batches, $"GeoTiles (BRUTAL): {attribution}", caption, (minY + maxY) / 2,
             (float)(radius * 1.6));
     }
 

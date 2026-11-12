@@ -78,7 +78,7 @@ internal static unsafe class TileView
         """;
 
     public static int Run(string[] args, Vertex[] vertices, IReadOnlyList<GeoTiles.Batch> batches, string title,
-        float targetY, float startDistance)
+        string caption, float targetY, float startDistance)
     {
         var limit = TimeSpan.FromSeconds(args.Length > 0 && double.TryParse(args[0], out var s) ? s : 10.0);
         var vsync = args.Contains("--vsync");
@@ -96,6 +96,8 @@ internal static unsafe class TileView
         Glfw.WindowHint(GlfwWindowHint.Resizable, 0);
         // --fullscreen: the primary monitor, at the mode it is already in.
         var fullscreen = args.Contains("--fullscreen");
+        var drone = args.Contains("--drone");
+        const float droneHeight = 150f; // metres above the place: over Ottawa's towers
         var monitor = fullscreen ? Glfw.PrimaryMonitor : GlfwMonitor.Null;
         var size = !fullscreen ? new int2(Width, Height) : new int2(monitor.VideoMode.Width, monitor.VideoMode.Height);
         var window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = title, Size = size, Monitor = monitor });
@@ -339,9 +341,9 @@ internal static unsafe class TileView
             AddressModeW = VkSamplerAddressMode.ClampToEdge,
             MaxLod = 16f,
         }, null);
-        var poolSize = new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = batches.Count + 1 };
+        var poolSize = new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = batches.Count + 2 };
         var descriptorPool = device.CreateDescriptorPool(
-            new VkDescriptorPoolCreateInfo { MaxSets = batches.Count + 1, PoolSizeCount = 1, PoolSizes = &poolSize }, null);
+            new VkDescriptorPoolCreateInfo { MaxSets = batches.Count + 2, PoolSizeCount = 1, PoolSizes = &poolSize }, null);
         var textures = new List<(VkImage Image, VkDeviceMemory Memory, VkImageView View)>();
         var stagings = new List<(VkBuffer Buffer, VkDeviceMemory Memory)>();
         var textureBytes = 0L;
@@ -481,6 +483,23 @@ internal static unsafe class TileView
         }
 
         var white = Texture(1, 1, 4, [255, 255, 255, 255]);
+
+        // The attribution, inside the picture: a band at the bottom left, drawn last in clip space.
+        var band = GeoTiles.Caption.Render(caption, Math.Max(2, (int)extent.Height / 360));
+        var bandSet = Texture(band.Width, band.Height, band.Channels, band.Data);
+        var bandFirst = vertices.Length;
+        {
+            float margin = 12f * extent.Height / 720f;
+            float x0 = -1f + (2f * margin / extent.Width), x1 = x0 + (2f * band.Width / extent.Width);
+            float y1 = 1f - (2f * margin / extent.Height), y0 = y1 - (2f * band.Height / extent.Height);
+            Vertex Corner(float x, float y, float u, float v) => new(new SN.Vector3(x, y, 0f), default, SN.Vector3.One, new SN.Vector2(u, v));
+            vertices =
+            [
+                .. vertices,
+                Corner(x0, y0, 0f, 0f), Corner(x1, y0, 1f, 0f), Corner(x1, y1, 1f, 1f),
+                Corner(x0, y0, 0f, 0f), Corner(x1, y1, 1f, 1f), Corner(x0, y1, 0f, 1f),
+            ];
+        }
         var sets = new VkDescriptorSet[batches.Count];
         for (var i = 0; i < batches.Count; i++)
         {
@@ -497,7 +516,7 @@ internal static unsafe class TileView
             device.FreeMemory(memory, null);
         }
 
-        Console.WriteLine($"GeoTiles textures: {textures.Count - 1} images with their mip levels, {textureBytes / (1024.0 * 1024.0):F0} MB");
+        Console.WriteLine($"GeoTiles textures: {textures.Count - 2} images with their mip levels, {textureBytes / (1024.0 * 1024.0):F0} MB");
 
         // The tiles, in a host-visible vertex buffer.
         var bufferSize = new ByteSize((nuint)(vertices.Length * sizeof(Vertex)));
@@ -529,6 +548,20 @@ internal static unsafe class TileView
 
         // Camera: orbits the axis by itself; arrows turn and tilt, W and S move in and out.
         float yaw = 0.6f, pitch = 0.45f, distance = startDistance;
+        // Taking the controls, as in the Observatory's fly camera: a movement key or a click hands the camera over;
+        // the mouse looks, W A S D (or Z Q S D, or the arrows) move, E or Space climbs, C sinks, Shift is three
+        // times faster, the wheel changes the speed, Tab gives the camera back.
+        const int CursorNormal = 0x00034001, CursorHidden = 0x00034002, CursorDisabled = 0x00034003;
+        bool manual = false, takeOver = false;
+        if (fullscreen)
+        {
+            window.SetInputMode(GlfwInputMode.Cursor, CursorHidden); // no pointer over the picture
+        }
+
+        var flyPos = SN.Vector3.Zero;
+        float flyYaw = 0f, flyPitch = 0f, flySpeed = 40f;
+        double lastX = 0, lastY = 0;
+        window.OnScroll += (w, offset) => flySpeed = Math.Clamp(flySpeed * (offset.Y > 0 ? 1.2f : 1f / 1.2f), 2f, 400f);
         var keys = 0;
         var reason = "window closed";
         window.OnKey += (w, key, scancode, action, mods) =>
@@ -538,14 +571,32 @@ internal static unsafe class TileView
                 return;
             }
 
+            if (key == GlfwKey.Tab)
+            {
+                // Back to the camera that moves by itself.
+                manual = false;
+                w.SetInputMode(GlfwInputMode.Cursor, fullscreen ? CursorHidden : CursorNormal);
+                return;
+            }
+
+            if (!manual && key is GlfwKey.W or GlfwKey.A or GlfwKey.S or GlfwKey.D or GlfwKey.Z or GlfwKey.Q or GlfwKey.E
+                    or GlfwKey.C or GlfwKey.Space)
+            {
+                takeOver = true; // the loop hands the camera over from where it is
+                return;
+            }
+
+            if (manual && key != GlfwKey.Escape)
+            {
+                return; // held keys are read every frame
+            }
+
             switch (key)
             {
                 case GlfwKey.Left: yaw -= 0.15f; break;
                 case GlfwKey.Right: yaw += 0.15f; break;
                 case GlfwKey.Up: pitch = Math.Min(pitch + 0.08f, 1.3f); break;
                 case GlfwKey.Down: pitch = Math.Max(pitch - 0.08f, 0.05f); break;
-                case GlfwKey.W: distance = Math.Max(distance * 0.85f, 20f); break;
-                case GlfwKey.S: distance = Math.Min(distance / 0.85f, 20000f); break;
                 case GlfwKey.Escape:
                     reason = "Esc";
                     w.ShouldClose = true;
@@ -594,7 +645,8 @@ internal static unsafe class TileView
             }
 
             var now = clock.Elapsed.TotalSeconds;
-            yaw += (float)(now - last) * 0.2f;
+            var dt = (float)(now - last);
+            yaw += dt * 0.2f;
             last = now;
 
             var slot = frame % FramesInFlight;
@@ -611,6 +663,55 @@ internal static unsafe class TileView
 
             var target = new SN.Vector3(0f, targetY, 0f);
             var eye = target + (distance * new SN.Vector3(MathF.Cos(pitch) * MathF.Cos(yaw), MathF.Sin(pitch), MathF.Cos(pitch) * MathF.Sin(yaw)));
+            if (drone)
+            {
+                // A drone's ride: an oval above the place, rising and sinking, looking ahead along its path and a
+                // little toward the place. W and S change its height.
+                var reach = startDistance / 1.6f;
+                SN.Vector3 At(float u) => new(reach * 0.85f * MathF.Cos(u), 0f, reach * 0.55f * MathF.Sin(u));
+                var along = (float)now * 0.11f;
+                var height = droneHeight * distance / startDistance;
+                eye = At(along) + new SN.Vector3(0f, height + (0.2f * height * MathF.Sin(along * 1.7f)), 0f);
+                target = SN.Vector3.Lerp(At(along + 0.7f) + new SN.Vector3(0f, height * 0.25f, 0f), new SN.Vector3(0f, targetY, 0f), 0.3f);
+            }
+
+            bool Held(GlfwKey key) => window.GetKey(key) != GlfwKeyAction.Release;
+            if (!manual && (takeOver || window.GetMouseButton(GlfwMouseButton.Left) != GlfwButtonAction.Release))
+            {
+                manual = true;
+                flyPos = eye;
+                var look = SN.Vector3.Normalize(target - eye);
+                flyYaw = MathF.Atan2(look.Z, look.X);
+                flyPitch = MathF.Asin(Math.Clamp(look.Y, -1f, 1f));
+                window.SetInputMode(GlfwInputMode.Cursor, CursorDisabled);
+                (lastX, lastY) = (window.CursorX, window.CursorY);
+                Console.WriteLine($"GeoTiles controls taken at {now:F2} s");
+            }
+
+            takeOver = false;
+            if (manual)
+            {
+                double cursorX = window.CursorX, cursorY = window.CursorY;
+                flyYaw += (float)(cursorX - lastX) * 0.0025f;
+                flyPitch = Math.Clamp(flyPitch - ((float)(cursorY - lastY) * 0.0025f), -1.5f, 1.5f);
+                (lastX, lastY) = (cursorX, cursorY);
+                var forward = new SN.Vector3(MathF.Cos(flyPitch) * MathF.Cos(flyYaw), MathF.Sin(flyPitch), MathF.Cos(flyPitch) * MathF.Sin(flyYaw));
+                var right = SN.Vector3.Normalize(SN.Vector3.Cross(forward, SN.Vector3.UnitY));
+                var move = SN.Vector3.Zero;
+                if (Held(GlfwKey.W) || Held(GlfwKey.Z) || Held(GlfwKey.Up)) { move += forward; }
+                if (Held(GlfwKey.S) || Held(GlfwKey.Down)) { move -= forward; }
+                if (Held(GlfwKey.A) || Held(GlfwKey.Q) || Held(GlfwKey.Left)) { move -= right; }
+                if (Held(GlfwKey.D) || Held(GlfwKey.Right)) { move += right; }
+                if (Held(GlfwKey.E) || Held(GlfwKey.Space)) { move += SN.Vector3.UnitY; }
+                if (Held(GlfwKey.C)) { move -= SN.Vector3.UnitY; }
+                if (move.LengthSquared() > 0f)
+                {
+                    flyPos += SN.Vector3.Normalize(move) * flySpeed * (Held(GlfwKey.LeftShift) ? 3f : 1f) * dt;
+                }
+
+                eye = flyPos;
+                target = flyPos + forward;
+            }
             var projection = SN.Matrix4x4.CreatePerspectiveFieldOfView(MathF.PI / 3f, extent.Width / (float)extent.Height, 2f, 60000f);
             projection.M22 = -projection.M22; // Vulkan's clip space has y pointing down
             var viewProj = SN.Matrix4x4.CreateLookAt(eye, target, SN.Vector3.UnitY) * projection;
@@ -637,6 +738,10 @@ internal static unsafe class TileView
                 cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, layout, 0, [sets[i]], []);
                 cb.Draw(batches[i].Count, 1, batches[i].First, 0);
             }
+            var identity = SN.Matrix4x4.Identity;
+            cb.PushConstants(layout, VkShaderStageFlags.VertexBit, offset: 0, new ReadOnlySpan<byte>(&identity, sizeof(SN.Matrix4x4)));
+            cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, layout, 0, [bandSet], []);
+            cb.Draw(6, 1, bandFirst, 0);
             cb.EndRenderPass();
             cb.End();
 
