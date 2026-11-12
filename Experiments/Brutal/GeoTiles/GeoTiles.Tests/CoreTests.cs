@@ -210,6 +210,85 @@ public class TilesetTests
     }
 }
 
+public class OsmTests
+{
+    // An L-shaped footprint of 20 m by 20 m with a 10 m notch, drawn clockwise, 4 levels; and an open way.
+    private static string Answer(EnuFrame frame)
+    {
+        string Node(double east, double north)
+        {
+            // The geodetic latitude of a point on the ellipsoid: tan(lat) = z / ((1 - e2) p), with WGS84's e2.
+            var ecef = frame.ToEcef(new Vec3d(east, north, 0));
+            var p = Math.Sqrt(ecef.X * ecef.X + ecef.Y * ecef.Y);
+            var (lat, lon) = (Math.Atan2(ecef.Z, (1 - 0.00669437999014) * p) * 180 / Math.PI,
+                Math.Atan2(ecef.Y, ecef.X) * 180 / Math.PI);
+            return FormattableString.Invariant($"{{\"lat\":{lat:R},\"lon\":{lon:R}}}");
+        }
+
+        var l = string.Join(",", Node(0, 0), Node(0, 20), Node(10, 20), Node(10, 10), Node(20, 10), Node(20, 0), Node(0, 0));
+        var open = string.Join(",", Node(50, 50), Node(60, 50), Node(60, 60));
+        return "{\"elements\":[" +
+               "{\"type\":\"way\",\"tags\":{\"building\":\"yes\",\"building:levels\":\"4\"},\"geometry\":[" + l + "]}," +
+               "{\"type\":\"way\",\"tags\":{\"building\":\"yes\"},\"geometry\":[" + open + "]}]}";
+    }
+
+    [Fact]
+    public void A_footprint_becomes_walls_and_a_flat_roof_at_its_height()
+    {
+        // On the equator geocentric and geodetic latitude agree, so the test's own inverse is exact.
+        var frame = new EnuFrame(0, 10, 0);
+        var scene = OsmBuildings.Parse(Answer(frame), frame, 0, out var skipped);
+
+        Assert.Equal(1, scene.Tiles);
+        Assert.Equal(1, skipped);
+        Assert.Equal([OsmBuildings.Attribution], scene.Attributions);
+        // 6 walls of 2 triangles, and a roof of 6 - 2 triangles.
+        Assert.Equal((6 * 2 + 4) * 3, scene.Vertices);
+
+        var ys = Enumerable.Range(0, scene.Vertices).Select(v => scene.Positions[v * 3 + 1]).ToArray();
+        Assert.Equal(0f, ys.Min(), 2);
+        Assert.Equal(12f, ys.Max(), 2); // 4 levels of 3 m
+
+        // The roof: the last 4 triangles, facing up, covering the L's 300 m2.
+        var area = 0.0;
+        for (var t = 12; t < 16; t++)
+        {
+            float X(int k) => scene.Positions[(t * 3 + k) * 3];
+            float Z(int k) => scene.Positions[(t * 3 + k) * 3 + 2];
+            Assert.Equal(1f, scene.Normals[t * 9 + 1]);
+            area += Math.Abs((X(1) - X(0)) * (Z(2) - Z(0)) - (X(2) - X(0)) * (Z(1) - Z(0))) / 2;
+        }
+
+        Assert.Equal(300, area, 0);
+
+        // Every wall faces away from the footprint: a step along its normal leaves the L.
+        for (var t = 0; t < 12; t++)
+        {
+            double mx = 0, mz = 0;
+            for (var k = 0; k < 3; k++)
+            {
+                mx += scene.Positions[(t * 3 + k) * 3] / 3.0;
+                mz += scene.Positions[(t * 3 + k) * 3 + 2] / 3.0;
+            }
+
+            double e = mx + scene.Normals[t * 9] * 0.5, n = -(mz + scene.Normals[t * 9 + 2] * 0.5);
+            var inside = e > 0 && n > 0 && ((e < 10 && n < 20) || (e < 20 && n < 10));
+            Assert.False(inside, $"wall {t} faces inward");
+        }
+    }
+
+    [Fact]
+    public void A_stated_height_wins_over_levels_and_a_part_starts_at_its_min_height()
+    {
+        var frame = new EnuFrame(0, 10, 0);
+        var json = Answer(frame).Replace("\"building:levels\":\"4\"", "\"building:levels\":\"4\",\"height\":\"30.5 m\",\"min_height\":\"10\"");
+        var scene = OsmBuildings.Parse(json, frame, 0, out _);
+        var ys = Enumerable.Range(0, scene.Vertices).Select(v => scene.Positions[v * 3 + 1]).ToArray();
+        Assert.Equal(10f, ys.Min(), 2);
+        Assert.Equal(30.5f, ys.Max(), 2);
+    }
+}
+
 public class GlbTests
 {
     // A right triangle in the glTF frame: x right, y up.
@@ -340,6 +419,10 @@ public class SceneTests
         });
         Assert.Equal([0x89, 0x50, 0x4E, 0x47], seen![..4]); // the tile's PNG, as bytes in memory
         Assert.Equal([1f, 0f, 0f], scene.Colors[..3]);
+
+        // sRGB to linear light: a mid grey of 128 is about a fifth of white, not a half.
+        var mid = await Load(300, _ => new Pixels(1, 1, 3, [128, 128, 128]));
+        Assert.Equal(0.2195f, mid.Colors[0], 3);
 
         var grey = await Load(300);
         Assert.Equal(grey.Colors[0], grey.Colors[1]);

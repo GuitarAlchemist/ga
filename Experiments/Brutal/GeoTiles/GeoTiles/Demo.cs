@@ -1,7 +1,7 @@
 // Loads the tiles around a place and hands them to the window.
 //
 //   dotnet run --project Experiments/Brutal/GeoTiles/GeoTiles -- [--lat 45.4236] [--lon -75.7009] [--height 40]
-//       [--radius 400] [--sse 16] [--max-tiles 120] [--seconds 20] [--synthetic] [--no-window]
+//       [--radius 400] [--sse 16] [--max-tiles 120] [--seconds 20] [--synthetic] [--no-window] [--fullscreen]
 //
 // With GOOGLE_MAPS_API_KEY set, the tiles are Google's Photorealistic 3D Tiles (Map Tiles API), streamed into
 // memory for this run only: nothing is written to disk, as Google's terms require. Without the key, or with
@@ -29,12 +29,15 @@ internal static class Demo
         double lat = Number("--lat", 45.4236), lon = Number("--lon", -75.7009), height = Number("--height", 40);
         var radius = Number("--radius", 400);
         var key = Environment.GetEnvironmentVariable("GOOGLE_MAPS_API_KEY");
-        var synthetic = args.Contains("--synthetic") || string.IsNullOrWhiteSpace(key);
+        var osm = args.Contains("--osm");
+        var synthetic = osm || args.Contains("--synthetic") || string.IsNullOrWhiteSpace(key);
 
-        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(40) };
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("GeoTiles-demo/0.1");
         GoogleTileSource? google = synthetic ? null : new GoogleTileSource(http, key!);
         ITileSource source = google is null ? new SyntheticTileSource(lat, lon, height) : google;
-        Console.WriteLine(google is null
+        Console.WriteLine(osm ? "GeoTiles source: OpenStreetMap buildings (Overpass), open data, no key"
+            : google is null
             ? "GeoTiles source: synthetic tileset" + (string.IsNullOrWhiteSpace(key) ? " (GOOGLE_MAPS_API_KEY is not set)" : "")
             : "GeoTiles source: Google Photorealistic 3D Tiles, in memory only");
 
@@ -52,7 +55,18 @@ internal static class Demo
         Scene scene;
         try
         {
-            scene = await SceneLoader.LoadAsync(source, frame, options, Decode, m => Console.WriteLine($"GeoTiles {m}"));
+            if (osm)
+            {
+                using var answer = await http.PostAsync("https://overpass-api.de/api/interpreter",
+                    new FormUrlEncodedContent([new("data", OsmBuildings.Query(lat, lon, radius))]));
+                answer.EnsureSuccessStatusCode();
+                scene = OsmBuildings.Parse(await answer.Content.ReadAsStringAsync(), frame, height, out var skipped);
+                Console.WriteLine($"GeoTiles extruded {scene.Tiles} footprints ({skipped} open rings skipped)");
+            }
+            else
+            {
+                scene = await SceneLoader.LoadAsync(source, frame, options, Decode, m => Console.WriteLine($"GeoTiles {m}"));
+            }
         }
         catch (Exception e) when (e is HttpRequestException or FormatException or TaskCanceledException)
         {
@@ -68,7 +82,7 @@ internal static class Demo
         }
 
         // Google's terms: the data providers named by the tiles on screen are shown with them, with Google's name.
-        var attribution = string.Join("; ", google is null ? scene.Attributions : scene.Attributions.Prepend("Google"));
+        var attribution = string.Join("; ", google is null ? scene.Attributions : scene.Attributions.Prepend("Google").Distinct());
         Console.WriteLine($"GeoTiles attribution: {attribution}");
 
         float minY = float.MaxValue, maxY = float.MinValue;
@@ -78,9 +92,22 @@ internal static class Demo
             var p = new SN.Vector3(scene.Positions[i * 3], scene.Positions[i * 3 + 1], scene.Positions[i * 3 + 2]);
             vertices[i] = new Vertex(p,
                 new SN.Vector3(scene.Normals[i * 3], scene.Normals[i * 3 + 1], scene.Normals[i * 3 + 2]),
-                new SN.Vector3(scene.Colors[i * 3], scene.Colors[i * 3 + 1], scene.Colors[i * 3 + 2]));
+                new SN.Vector3(scene.Colors[i * 3], scene.Colors[i * 3 + 1], scene.Colors[i * 3 + 2]),
+                scene.Uvs.Length == 0 ? default : new SN.Vector2(scene.Uvs[i * 2], scene.Uvs[i * 2 + 1]));
             minY = Math.Min(minY, p.Y);
             maxY = Math.Max(maxY, p.Y);
+        }
+
+        // A textured run is drawn with its image alone: the photographs carry their own light. The window knows
+        // such a vertex by its zero normal.
+        var batches = scene.Batches.Count > 0 ? scene.Batches : [new Batch(0, vertices.Length, null)];
+        foreach (var batch in batches.Where(b => b.Image is not null))
+        {
+            for (var i = batch.First; i < batch.First + batch.Count; i++)
+            {
+                vertices[i].Normal = default;
+                vertices[i].Color = SN.Vector3.One;
+            }
         }
 
         Console.WriteLine($"GeoTiles local heights {minY:F1} to {maxY:F1} m around the origin");
@@ -90,7 +117,8 @@ internal static class Demo
         }
 
         var seconds = Number("--seconds", 20).ToString(CultureInfo.CurrentCulture);
-        return TileView.Run([seconds, "--vsync"], vertices, $"GeoTiles (BRUTAL): {attribution}", (minY + maxY) / 2,
+        string[] view = args.Contains("--fullscreen") ? [seconds, "--vsync", "--fullscreen"] : [seconds, "--vsync"];
+        return TileView.Run(view, vertices, batches, $"GeoTiles (BRUTAL): {attribution}", (minY + maxY) / 2,
             (float)(radius * 1.6));
     }
 
@@ -98,8 +126,8 @@ internal static class Demo
     {
         try
         {
-            var decoded = ImageResult.FromMemory(image, ColorComponents.RedGreenBlue);
-            return new Pixels(decoded.Width, decoded.Height, 3, decoded.Data);
+            var decoded = ImageResult.FromMemory(image, ColorComponents.RedGreenBlueAlpha);
+            return new Pixels(decoded.Width, decoded.Height, 4, decoded.Data);
         }
         catch (Exception)
         {

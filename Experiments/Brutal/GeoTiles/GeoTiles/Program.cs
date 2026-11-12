@@ -19,11 +19,12 @@ using SN = System.Numerics;
 return await Demo.Main(args);
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct Vertex(SN.Vector3 pos, SN.Vector3 normal, SN.Vector3 color)
+internal struct Vertex(SN.Vector3 pos, SN.Vector3 normal, SN.Vector3 color, SN.Vector2 uv = default)
 {
     public SN.Vector3 Pos = pos;
     public SN.Vector3 Normal = normal;
     public SN.Vector3 Color = color;
+    public SN.Vector2 Uv = uv;
 }
 
 internal static unsafe class TileView
@@ -39,32 +40,45 @@ internal static unsafe class TileView
         layout(location = 0) in vec3 inPos;
         layout(location = 1) in vec3 inNormal;
         layout(location = 2) in vec3 inColor;
+        layout(location = 3) in vec2 inUv;
         layout(push_constant) uniform Push { mat4 viewProj; } pc;
         layout(location = 0) out vec3 vNormal;
         layout(location = 1) out vec3 vColor;
+        layout(location = 2) out vec2 vUv;
         void main()
         {
             gl_Position = pc.viewProj * vec4(inPos, 1.0);
             vNormal = inNormal;
             vColor = inColor;
+            vUv = inUv;
         }
         """;
 
+    // A vertex with a zero normal is textured and unlit: a photograph carries its own light.
     private const string FragmentShader = """
         #version 450
         layout(location = 0) in vec3 vNormal;
         layout(location = 1) in vec3 vColor;
+        layout(location = 2) in vec2 vUv;
+        layout(set = 0, binding = 0) uniform sampler2D image;
         layout(location = 0) out vec4 outColor;
         void main()
         {
-            vec3 n = normalize(vNormal);
-            float sun = max(dot(n, normalize(vec3(0.35, 0.85, 0.4))), 0.0);
-            float sky = 0.5 + 0.5 * n.y;
-            outColor = vec4(vColor * (0.15 + 0.25 * sky + 0.7 * sun), 1.0);
+            float light = 1.0;
+            if (dot(vNormal, vNormal) > 0.25)
+            {
+                vec3 n = normalize(vNormal);
+                float sun = max(dot(n, normalize(vec3(0.35, 0.85, 0.4))), 0.0);
+                float sky = 0.5 + 0.5 * n.y;
+                light = 0.15 + 0.25 * sky + 0.7 * sun;
+            }
+
+            outColor = vec4(texture(image, vUv).rgb * vColor * light, 1.0);
         }
         """;
 
-    public static int Run(string[] args, Vertex[] vertices, string title, float targetY, float startDistance)
+    public static int Run(string[] args, Vertex[] vertices, IReadOnlyList<GeoTiles.Batch> batches, string title,
+        float targetY, float startDistance)
     {
         var limit = TimeSpan.FromSeconds(args.Length > 0 && double.TryParse(args[0], out var s) ? s : 10.0);
         var vsync = args.Contains("--vsync");
@@ -80,7 +94,11 @@ internal static unsafe class TileView
 
         Glfw.WindowHint(GlfwWindowHint.ClientApi, 0);
         Glfw.WindowHint(GlfwWindowHint.Resizable, 0);
-        var window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = title, Size = new int2(Width, Height) });
+        // --fullscreen: the primary monitor, at the mode it is already in.
+        var fullscreen = args.Contains("--fullscreen");
+        var monitor = fullscreen ? Glfw.PrimaryMonitor : GlfwMonitor.Null;
+        var size = !fullscreen ? new int2(Width, Height) : new int2(monitor.VideoMode.Width, monitor.VideoMode.Height);
+        var window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = title, Size = size, Monitor = monitor });
 
         // Instance with the extensions GLFW needs to present, and the window's surface.
         var glfwExtensions = Glfw.GetRequiredInstanceExtensions(out var extensionCount);
@@ -295,8 +313,191 @@ internal static unsafe class TileView
         Console.WriteLine($"GeoTiles shaders compiled in {compileClock.Elapsed.TotalMilliseconds:F0} ms");
 
         var pushRange = new VkPushConstantRange { StageFlags = VkShaderStageFlags.VertexBit, Offset = ByteSize.Zero, Size = ByteSize.Of<SN.Matrix4x4>() };
-        var layout = device.CreatePipelineLayout([], [pushRange], null);
+        var samplerBinding = new VkDescriptorSetLayoutBinding
+        {
+            Binding = 0,
+            DescriptorType = VkDescriptorType.CombinedImageSampler,
+            DescriptorCount = 1,
+            StageFlags = VkShaderStageFlags.FragmentBit,
+        };
+        var setLayout = device.CreateDescriptorSetLayout(
+            new VkDescriptorSetLayoutCreateInfo { BindingCount = 1, Bindings = &samplerBinding }, null);
+        var layout = device.CreatePipelineLayout([setLayout], [pushRange], null);
         var pipeline = Pipeline(device, layout, renderPass, vertexModule, fragmentModule);
+
+        // Textures: one image per run of vertices that has one, and a white pixel for the runs drawn by colour.
+        // Trilinear sampling over a full mip chain, so a distant photograph does not shimmer.
+        var uploadPool = device.CreateCommandPool(new VkCommandPoolCreateInfo { QueueFamilyIndex = family }, null);
+        var upload = device.AllocateCommandBuffer(new VkCommandBufferAllocateInfo { CommandPool = uploadPool, Level = VkCommandBufferLevel.Primary });
+        var sampler = device.CreateSampler(new VkSamplerCreateInfo
+        {
+            MagFilter = VkFilter.Linear,
+            MinFilter = VkFilter.Linear,
+            MipmapMode = VkSamplerMipmapMode.Linear,
+            AddressModeU = VkSamplerAddressMode.ClampToEdge,
+            AddressModeV = VkSamplerAddressMode.ClampToEdge,
+            AddressModeW = VkSamplerAddressMode.ClampToEdge,
+            MaxLod = 16f,
+        }, null);
+        var poolSize = new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = batches.Count + 1 };
+        var descriptorPool = device.CreateDescriptorPool(
+            new VkDescriptorPoolCreateInfo { MaxSets = batches.Count + 1, PoolSizeCount = 1, PoolSizes = &poolSize }, null);
+        var textures = new List<(VkImage Image, VkDeviceMemory Memory, VkImageView View)>();
+        var stagings = new List<(VkBuffer Buffer, VkDeviceMemory Memory)>();
+        var textureBytes = 0L;
+        upload.Begin(new VkCommandBufferBeginInfo { Flags = VkCommandBufferUsageFlags.OneTimeSubmitBit });
+
+        VkDescriptorSet Texture(int width, int height, int channels, byte[] data)
+        {
+            // Every mip level, each a box filter of the one above, in one staging buffer.
+            var levels = new List<(int W, int H, byte[] Rgba)>();
+            var rgba = new byte[width * height * 4];
+            for (var i = 0; i < width * height; i++)
+            {
+                rgba[i * 4] = data[i * channels];
+                rgba[i * 4 + 1] = data[i * channels + 1];
+                rgba[i * 4 + 2] = data[i * channels + 2];
+                rgba[i * 4 + 3] = 255;
+            }
+
+            levels.Add((width, height, rgba));
+            while (levels[^1].W > 1 || levels[^1].H > 1)
+            {
+                var (pw, ph, parent) = levels[^1];
+                int w = Math.Max(pw / 2, 1), h = Math.Max(ph / 2, 1);
+                var level = new byte[w * h * 4];
+                for (var y = 0; y < h; y++)
+                {
+                    for (var x = 0; x < w; x++)
+                    {
+                        int x0 = Math.Min(x * 2, pw - 1), x1 = Math.Min(x * 2 + 1, pw - 1);
+                        int y0 = Math.Min(y * 2, ph - 1), y1 = Math.Min(y * 2 + 1, ph - 1);
+                        for (var c = 0; c < 4; c++)
+                        {
+                            level[(y * w + x) * 4 + c] = (byte)((parent[(y0 * pw + x0) * 4 + c] + parent[(y0 * pw + x1) * 4 + c] +
+                                                                parent[(y1 * pw + x0) * 4 + c] + parent[(y1 * pw + x1) * 4 + c] + 2) / 4);
+                        }
+                    }
+                }
+
+                levels.Add((w, h, level));
+            }
+
+            var total = levels.Sum(l => l.Rgba.Length);
+            textureBytes += total;
+            var stagingSize = new ByteSize((nuint)total);
+            var staging = device.CreateBuffer(new VkBufferCreateInfo
+            {
+                Size = stagingSize,
+                Usage = VkBufferUsageFlags.TransferSrcBit,
+                SharingMode = VkSharingMode.Exclusive,
+            }, null);
+            var stagingMemory = device.AllocateMemory(physical, staging, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, null);
+            device.BindBufferMemory(staging, stagingMemory, memoryOffset: ByteSize.Zero);
+            var to = new Span<byte>((byte*)device.MapMemory<byte>(new MapInfo(stagingMemory) { Region = new MapRegion { Size = stagingSize } }), total);
+            var regions = new VkBufferImageCopy[levels.Count];
+            var at = 0;
+            for (var i = 0; i < levels.Count; i++)
+            {
+                levels[i].Rgba.CopyTo(to[at..]);
+                regions[i] = new VkBufferImageCopy
+                {
+                    BufferOffset = new ByteSize64((ulong)at),
+                    ImageSubresource = new VkImageSubresourceLayers { AspectMask = VkImageAspectFlags.ColorBit, MipLevel = i, LayerCount = 1 },
+                    ImageExtent = new VkExtent3D { Width = levels[i].W, Height = levels[i].H, Depth = 1 },
+                };
+                at += levels[i].Rgba.Length;
+            }
+
+            device.UnmapMemory(stagingMemory);
+            stagings.Add((staging, stagingMemory));
+
+            const VkFormat format = VkFormat.R8G8B8A8SRGB;
+            var image = device.CreateImage(new VkImageCreateInfo
+            {
+                ImageType = VkImageType._2D,
+                Format = format,
+                Extent = new VkExtent3D { Width = width, Height = height, Depth = 1 },
+                MipLevels = levels.Count,
+                ArrayLayers = 1,
+                Samples = VkSampleCountFlags._1Bit,
+                Tiling = VkImageTiling.Optimal,
+                Usage = VkImageUsageFlags.SampledBit | VkImageUsageFlags.TransferDstBit,
+                SharingMode = VkSharingMode.Exclusive,
+                InitialLayout = VkImageLayout.Undefined,
+            }, null);
+            var memory = device.AllocateMemory(physical, image, VkMemoryPropertyFlags.DeviceLocalBit, null);
+            device.BindImageMemory(image, memory, ByteSize.Zero);
+            var range = new VkImageSubresourceRange { AspectMask = VkImageAspectFlags.ColorBit, LevelCount = levels.Count, LayerCount = 1 };
+            upload.PipelineBarrier(VkPipelineStageFlags.TopOfPipeBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
+            [
+                new VkImageMemoryBarrier
+                {
+                    DstAccessMask = VkAccessFlags.TransferWriteBit,
+                    OldLayout = VkImageLayout.Undefined,
+                    NewLayout = VkImageLayout.TransferDstOptimal,
+                    SrcQueueFamilyIndex = VK.QUEUE_FAMILY_IGNORED,
+                    DstQueueFamilyIndex = VK.QUEUE_FAMILY_IGNORED,
+                    Image = image,
+                    SubresourceRange = range,
+                },
+            ]);
+            upload.CopyBufferToImage(staging, image, VkImageLayout.TransferDstOptimal, regions);
+            upload.PipelineBarrier(VkPipelineStageFlags.TransferBit, VkPipelineStageFlags.FragmentShaderBit, VkDependencyFlags.None, [], [],
+            [
+                new VkImageMemoryBarrier
+                {
+                    SrcAccessMask = VkAccessFlags.TransferWriteBit,
+                    DstAccessMask = VkAccessFlags.ShaderReadBit,
+                    OldLayout = VkImageLayout.TransferDstOptimal,
+                    NewLayout = VkImageLayout.ShaderReadOnlyOptimal,
+                    SrcQueueFamilyIndex = VK.QUEUE_FAMILY_IGNORED,
+                    DstQueueFamilyIndex = VK.QUEUE_FAMILY_IGNORED,
+                    Image = image,
+                    SubresourceRange = range,
+                },
+            ]);
+            var view = device.CreateImageView(new VkImageViewCreateInfo { Image = image, ViewType = VkImageViewType._2D, Format = format, SubresourceRange = range }, null);
+            textures.Add((image, memory, view));
+
+            VkDescriptorSet set;
+            var oneLayout = setLayout;
+            device.AllocateDescriptorSets(
+                new VkDescriptorSetAllocateInfo { DescriptorPool = descriptorPool, DescriptorSetCount = 1, SetLayouts = &oneLayout },
+                new ReadOnlySpan<VkDescriptorSet>(&set, 1));
+            var imageInfo = new VkDescriptorImageInfo { Sampler = sampler, ImageView = view, ImageLayout = VkImageLayout.ShaderReadOnlyOptimal };
+            device.UpdateDescriptorSets(
+            [
+                new VkWriteDescriptorSet
+                {
+                    DstSet = set,
+                    DstBinding = 0,
+                    DescriptorCount = 1,
+                    DescriptorType = VkDescriptorType.CombinedImageSampler,
+                    ImageInfo = &imageInfo,
+                },
+            ], []);
+            return set;
+        }
+
+        var white = Texture(1, 1, 4, [255, 255, 255, 255]);
+        var sets = new VkDescriptorSet[batches.Count];
+        for (var i = 0; i < batches.Count; i++)
+        {
+            sets[i] = batches[i].Image is { } pixels ? Texture(pixels.Width, pixels.Height, pixels.Channels, pixels.Data) : white;
+        }
+
+        upload.End();
+        var uploadHandle = upload.Handle;
+        queue.Submit([new VkSubmitInfo { CommandBufferCount = 1, CommandBuffers = &uploadHandle }], default);
+        device.WaitIdle();
+        foreach (var (buffer, memory) in stagings)
+        {
+            device.DestroyBuffer(buffer, null);
+            device.FreeMemory(memory, null);
+        }
+
+        Console.WriteLine($"GeoTiles textures: {textures.Count - 1} images with their mip levels, {textureBytes / (1024.0 * 1024.0):F0} MB");
 
         // The tiles, in a host-visible vertex buffer.
         var bufferSize = new ByteSize((nuint)(vertices.Length * sizeof(Vertex)));
@@ -431,7 +632,11 @@ internal static unsafe class TileView
             cb.SetScissor(firstScissor: 0, [new VkRect2D { Extent = extent }]);
             cb.PushConstants(layout, VkShaderStageFlags.VertexBit, offset: 0, new ReadOnlySpan<byte>(&viewProj, sizeof(SN.Matrix4x4)));
             cb.BindVertexBuffer(0, vertexBuffer);
-            cb.Draw(vertices.Length, 1, 0, 0);
+            for (var i = 0; i < batches.Count; i++)
+            {
+                cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, layout, 0, [sets[i]], []);
+                cb.Draw(batches[i].Count, 1, batches[i].First, 0);
+            }
             cb.EndRenderPass();
             cb.End();
 
@@ -520,6 +725,17 @@ internal static unsafe class TileView
             device.DestroyCommandPool(pools[i], null);
         }
 
+        foreach (var (image, memory, view) in textures)
+        {
+            device.DestroyImageView(view, null);
+            device.DestroyImage(image, null);
+            device.FreeMemory(memory, null);
+        }
+
+        device.DestroyDescriptorPool(descriptorPool, null);
+        device.DestroySampler(sampler, null);
+        device.DestroyDescriptorSetLayout(setLayout, null);
+        device.DestroyCommandPool(uploadPool, null);
         device.DestroyBuffer(vertexBuffer, null);
         device.FreeMemory(vertexMemory, null);
         device.DestroyPipeline(pipeline, null);
@@ -593,12 +809,13 @@ internal static unsafe class TileView
                 new() { Location = 0, Binding = 0, Format = VkFormat.R32G32B32SFloat, Offset = ByteSize.Zero },
                 new() { Location = 1, Binding = 0, Format = VkFormat.R32G32B32SFloat, Offset = ByteSize.Of<float>(3) },
                 new() { Location = 2, Binding = 0, Format = VkFormat.R32G32B32SFloat, Offset = ByteSize.Of<float>(6) },
+                new() { Location = 3, Binding = 0, Format = VkFormat.R32G32SFloat, Offset = ByteSize.Of<float>(9) },
             };
             var vertexInput = new VkPipelineVertexInputStateCreateInfo
             {
                 VertexBindingDescriptionCount = 1,
                 VertexBindingDescriptions = &binding,
-                VertexAttributeDescriptionCount = 3,
+                VertexAttributeDescriptionCount = 4,
                 VertexAttributeDescriptions = attributes,
             };
             var assembly = new VkPipelineInputAssemblyStateCreateInfo { Topology = VkPrimitiveTopology.TriangleList };

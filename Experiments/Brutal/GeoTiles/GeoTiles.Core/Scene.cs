@@ -9,7 +9,19 @@ public sealed record Scene(float[] Positions, float[] Normals, float[] Colors, I
     int Tiles, int Requests, bool Truncated)
 {
     public int Vertices => Positions.Length / 3;
+
+    /// <summary>A texture coordinate per vertex, (0, 0) at the top-left of the image; empty when nothing is
+    /// textured.</summary>
+    public float[] Uvs { get; init; } = [];
+
+    /// <summary>The vertices in runs that share one image, in order and without gaps; empty when nothing is
+    /// textured.</summary>
+    public IReadOnlyList<Batch> Batches { get; init; } = [];
 }
+
+/// <summary><paramref name="Count"/> vertices from <paramref name="First"/>, drawn with <paramref name="Image"/>
+/// at their texture coordinates, or with their colours when it is null.</summary>
+public sealed record Batch(int First, int Count, Pixels? Image);
 
 public static class SceneLoader
 {
@@ -41,6 +53,8 @@ public static class SceneLoader
         var positions = new List<float>();
         var normals = new List<float>();
         var colors = new List<float>();
+        var uvs = new List<float>();
+        var batches = new List<Batch>();
         foreach (var tile in selection.Tiles)
         {
             requests++;
@@ -49,6 +63,7 @@ public static class SceneLoader
             foreach (var p in mesh.Primitives)
             {
                 var pixels = p.Image is null ? null : decodeImage(p.Image);
+                var first = positions.Count / 3;
                 // ECEF to local, in doubles; only then floats. Render frame: x east, y up, z south.
                 var local = Array.ConvertAll(p.Positions, ecef =>
                 {
@@ -73,13 +88,19 @@ public static class SceneLoader
                         positions.AddRange([v.X, v.Y, v.Z]);
                         normals.AddRange([nx / length, ny / length, nz / length]);
                         colors.AddRange(Sample(pixels, p.Uvs, index));
+                        uvs.AddRange(p.Uvs is null ? [0f, 0f] : [p.Uvs[index * 2], p.Uvs[index * 2 + 1]]);
                     }
+                }
+
+                if (positions.Count / 3 > first)
+                {
+                    batches.Add(new Batch(first, positions.Count / 3 - first, p.Uvs is null ? null : pixels));
                 }
             }
         }
 
         return new Scene([.. positions], [.. normals], [.. colors], attributions, selection.Tiles.Count, requests,
-            selection.Truncated);
+            selection.Truncated) { Uvs = [.. uvs], Batches = batches };
     }
 
     /// <summary>Google separates the providers of one tile with semicolons.</summary>
@@ -105,6 +126,8 @@ public static class SceneLoader
         var x = Math.Clamp((int)(uvs[vertex * 2] * pixels.Width), 0, pixels.Width - 1);
         var y = Math.Clamp((int)(uvs[vertex * 2 + 1] * pixels.Height), 0, pixels.Height - 1);
         var at = (y * pixels.Width + x) * pixels.Channels;
-        return [pixels.Data[at] / 255f, pixels.Data[at + 1] / 255f, pixels.Data[at + 2] / 255f];
+        // The image is sRGB (glTF base colour); the window writes to an sRGB target, which expects linear light.
+        static float Linear(byte value) => MathF.Pow(value / 255f, 2.2f);
+        return [Linear(pixels.Data[at]), Linear(pixels.Data[at + 1]), Linear(pixels.Data[at + 2])];
     }
 }
