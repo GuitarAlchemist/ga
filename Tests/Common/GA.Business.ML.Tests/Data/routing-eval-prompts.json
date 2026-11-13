@@ -1,7 +1,7 @@
 {
-  "version": "0.7.0",
-  "description": "Labeled prompt set for SemanticIntentRouter evaluation. v0.3 (task #106): grew labeled corpus to ≥5 prompts per intent (was avg 1.7/intent at v0.1.1). New prompts tagged 'v0.3-seed' — drafted by the harness author as plausible candidates; some routing-ambiguity is expected. Operator should spot-check after the first v0.3 eval run and either confirm or relabel any seed whose routing diverges from human intuition.\n\nIntent count: 16 (unchanged from v0.2). In-scope prompt count: 86.\n\nHISTORY:\n  v0.1.0: initial 27 prompts, average 1.7/intent — insufficient for stable per-intent F1.\n  v0.1.1: dropped skill.fretspan (regex-routed in production, not semantic), relabeled 'G mixolydian' from scaleinfo→modes, rephrased the progressionmood prompt to match production's transform semantics.\n  v0.2  : harness reflect-loads production IIntent set (PR #168). Corpus unchanged.\n  v0.3  : grew labeled corpus to ≥5 prompts per intent. Per-intent F1 now has enough support to be statistically meaningful.\n  v0.6  : added 8 out-of-scope (non-music) prompts tagged 'oos' with expectedIntentId '__none__'. The router SHOULD decline these (RouteAsync returns null) so the caller can refuse a non-music query instead of forcing it into the nearest skill. Harness now reports an OOS-decline rate — the baseline the report's two-step-OOS-gate recommendation needs. OOS prompts are excluded from per-intent precision/recall but an OOS query that wrongly routes to a skill counts against that skill's precision (a true false-positive).\n  v0.7  : added skill.improvisation with 5 held-out progression/solo prompts tagged 'v0.7-tracer' (none verbatim from the skill's ExamplePrompts). Source: the 2026-09-28 public progression-arpeggio tracer (state/research/ga-chatbot-arpeggio-tracer/).\n\nKNOWN GAPS: still missing labeled prompts for AlgebraIntent, TabOptimizeIntent, TabAnalyzeIntent, VoicingIntent (the four non-skill intents that live in GA.Business.Core.Orchestration). The v0.2 harness doesn't load them either, so this is consistent.",
-  "lastUpdated": "2026-09-28",
+  "version": "0.8.0",
+  "description": "Labeled prompt set for SemanticIntentRouter evaluation. v0.3 (task #106): grew labeled corpus to ≥5 prompts per intent (was avg 1.7/intent at v0.1.1). New prompts tagged 'v0.3-seed' — drafted by the harness author as plausible candidates; some routing-ambiguity is expected. Operator should spot-check after the first v0.3 eval run and either confirm or relabel any seed whose routing diverges from human intuition.\n\nIntent count: 16 (unchanged from v0.2). In-scope prompt count: 86.\n\nHISTORY:\n  v0.1.0: initial 27 prompts, average 1.7/intent — insufficient for stable per-intent F1.\n  v0.1.1: dropped skill.fretspan (regex-routed in production, not semantic), relabeled 'G mixolydian' from scaleinfo→modes, rephrased the progressionmood prompt to match production's transform semantics.\n  v0.2  : harness reflect-loads production IIntent set (PR #168). Corpus unchanged.\n  v0.3  : grew labeled corpus to ≥5 prompts per intent. Per-intent F1 now has enough support to be statistically meaningful.\n  v0.6  : added 8 out-of-scope (non-music) prompts tagged 'oos' with expectedIntentId '__none__'. The router SHOULD decline these (RouteAsync returns null) so the caller can refuse a non-music query instead of forcing it into the nearest skill. Harness now reports an OOS-decline rate — the baseline the report's two-step-OOS-gate recommendation needs. OOS prompts are excluded from per-intent precision/recall but an OOS query that wrongly routes to a skill counts against that skill's precision (a true false-positive).\n  v0.7  : added skill.improvisation with 5 held-out progression/solo prompts tagged 'v0.7-tracer' (none verbatim from the skill's ExamplePrompts). Source: the 2026-09-28 public progression-arpeggio tracer (state/research/ga-chatbot-arpeggio-tracer/).\n  v0.8  : added skill.functionalharmony with the 8 functional-harmony concept questions of the 2026-10-03 theory QA eval, tagged 'v0.8-theory-qa' (none verbatim from the skill's ExamplePrompts, but the examples were tuned against them: they guard these routes, they do not measure generalisation).\n\nKNOWN GAPS: still missing labeled prompts for AlgebraIntent, TabOptimizeIntent, TabAnalyzeIntent, VoicingIntent (the four non-skill intents that live in GA.Business.Core.Orchestration). The v0.2 harness doesn't load them either, so this is consistent.",
+  "lastUpdated": "2026-10-03",
   "intentIdsCovered": [
     "skill.chordinfo",
     "skill.scaleinfo",
@@ -19,7 +19,8 @@
     "skill.diatonicchords",
     "skill.keyidentification",
     "skill.progressioncompletion",
-    "skill.improvisation"
+    "skill.improvisation",
+    "skill.functionalharmony"
   ],
   "prompts": [
     { "id": "ci-1",  "prompt": "what notes are in Cmaj7?",                              "expectedIntentId": "skill.chordinfo",          "tags": ["common"] },
@@ -210,6 +211,14 @@
     { "id": "imp-3", "prompt": "give me an arpeggio for each chord in Bm G D A",          "expectedIntentId": "skill.improvisation",      "tags": ["v0.7-tracer"] },
     { "id": "imp-4", "prompt": "what scale should I solo with over a D7",                 "expectedIntentId": "skill.improvisation",      "tags": ["v0.7-tracer"] },
     { "id": "imp-5", "prompt": "which arpeggios fit over F Dm Bb C",                      "expectedIntentId": "skill.improvisation",      "tags": ["v0.7-tracer"] },
+    { "id": "fh-1", "prompt": "Why does a dominant seventh chord want to resolve?",        "expectedIntentId": "skill.functionalharmony",  "tags": ["v0.8-theory-qa"] },
+    { "id": "fh-2", "prompt": "What is a tritone substitution?",                           "expectedIntentId": "skill.functionalharmony",  "tags": ["v0.8-theory-qa"] },
+    { "id": "fh-3", "prompt": "what's the secondary dominant of the V chord in C major?",  "expectedIntentId": "skill.functionalharmony",  "tags": ["v0.8-theory-qa"] },
+    { "id": "fh-4", "prompt": "What is a Neapolitan chord?",                               "expectedIntentId": "skill.functionalharmony",  "tags": ["v0.8-theory-qa"] },
+    { "id": "fh-5", "prompt": "What is an augmented sixth chord and how does it resolve?", "expectedIntentId": "skill.functionalharmony",  "tags": ["v0.8-theory-qa"] },
+    { "id": "fh-6", "prompt": "What makes a half cadence different from a plagal cadence?", "expectedIntentId": "skill.functionalharmony", "tags": ["v0.8-theory-qa"] },
+    { "id": "fh-7", "prompt": "what is a deceptive cadence",                               "expectedIntentId": "skill.functionalharmony",  "tags": ["v0.8-theory-qa"] },
+    { "id": "fh-8", "prompt": "In a G7 to C resolution, where should the notes B and F go?", "expectedIntentId": "skill.functionalharmony", "tags": ["v0.8-theory-qa"] },
 
     { "id": "oos-1", "prompt": "what's the weather in Paris today",                       "expectedIntentId": "__none__", "tags": ["v0.6-oos", "non-music"] },
     { "id": "oos-2", "prompt": "write me a haiku about the ocean",                        "expectedIntentId": "__none__", "tags": ["v0.6-oos", "non-music"] },

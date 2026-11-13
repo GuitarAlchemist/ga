@@ -30,7 +30,11 @@ using System.Text.Json.Serialization;
 /// Spend is capped by <c>GA_ROUTER_JEV_SHADOW_BUDGET_USD</c> (default
 /// <see cref="DefaultBudgetUsd"/>), cumulative over every row already in the log
 /// directory, so a restart does not reset it. A call whose usage is unknown
-/// (timeout, network error) is charged a conservative estimate.
+/// (timeout, network error) is charged a conservative estimate. Local requests tagged
+/// as the repo's own eval or probe traffic
+/// (<see cref="RoutingTelemetryLog.IsSyntheticTraffic"/>: <c>theory-qa</c>,
+/// <c>probe-*</c>) are never sent: they log a <c>skipped_source</c> row and cost
+/// nothing, so a QA run cannot spend the budget meant for real traffic.
 /// </para>
 /// <para>
 /// The question is the one ix Stage 3 measured (ix
@@ -162,9 +166,11 @@ public sealed class JevRoutingShadow
     {
         try
         {
-            // Snapshot now: intents may be scoped to the request, which ends before the call does.
+            // Snapshot now: intents may be scoped to the request, which ends before the call does;
+            // so may the request's traffic-source tag, passed on only when the host vouched for it.
             var criteria = Criteria(intents);
-            _ = Task.Run(() => ObserveAsync(query, criteria, prodChosen, prodConfidence, margin));
+            var trafficSource = RoutingTelemetryLog.IsSyntheticTraffic ? RoutingTelemetryLog.CurrentTrafficSource : null;
+            _ = Task.Run(() => ObserveAsync(query, criteria, prodChosen, prodConfidence, margin, trafficSource));
         }
         catch
         {
@@ -185,7 +191,8 @@ public sealed class JevRoutingShadow
         SortedDictionary<string, string> criteria,
         string? prodChosen,
         double prodConfidence,
-        double? margin)
+        double? margin,
+        string? trafficSource = null)
     {
         var record = new JevShadowRecord
         {
@@ -198,7 +205,9 @@ public sealed class JevRoutingShadow
         };
         try
         {
-            record = await ClassifyAsync(record, criteria);
+            record = RoutingTelemetryLog.IsSyntheticTrafficSource(trafficSource)
+                ? record with { Status = "skipped_source", Detail = trafficSource }
+                : await ClassifyAsync(record, criteria);
         }
         catch (Exception ex)
         {
@@ -449,11 +458,13 @@ public sealed record JevShadowRecord
     [JsonPropertyName("margin")] public double? Margin { get; init; }
 
     /// <summary><c>ok</c>, <c>timeout</c>, <c>http_NNN</c>, <c>invalid</c>,
-    /// <c>wrong_model</c>, <c>error</c>, <c>skipped_busy</c>, <c>skipped_budget</c> or
-    /// <c>skipped_stopped</c> (after a 401, 403 or 429).</summary>
+    /// <c>wrong_model</c>, <c>error</c>, <c>skipped_busy</c>, <c>skipped_budget</c>,
+    /// <c>skipped_stopped</c> (after a 401, 403 or 429) or <c>skipped_source</c>
+    /// (eval or probe traffic; <see cref="Detail"/> holds the tag).</summary>
     [JsonPropertyName("status")] public required string Status { get; init; }
 
-    /// <summary>Why a response was rejected, the unexpected model id, or an exception type name.</summary>
+    /// <summary>Why a response was rejected, the unexpected model id, an exception type name,
+    /// or the skipped traffic-source tag.</summary>
     [JsonPropertyName("detail")] public string? Detail { get; init; }
 
     /// <summary>Jev's choice; <c>__none__</c> means it declined.</summary>

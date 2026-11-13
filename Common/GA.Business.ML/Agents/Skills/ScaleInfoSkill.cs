@@ -94,6 +94,39 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
     private static readonly Regex KeyPattern =
         new(@"\b([A-G][#b]?)\s*(major|minor|maj|min)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    // Scales spelled from a key's own degrees: "A minor pentatonic", "A pentatonic minor",
+    // "E blues", "C major blues", "G# harmonic minor", "D melodic minor". "A minor pentatonic"
+    // also matches KeyPattern ("A minor"), so these must be resolved first or the answer is
+    // the 7-note A minor scale.
+    private static readonly Regex VariantPattern =
+        new(@"\b(?<root>[A-G][#b]?)\s+(?:(?<quality>major|minor|maj|min)\s+)?" +
+            @"(?<variant>pentatonic|blues|harmonic\s+minor|melodic\s+minor)(?:\s+(?<quality2>major|minor))?\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    // Other non-diatonic scales and modes. The key's 7 notes would be a wrong answer for
+    // "C major bebop" or "A minor dorian", so the skill declines them.
+    private static readonly Regex UnsupportedScalePattern =
+        new(@"\b(whole[\s-]?tone|diminished|octatonic|chromatic|bebop|augmented|altered|hexatonic|" +
+            @"dorian|phrygian|lydian|mixolydian|locrian|hungarian|neapolitan|enigmatic|byzantine|" +
+            @"hirajoshi|prometheus|persian|gypsy|harmonic\s+major|double\s+harmonic)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    // (degree, alteration) pairs over the parallel major or natural-minor key.
+    private sealed record ScaleVariant(string Name, bool FromMinorKey, (int Degree, int Alter)[] Degrees, string Formula);
+
+    private static readonly ScaleVariant MajorPentatonic = new("major pentatonic", false,
+        [(1, 0), (2, 0), (3, 0), (5, 0), (6, 0)], "1 2 3 5 6");
+    private static readonly ScaleVariant MinorPentatonic = new("minor pentatonic", true,
+        [(1, 0), (3, 0), (4, 0), (5, 0), (7, 0)], "1 b3 4 5 b7");
+    private static readonly ScaleVariant MinorBlues = new("blues", true,
+        [(1, 0), (3, 0), (4, 0), (5, -1), (5, 0), (7, 0)], "1 b3 4 b5 5 b7");
+    private static readonly ScaleVariant MajorBlues = new("major blues", false,
+        [(1, 0), (2, 0), (3, -1), (3, 0), (5, 0), (6, 0)], "1 2 b3 3 5 6");
+    private static readonly ScaleVariant HarmonicMinor = new("harmonic minor", true,
+        [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 1)], "1 2 b3 4 5 b6 7");
+    private static readonly ScaleVariant MelodicMinor = new("melodic minor", true,
+        [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 1), (7, 1)], "1 2 b3 4 5 6 7");
+
     public bool CanHandle(string message)
     {
         if (string.IsNullOrWhiteSpace(message)) return false;
@@ -109,7 +142,9 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         // names a key but asks for a related key, not for its notes.
         if (RelativeKeySkill.IsKeyRelationQuestion(message)) return false;
 
-        return KeyPattern.IsMatch(message) &&
+        if (UnsupportedScalePattern.IsMatch(message)) return false;
+
+        return (KeyPattern.IsMatch(message) || VariantPattern.IsMatch(message)) &&
                (q.Contains("note") || q.Contains("scale") || q.Contains("what is") ||
                 q.Contains("what's in") || q.Contains("tell me") || q.Contains("show me") ||
                 q.Contains("list") || q.Contains("play"));
@@ -117,6 +152,13 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
 
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
+        if (UnsupportedScalePattern.IsMatch(message))
+            return Task.FromResult(Decline("the question names a scale other than major, minor, pentatonic, blues, harmonic or melodic minor"));
+
+        var variantMatch = VariantPattern.Match(message);
+        if (variantMatch.Success)
+            return Task.FromResult(DescribeVariant(variantMatch));
+
         var match = KeyPattern.Match(message);
         if (!match.Success)
             return Task.FromResult(CannotHelp("Could not parse a key name from your question."));
@@ -158,7 +200,80 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         });
     }
 
+    private AgentResponse DescribeVariant(Match match)
+    {
+        var rootStr = match.Groups["root"].Value;
+        var quality = (match.Groups["quality"].Success ? match.Groups["quality"] : match.Groups["quality2"]).Value
+            .ToLowerInvariant();
+        var variantWord = Regex.Replace(match.Groups["variant"].Value.ToLowerInvariant(), @"\s+", " ");
+
+        var variant = variantWord switch
+        {
+            "pentatonic" when quality is "major" or "maj" => MajorPentatonic,
+            "pentatonic" when quality is "minor" or "min" => MinorPentatonic,
+            "pentatonic"                                  => null, // major or minor? let the agent path ask
+            "blues" when quality is "major" or "maj"      => MajorBlues,
+            "blues"                                       => MinorBlues,
+            "harmonic minor"                              => HarmonicMinor,
+            _                                             => MelodicMinor,
+        };
+        if (variant is null)
+            return Decline("a pentatonic scale was named without major or minor");
+
+        var key = KeyNaming.ResolveKey(rootStr, variant.FromMinorKey);
+        if (key is null)
+            return CannotHelp(
+                $"I don't recognise \"{rootStr} {(variant.FromMinorKey ? "minor" : "major")}\" as a standard key, " +
+                $"so I can't spell its {variant.Name} scale. Try a key like C major, F# minor, or Bb major.");
+
+        var keyNotes  = key.Notes.ToList();
+        var noteNames = variant.Degrees.Select(d => Spell(keyNotes[d.Degree - 1], d.Alter)).ToList();
+        var scaleName = $"{key.Root} {variant.Name}";
+
+        logger.LogDebug("ScaleInfoSkill: resolved {Scale} → [{Notes}]", scaleName, string.Join(", ", noteNames));
+
+        return new AgentResponse
+        {
+            AgentId    = AgentIds.Theory,
+            Result     = $"The {scaleName} scale has {noteNames.Count} notes: **{string.Join(" – ", noteNames)}** (formula {variant.Formula}).",
+            Confidence = 1.0f,
+            Evidence   =
+            [
+                $"Scale: {scaleName}",
+                $"Notes: {string.Join(", ", noteNames)}",
+                $"Formula: {variant.Formula}",
+                $"Spelled from the degrees of {key.Root} {(variant.FromMinorKey ? "minor" : "major")}"
+            ],
+            Assumptions = []
+        };
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /// <summary>A key note raised or lowered by <paramref name="alter"/> semitones, keeping its letter.</summary>
+    private static string Spell(Note.KeyNote note, int alter)
+    {
+        if (alter == 0) return note.ToString();
+        return ((note.Accidental?.Value ?? 0) + alter) switch
+        {
+            0  => $"{note.NaturalNote}",
+            1  => $"{note.NaturalNote}#",
+            2  => $"{note.NaturalNote}x",
+            -1 => $"{note.NaturalNote}b",
+            -2 => $"{note.NaturalNote}bb",
+            var v => throw new InvalidOperationException($"Cannot spell {note} altered by {alter} ({v})")
+        };
+    }
+
+    private static AgentResponse Decline(string reason) => new()
+    {
+        Declined    = true,
+        AgentId     = AgentIds.Theory,
+        Result      = "Ask for the notes of a major or minor key, or of its pentatonic, blues, harmonic minor or melodic minor scale (e.g. \"notes in the A minor pentatonic scale\").",
+        Confidence  = 0.1f,
+        Evidence    = [$"ScaleInfoSkill: declined because {reason}"],
+        Assumptions = []
+    };
 
     private static AgentResponse CannotHelp(string reason) => new()
     {

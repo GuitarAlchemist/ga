@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 /// <item><b>"Parallel minor of C major"</b> → C minor (same root, flip quality)</item>
 /// <item><b>"Parallel major of A minor"</b> → A major</item>
 /// <item><b>"How many sharps in D major"</b> → 2 sharps (F#, C#)</item>
+/// <item><b>"Which major key has 4 flats"</b> → Ab major (key signatures via <see cref="KeySignatureAnswers"/>)</item>
 /// </list>
 /// Zero LLM calls — pure pitch-class arithmetic. Confidence = 1.0.
 /// </summary>
@@ -28,7 +29,8 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
         "Answers relative-key, parallel-key, and key-signature questions: " +
         "relative minor/major of a given key (down/up a minor 3rd, same key " +
         "signature), parallel minor/major (same root, flip quality, different " +
-        "key signature), and sharps/flats count for any major or minor key. " +
+        "key signature), sharps/flats count and names for any major or minor key, " +
+        "and which key has a given number of sharps or flats. " +
         "Pure pitch-class math — no LLM call.";
 
     public IReadOnlyList<string> ExamplePrompts =>
@@ -45,6 +47,9 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
         "How many flats in F major",
         "What's the key signature of E major",
         "Key signature of B minor",
+        "How many flats does the key of Eb major have",
+        "Which major key has three flats",
+        "What minor key has two sharps",
     ];
 
     // Semantic routing is the normal path; this predicate only serves the offline
@@ -60,7 +65,7 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
             || RelativeMajorPattern.IsMatch(message)
             || ParallelMinorPattern.IsMatch(message)
             || ParallelMajorPattern.IsMatch(message)
-            || KeySignaturePattern.IsMatch(message));
+            || KeySignatureAnswers.IsKeySignatureQuestion(message));
 
     private static readonly Regex RelativeMinorPattern =
         new(@"\brelative\s+min(?:or)?\s+of\s+(?<key>[A-Ga-g][b#♭♯]?)\s*(?<quality>maj(?:or)?|min(?:or)?)?",
@@ -76,10 +81,6 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
 
     private static readonly Regex ParallelMajorPattern =
         new(@"\bparallel\s+maj(?:or)?\s+of\s+(?<key>[A-Ga-g][b#♭♯]?)\s*(?<quality>maj(?:or)?|min(?:or)?)?",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex KeySignaturePattern =
-        new(@"\b(?:how\s+many\s+(?<acc>sharps|flats|accidentals)|key\s+signature)\s+(?:in|of|for)?\s+(?<key>[A-Ga-g][b#♭♯]?)\s*(?<quality>maj(?:or)?|min(?:or)?)?",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Map pitch-letter spellings → semitone PC (0..11)
@@ -116,13 +117,8 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
             return Task.FromResult(AnswerParallelMinor(NormalizeKey(m3.Groups["key"].Value)));
         if (ParallelMajorPattern.Match(msg) is { Success: true } m4)
             return Task.FromResult(AnswerParallelMajor(NormalizeKey(m4.Groups["key"].Value)));
-        if (KeySignaturePattern.Match(msg) is { Success: true } m5)
-        {
-            var key = NormalizeKey(m5.Groups["key"].Value);
-            var quality = m5.Groups["quality"].Value;
-            var isMinor = quality.StartsWith("min", StringComparison.OrdinalIgnoreCase);
-            return Task.FromResult(AnswerKeySignature(key, isMinor));
-        }
+        if (KeySignatureAnswers.TryAnswer(msg, out var signatureAnswer, out var signatureEvidence))
+            return Task.FromResult(Result(signatureAnswer, signatureEvidence));
 
         return Task.FromResult(CannotHandle());
     }
@@ -190,17 +186,6 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
         return Result(sb.ToString(), $"parallel-major({minorKey})");
     }
 
-    private AgentResponse AnswerKeySignature(string key, bool isMinor)
-    {
-        if (!RootPc.TryGetValue(key, out _))
-            return CannotParse(key);
-        var sharps = isMinor ? MinorSharpsFlats(key) : MajorSharpsFlats(key);
-        var qualityWord = isMinor ? "minor" : "major";
-        return Result(
-            $"**{key} {qualityWord}** has {KeySignatureBlurb(sharps)}.",
-            $"key-signature({key} {qualityWord}={sharps})");
-    }
-
     private static int? TryMajorIndex(string majorKey)
     {
         for (var i = 0; i < MajorByFifth.Length; i++)
@@ -220,9 +205,6 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
 
     private static int MajorSharpsFlats(string majorKey) =>
         TryMajorIndex(majorKey) is { } i ? i - 7 : 0;
-
-    private static int MinorSharpsFlats(string minorKey) =>
-        TryMinorIndex(minorKey) is { } i ? i - 7 : 0;
 
     private static string KeySignatureBlurb(int sharpsFlats) =>
         sharpsFlats switch

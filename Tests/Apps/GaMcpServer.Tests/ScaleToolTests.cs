@@ -78,6 +78,7 @@ public sealed class ScaleToolTests
     [TestCase("C# major", "C# D# E# F# G# A# B#")]
     [TestCase("Eb minor", "Eb F Gb Ab Bb Cb Db")]
     [TestCase("A minor", "A B C D E F G")]
+    [TestCase("G minor", "G A Bb C D Eb F")] // a stale GaMcpServer build answered A# and D# (2026-10-03)
     [TestCase("D dorian", "D E F G A B C")]
     [TestCase("E phrygian", "E F G A B C D")]
     [TestCase("F lydian", "F G A B C D E")]

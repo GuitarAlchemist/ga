@@ -57,6 +57,21 @@ public sealed class TypedMusicalQueryExtractor : IMusicalQueryExtractor
         "play", "playing", "position",
     };
 
+    /// <summary>
+    ///     English function words of three letters or more. The tag registry's substring
+    ///     fallback matched "the" against a corpus tag, so "where do I play a C major barre
+    ///     chord using the A shape?" searched on tags [the] and returned unrelated Cadd9
+    ///     shapes. Shorter words are already excluded by the length guard below.
+    /// </summary>
+    private static readonly HashSet<string> FunctionWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "the", "and", "but", "for", "with", "without", "using", "use", "from", "into", "onto",
+        "where", "what", "which", "who", "how", "why", "when", "can", "could", "would", "should",
+        "you", "your", "does", "did", "are", "was", "were", "has", "have", "had", "get", "got",
+        "this", "that", "these", "those", "there", "here", "then", "than", "its", "their", "them",
+        "they", "some", "any", "all", "about", "want", "need", "give", "show", "tell", "please",
+    };
+
     // 2026-05-12: '(' and ')' removed from delimiters so chord-symbol shorthand
     // like "Em(maj7)" reaches ChordPitchClasses.TryParse as a single token. The
     // dictionary key "m(maj7)" already resolves to [0,3,7,11]; with the previous
@@ -132,7 +147,7 @@ public sealed class TypedMusicalQueryExtractor : IMusicalQueryExtractor
             // 4. Linguistic filler ("chord", "voicing", "shape", …) never becomes a tag.
             //    Without this, the registry's substring fallback maps "chord" onto the
             //    first tag whose name contains it and poisons the SYMBOLIC vector.
-            if (TagStopWords.Contains(tok))
+            if (TagStopWords.Contains(tok) || FunctionWords.Contains(tok))
             {
                 continue;
             }

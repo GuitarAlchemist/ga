@@ -34,6 +34,21 @@ public sealed class CircleOfFifthsSkill(ILogger<CircleOfFifthsSkill> logger) : C
         "Move three positions clockwise on the circle",
     ];
 
+    /// <summary>
+    /// "How many sharps are in the key of A major?" gets the key's signature, not the whole page:
+    /// the router sends such questions here as well as to <see cref="RelativeKeySkill"/>.
+    /// </summary>
+    protected override AgentResponse? TryAnswerDirectly(string message) =>
+        KeySignatureAnswers.TryAnswer(message, out var answer, out var evidence)
+            ? new AgentResponse
+            {
+                AgentId    = AgentIds.Theory,
+                Result     = answer,
+                Confidence = 1.0f,
+                Evidence   = ["Source: domain key signatures (KeySignatureAnswers)", evidence],
+            }
+            : null;
+
     protected override string FolderName => "circle-of-fifths";
     protected override string Fallback   =>
         "The circle of fifths arranges the twelve major keys so each clockwise step is a perfect fifth up. Each step adds one sharp (clockwise) or one flat (counter-clockwise). C major sits at the top with no sharps or flats.";
