@@ -17,6 +17,11 @@ const DEMERZEL_ROOT = process.env.DEMERZEL_ROOT
   || path.resolve(__dirname, '../../../../../../Demerzel');
 // Default: C:\Users\spare\source\repos\Demerzel (set DEMERZEL_ROOT env var to override)
 
+// Streeling department files moved from Demerzel to spareilleux/learn (2026-10-21; Demerzel #1255 deleted its copies).
+const LEARN_ROOT = process.env.LEARN_ROOT
+  || path.resolve(__dirname, '../../../../../../learn');
+// Default: the learn clone next to Demerzel (set LEARN_ROOT env var to override)
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -211,7 +216,7 @@ function scanTests(): ArtifactInfo[] {
 }
 
 function scanDepartments(): ArtifactInfo[] {
-  const dir = path.join(DEMERZEL_ROOT, 'state/streeling/departments');
+  const dir = path.join(LEARN_ROOT, 'streeling/departments');
   return listFiles(dir, '.json')
     .filter(f => f.endsWith('.department.json'))
     .map(f => {
@@ -221,8 +226,8 @@ function scanDepartments(): ArtifactInfo[] {
       const deptDir = path.join(dir, base);
       const hasDeptDir = fs.existsSync(deptDir) && fs.statSync(deptDir).isDirectory();
       const fileTree: FileTreeNode[] = hasDeptDir
-        ? buildFileTree(deptDir, DEMERZEL_ROOT)
-        : singleFileTree(f, 'state/streeling/departments');
+        ? buildFileTree(deptDir, LEARN_ROOT)
+        : singleFileTree(f, 'streeling/departments');
       return {
         id: `dept-${base}`,
         name: (data?.full_name as string) || kebabToTitle(base) + ' Department',
@@ -315,6 +320,11 @@ function main() {
 
   if (!fs.existsSync(DEMERZEL_ROOT)) {
     console.error('ERROR: Demerzel root not found. Skipping generation.');
+    process.exit(1);
+  }
+  console.log(`Reading Streeling departments from: ${LEARN_ROOT}`);
+  if (!fs.existsSync(path.join(LEARN_ROOT, 'streeling/departments'))) {
+    console.error('ERROR: learn clone not found (streeling/departments). Set LEARN_ROOT. Skipping generation.');
     process.exit(1);
   }
 
