@@ -2,6 +2,7 @@ namespace GaChatbot.Api.Services;
 
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
+using GA.Business.ML.Agents;
 using GA.Business.ML.Notation;
 using GaChatbot.Api.Controllers;
 using Microsoft.Extensions.AI;
@@ -74,7 +75,9 @@ public sealed class DirectChatApplicationService(
         {
             new(ChatRole.System,
                 "You are Guitar Alchemist, a concise assistant for guitar, chords, voicings, and music theory. " +
-                "Answer clearly and directly. If the user asks about music, stay grounded in practical musical guidance." +
+                "Answer clearly and directly. If the user asks about music, stay grounded in practical musical guidance. " +
+                AssistantScopeRules.SpeakAsAssistant + ". " +
+                AssistantScopeRules.DeclineOffTopic + "." +
                 Environment.NewLine +
                 Environment.NewLine +
                 PlayableNotationFormatter.PromptGuidance)

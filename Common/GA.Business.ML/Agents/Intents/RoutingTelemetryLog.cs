@@ -2,6 +2,7 @@ namespace GA.Business.ML.Agents.Intents;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 /// <summary>
 ///     Append-only per-day JSONL telemetry for <see cref="SemanticIntentRouter"/>
@@ -36,6 +37,88 @@ public static class RoutingTelemetryLog
     /// </summary>
     public const string DisableEnvVar = "GA_ROUTING_NO_TELEMETRY";
 
+    /// <summary>Longest traffic-source tag kept; see <see cref="NormalizeTrafficSource"/>.</summary>
+    public const int MaxTrafficSourceLength = 32;
+
+    private static readonly Regex TrafficSourcePrefix =
+        new($"^[a-z0-9-]{{1,{MaxTrafficSourceLength}}}", RegexOptions.CultureInvariant);
+
+    private static readonly AsyncLocal<string?> _trafficSource = new();
+
+    private static readonly AsyncLocal<bool> _syntheticTraffic = new();
+
+    /// <summary>
+    ///     The traffic-source tag of the request being served (the page's <c>?ref=</c>,
+    ///     e.g. <c>reddit</c>), or null. The HTTP host scopes it per request with
+    ///     <see cref="BeginTrafficSource"/>, and <see cref="Append"/> stamps it on every
+    ///     record written in that async flow, so the router needs no source parameter.
+    /// </summary>
+    public static string? CurrentTrafficSource => _trafficSource.Value;
+
+    /// <summary>
+    ///     True while serving the repo's own eval or probe run: a synthetic tag
+    ///     (<see cref="IsSyntheticTrafficSource"/>) on a request the host vouched for with
+    ///     <c>fromLocalHost</c>. The tag alone is client input, so it is never enough: a public
+    ///     caller sending <c>source: "theory-qa"</c> is still real traffic.
+    /// </summary>
+    public static bool IsSyntheticTraffic => _syntheticTraffic.Value;
+
+    /// <summary>
+    ///     Sets <see cref="CurrentTrafficSource"/> to the normalized <paramref name="rawSource"/>
+    ///     for the caller's async flow, and restores the previous value on dispose.
+    ///     <paramref name="fromLocalHost"/> is the host's own judgement that the request came
+    ///     straight from this machine; only then can the tag mark <see cref="IsSyntheticTraffic"/>.
+    /// </summary>
+    public static IDisposable BeginTrafficSource(string? rawSource, bool fromLocalHost = false)
+    {
+        var previous = (_trafficSource.Value, _syntheticTraffic.Value);
+        _trafficSource.Value = NormalizeTrafficSource(rawSource);
+        _syntheticTraffic.Value = fromLocalHost && IsSyntheticTrafficSource(_trafficSource.Value);
+        return new TrafficSourceScope(previous);
+    }
+
+    /// <summary>
+    ///     Keeps the leading run of <c>[a-z0-9-]</c> of the lower-cased tag, at most
+    ///     <see cref="MaxTrafficSourceLength"/> characters, or returns null when that run is
+    ///     empty. The tag names a channel, so free text never reaches the log, and a link
+    ///     pasted with trailing punctuation (<c>reddit)</c>) still counts as <c>reddit</c>.
+    /// </summary>
+    public static string? NormalizeTrafficSource(string? rawSource)
+    {
+        if (string.IsNullOrWhiteSpace(rawSource)) return null;
+        var head = rawSource.Trim();
+        if (head.Length > MaxTrafficSourceLength) head = head[..MaxTrafficSourceLength];
+        var match = TrafficSourcePrefix.Match(head.ToLowerInvariant());
+        return match.Success ? match.Value : null;
+    }
+
+    /// <summary>
+    ///     The one list of traffic-source tags that mark the repo's own eval and probe runs,
+    ///     never a real user: <c>theory-qa</c> (sent by <c>Scripts/theory-qa/run_eval.py</c>)
+    ///     and any tag starting with <see cref="SyntheticTrafficSourcePrefix"/>. On a local request
+    ///     (<see cref="IsSyntheticTraffic"/>), paid observers such as <see cref="JevRoutingShadow"/>
+    ///     skip them, so a QA run cannot spend a budget meant for real traffic, and
+    ///     <see cref="QueryEmbeddingLog"/> keeps them out of the real-query corpus.
+    /// </summary>
+    private static readonly HashSet<string> SyntheticTrafficSources = new(StringComparer.Ordinal) { "theory-qa" };
+
+    /// <summary>Prefix of ad-hoc probe tags (<c>probe-reddit-sim</c>, ...); see <see cref="IsSyntheticTrafficSource"/>.</summary>
+    public const string SyntheticTrafficSourcePrefix = "probe-";
+
+    /// <summary>
+    ///     True when the normalized <paramref name="trafficSource"/> (as held by
+    ///     <see cref="CurrentTrafficSource"/>) is an eval or probe tag rather than real traffic.
+    /// </summary>
+    public static bool IsSyntheticTrafficSource(string? trafficSource) =>
+        trafficSource is not null
+        && (SyntheticTrafficSources.Contains(trafficSource)
+            || trafficSource.StartsWith(SyntheticTrafficSourcePrefix, StringComparison.Ordinal));
+
+    private sealed class TrafficSourceScope((string? Source, bool Synthetic) previous) : IDisposable
+    {
+        public void Dispose() => (_trafficSource.Value, _syntheticTraffic.Value) = previous;
+    }
+
     /// <summary>
     ///     Resolves the directory holding the rolling JSONL files. Override via
     ///     <c>GA_ROUTING_TELEMETRY_DIR</c>; default is
@@ -67,6 +150,7 @@ public static class RoutingTelemetryLog
     public static void Append(RoutingTelemetryRecord record)
     {
         if (Environment.GetEnvironmentVariable(DisableEnvVar) == "1") return;
+        if (record.Source is null && _trafficSource.Value is { } source) record = record with { Source = source };
 
         try
         {
@@ -155,6 +239,11 @@ public sealed record RoutingTelemetryRecord
     /// <summary>Routing latency in milliseconds (includes the query embedding call).</summary>
     [JsonPropertyName("ms")]
     public double LatencyMs { get; init; }
+
+    /// <summary>Traffic-source tag of the request (e.g. <c>reddit</c>), or null when untagged.
+    /// See <see cref="RoutingTelemetryLog.BeginTrafficSource"/>.</summary>
+    [JsonPropertyName("src")]
+    public string? Source { get; init; }
 }
 
 /// <summary>One candidate intent in a logged routing decision.</summary>

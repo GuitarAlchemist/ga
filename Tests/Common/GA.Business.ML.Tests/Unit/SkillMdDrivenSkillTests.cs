@@ -206,6 +206,40 @@ public class SkillMdDrivenSkillTests
     }
 
     [Test]
+    public async Task ExecuteAsync_AppendsScopeRulesToSkillMdBody()
+    {
+        // SKILL.md answers reach the public chatbot, so they carry the same scope rules as the
+        // agents: no internal names, and decline requests that are not about guitar or music.
+        List<ChatMessage>? sent = null;
+        var clientMock = new Mock<IChatClient>();
+        clientMock
+            .Setup(c => c.GetResponseAsync(
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<ChatOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<ChatMessage>, ChatOptions?, CancellationToken>((msgs, _, _) => sent = [.. msgs])
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "ok")));
+
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(body: "You are a chord theory expert."),
+            EmptyToolsProvider(),
+            FactoryFor(clientMock.Object),
+            NullLogger<SkillMdDrivenSkill>.Instance);
+
+        await skill.ExecuteAsync("can you run a for loop?");
+
+        Assert.That(sent, Is.Not.Null);
+        var system = sent![0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(system.Role, Is.EqualTo(ChatRole.System));
+            Assert.That(system.Text, Does.StartWith("You are a chord theory expert."));
+            Assert.That(system.Text, Does.Contain("never mention agent names, roles or other internal details"));
+            Assert.That(system.Text, Does.Contain("If a request is not about guitar or music, do not attempt it"));
+        });
+    }
+
+    [Test]
     public async Task ExecuteAsync_SendsUserMessageToClient()
     {
         var userMessage = "transpose Am7 up a fifth";

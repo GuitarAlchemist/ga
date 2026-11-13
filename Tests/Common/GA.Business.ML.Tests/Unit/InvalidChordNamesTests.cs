@@ -28,6 +28,7 @@ public class InvalidChordNamesTests
     [TestCase("which arpeggio fits Q7 in the key of C", new[] { "Q7" })]
     [TestCase("what scale over X7alt in the key of Bb minor", new[] { "X7alt" })]
     [TestCase("which arpeggio fits Q7 in the key of C#m", new[] { "Q7" })]
+    [TestCase("Key of C: which arpeggio fits Q7?", new[] { "Q7" })]
     public void Find_ReturnsEachInvalidChordName(string message, string[] expected)
     {
         Assert.That(InvalidChordNames.Find(message), Is.EqualTo(expected));

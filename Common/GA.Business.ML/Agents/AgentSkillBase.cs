@@ -51,7 +51,10 @@ public abstract class AgentSkillBase(string agentId, IChatClient chatClient, ILo
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    /// <summary>Calls the LLM with a system prompt and user message.</summary>
+    /// <summary>
+    /// Calls the LLM with a system prompt and user message. The <see cref="AssistantScopeRules"/>
+    /// are appended to the system prompt, because skill answers reach the public chatbot too.
+    /// </summary>
     protected async Task<string> ChatAsync(
         string userMessage,
         string systemPrompt,
@@ -63,7 +66,7 @@ public abstract class AgentSkillBase(string agentId, IChatClient chatClient, ILo
 
         var messages = new List<ChatMessage>
         {
-            new(ChatRole.System, systemPrompt),
+            new(ChatRole.System, AssistantScopeRules.AppendTo(systemPrompt)),
             new(ChatRole.User, userMessage)
         };
 

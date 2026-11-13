@@ -48,7 +48,7 @@ What the script does:
 
 1. Fetches `origin` and checks out the ref, detached, in the deploy worktree `..\ga-deploy-chatbot` (created on first use). It refuses to run if that worktree has changes or untracked files outside `.deploy`: SDK projects compile stray `*.cs` files, so the binary would no longer match the ref.
 2. Runs `dotnet publish -c Release` into `.deploy\releases\<sha>`. The running release is not touched, so there are no file locks and no downtime during the build.
-3. Writes `.deploy\run-chatbot.cmd`, which sets `Chatbot__PathBase=/chatbot`, `AI__CascadeProvider=mistral`, `ASPNETCORE_URLS=http://localhost:5252` and `GA_OPTICK_INDEX_PATH` (the gitignored OPTK index in the main checkout), then runs the host in a loop so a crash restarts it. Before every start it rotates each log in `.deploy\logs` past 10 MB, keeping one old copy. It also registers the scheduled task `GA-Chatbot-5252` to run that launcher headless, with no execution time limit, at logon and every 5 minutes; `MultipleInstances=IgnoreNew` makes a repetition a no-op while the launcher runs.
+3. Writes `.deploy\run-chatbot.cmd`, which sets `Chatbot__PathBase=/chatbot`, `AI__CascadeProvider=mistral`, `ASPNETCORE_URLS=http://localhost:5252` and `GA_OPTICK_INDEX_PATH` (the gitignored OPTK index in the main checkout), then calls `.deploy\local-env.cmd` if it exists (see [Operator settings](#operator-settings-deploylocal-envcmd)), then runs the host in a loop so a crash restarts it. Before every start it rotates each log in `.deploy\logs` past 10 MB, keeping one old copy. It also registers the scheduled task `GA-Chatbot-5252` to run that launcher headless, with no execution time limit, at logon and every 5 minutes; `MultipleInstances=IgnoreNew` makes a repetition a no-op while the launcher runs.
 4. Stops the task and whatever GaChatbot.Api listens on :5252, points the `.deploy\current` junction at the new release and starts the task. The host runs with the worktree root as its working directory, so `state/` (telemetry) and the QA summary survive a release switch.
 5. Verifies: `/api/chatbot/status` must report `isAvailable` (and `embeddingRoundTripOk`, which is one real embedding, on builds that have it); a real `POST /api/chatbot/chat` with `which arpeggio fits Am F C G` must be answered by `skill.improvisation`; `https://demos.guitaralchemist.com/chatbot/` and `/api/chatbot/status` must return 200.
 
@@ -115,6 +115,19 @@ Assert-GaChatSessionSecure -SetCookieHeaders @($cookieProbe.Headers['Set-Cookie'
 The probe should show the 6-step canonical shape:
 `chat.request → orchestration.answer → orchestration.route → agent.semantic_result → notation.vextab → response.emit`,
 with `agent.id = skill.theorycomparison` on the orchestration steps once #221 ships and the cascade is wired. **No `orchestration.fallback` step** means cascade isn't being triggered — that's the healthy path.
+
+## Operator settings: `.deploy\local-env.cmd`
+
+Some settings belong to this host only and must survive redeploys, such as the opt-in Jev routing shadow (`docs/runbooks/router-jev-shadow.md`). Put them in `.deploy\local-env.cmd`, one `set` line each:
+
+```bat
+set GA_ROUTER_JEV_SHADOW=1
+```
+
+- The deploy script never writes or deletes this file, and `.deploy` is outside the clean-worktree check.
+- The launcher calls it once, before the first start. After editing it, restart the launcher with `Stop-ScheduledTask GA-Chatbot-5252` then `Start-ScheduledTask GA-Chatbot-5252`, or redeploy.
+- Never put secrets in it. API keys such as `TYPESAFE_API_KEY` come from the user environment, which the scheduled task inherits.
+- To turn a setting off, delete its line and restart the launcher.
 
 ## Rollback
 

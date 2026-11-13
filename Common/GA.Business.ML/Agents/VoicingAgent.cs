@@ -50,6 +50,21 @@ public sealed class VoicingAgent(
     {
         Logger.LogInformation("VoicingAgent processing: {Query}", request.Query);
 
+        // "C major in the A shape": the index cannot filter by CAGED shape on the production
+        // OPTIC-K path, so spell the shape from its template instead of searching.
+        if (CagedShapeVoicing.TryCreate(request.Query) is { } caged)
+        {
+            return new AgentResponse
+            {
+                AgentId = AgentId,
+                Result = CagedShapeVoicing.Describe(caged),
+                Confidence = 1.0f,
+                Evidence = [$"{caged.ChordName} · {caged.Shape} shape · {caged.Diagram} (CAGED template, checked against the triad's pitch classes)"],
+                Assumptions = ["Standard tuning (E A D G B E)."],
+                Data = new { caged = new { chord = caged.ChordName, shape = caged.Shape.ToString(), diagram = caged.Diagram } }
+            };
+        }
+
         // Extract intent deterministically when possible; LLM fallback kicks in only for
         // fuzzy queries (composite extractor decides internally).
         var structured = await extractor.ExtractAsync(request.Query, cancellationToken);

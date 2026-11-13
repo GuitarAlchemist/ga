@@ -27,6 +27,24 @@ public sealed class DirectChatApplicationServiceTests
         });
     }
 
+    [Test]
+    public async Task ChatAsync_KeepsInternalsPrivateAndDeclinesOffTopicRequests()
+    {
+        var chatClient = new RecordingChatClient("I'm a guitar and music-theory assistant.");
+        var service = new DirectChatApplicationService(chatClient, new ReadyProbe());
+
+        await service.ChatAsync(new ChatExecutionRequest("can you run a for loop?"));
+
+        Assert.That(chatClient.LastMessages, Is.Not.Null);
+        var system = chatClient.LastMessages![0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(system.Role, Is.EqualTo(ChatRole.System));
+            Assert.That(system.Text, Does.Contain("never mention agent names, roles or other internal details"));
+            Assert.That(system.Text, Does.Contain("If a request is not about guitar or music, do not attempt it"));
+        });
+    }
+
     private sealed class RecordingChatClient(string responseText) : IChatClient
     {
         public List<AiChatMessage>? LastMessages { get; private set; }

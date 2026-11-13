@@ -45,6 +45,12 @@ public sealed class SemanticIntentRouter(
     // after this dropped to 0.55 (2026-05-13), making the baseline measure a
     // threshold prod never used. One source of truth prevents recurrence.
     public const float DefaultMinConfidence = 0.55f;
+
+    /// <summary>
+    /// The query the startup warmup service routes to fill the example-embedding
+    /// cache. It is not user traffic, so the Jev shadow skips it.
+    /// </summary>
+    public const string WarmupQuery = "warmup";
     private static readonly TimeSpan DefaultEmbeddingTimeout = TimeSpan.FromSeconds(15);
 
     // Process-wide cache so intent vectors persist across requests. Keyed by
@@ -231,6 +237,22 @@ public sealed class SemanticIntentRouter(
         {
             var prodChosenForShadow = top.Score >= MinConfidence ? top.Intent.Id : null;
             shadow.LogShadow(query, queryVec, prodChosenForShadow);
+        }
+
+        // JEV SHADOW (default OFF; never affects routing): when GA_ROUTER_JEV_SHADOW=1
+        // and TYPESAFE_API_KEY is set, TypeSafe Jev classifies the same query over the
+        // intents production just scored, in the background, and its pick is logged
+        // next to production's. Enabling it sends the user's message to
+        // api.typesafe.ai. The startup warmup query is skipped: it is not user
+        // traffic. Observe returns immediately and never throws.
+        if (JevRoutingShadow.Instance is { } jev && !string.Equals(query, WarmupQuery, StringComparison.Ordinal))
+        {
+            jev.Observe(
+                query,
+                withHints.Select(r => r.Intent).ToList(),
+                top.Score >= MinConfidence ? top.Intent.Id : null,
+                top.Score,
+                margin);
         }
 
         // Query-embedding sink (Contract B for ix-duck's out-of-domain lens): persist

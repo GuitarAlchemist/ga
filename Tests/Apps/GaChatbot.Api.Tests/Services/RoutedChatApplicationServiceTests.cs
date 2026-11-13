@@ -70,6 +70,33 @@ public sealed class RoutedChatApplicationServiceTests
         });
     }
 
+    [TestCase("can you run a for loop?")]
+    [TestCase("hi")]
+    [TestCase("What is Phrygian mode?")]
+    [TestCase("Show me Cmaj7 chord voicings")]
+    [TestCase("Can you transcribe this riff as tab?")]
+    [TestCase("Improve this ii-V-I progression")]
+    public async Task ChatAsync_KeepsInternalsPrivateAndDeclinesOffTopicRequestsInEveryProfile(string message)
+    {
+        var chatClient = new RecordingChatClient("answer");
+        var service = new RoutedChatApplicationService(
+            chatClient,
+            new ReadyProbe(),
+            new LightweightChatRouter(),
+            new LightweightTheorySanityChecker());
+
+        await service.ChatAsync(new ChatExecutionRequest(message));
+
+        Assert.That(chatClient.LastMessages, Is.Not.Null);
+        var system = chatClient.LastMessages![0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(system.Role, Is.EqualTo(ChatRole.System));
+            Assert.That(system.Text, Does.Contain("never mention agent names, roles or other internal details"));
+            Assert.That(system.Text, Does.Contain("If a request is not about guitar or music, do not attempt it"));
+        });
+    }
+
     private sealed class RecordingChatClient(string responseText) : IChatClient
     {
         public List<AiChatMessage>? LastMessages { get; private set; }

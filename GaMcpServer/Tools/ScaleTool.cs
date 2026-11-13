@@ -1,6 +1,7 @@
 namespace GaMcpServer.Tools;
 
 using GA.Business.Config;
+using GA.Business.ML.Agents.Mcp;
 using GA.Domain.Core.Theory.Atonal;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
@@ -99,7 +100,7 @@ public static class ScaleTool
     {
         var parts = (key ?? "").Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length < 2)
-            throw new McpException($"Invalid key format '{key}'. Expected 'Root mode', e.g. 'G major'.");
+            throw new McpException($"Invalid key format '{McpEchoSanitizer.SanitizeEcho(key)}'. Expected 'Root mode', e.g. 'G major'.");
 
         var root = parts[0];
         var mode = string.Join(' ', parts[1].Split(' ', StringSplitOptions.RemoveEmptyEntries));
@@ -108,11 +109,11 @@ public static class ScaleTool
         var accidental = root.Length > 1 ? root[1..] : "";
         var shift = accidental switch { "" => 0, "#" => 1, "##" or "x" => 2, "b" => -1, "bb" => -2, _ => (int?)null };
         if (letter < 0 || shift is null)
-            throw new McpException($"Unknown root note '{root}'. Use a letter A-G with an optional #, ## (or x), b or bb, e.g. C, F#, Bb.");
+            throw new McpException($"Unknown root note '{McpEchoSanitizer.SanitizeEcho(root)}'. Use a letter A-G with an optional #, ## (or x), b or bb, e.g. C, F#, Bb.");
 
         if (!ModeOffsets.TryGetValue(mode, out var offsets))
             throw new McpException(
-                $"Unsupported mode '{mode}'. Use major, minor, natural minor, ionian, dorian, phrygian, lydian, mixolydian, aeolian or locrian.");
+                $"Unsupported mode '{McpEchoSanitizer.SanitizeEcho(mode)}'. Use major, minor, natural minor, ionian, dorian, phrygian, lydian, mixolydian, aeolian or locrian.");
 
         var rootPc = (LetterPitchClasses[letter] + shift.Value + 12) % 12;
         var notes = offsets.Select((offset, degree) =>

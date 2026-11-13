@@ -1,5 +1,6 @@
 namespace GaChatbot.Api.Services;
 
+using GA.Business.ML.Agents;
 using GA.Business.ML.Notation;
 using GaChatbot.Api.Controllers;
 using Microsoft.Extensions.AI;
@@ -113,7 +114,7 @@ public sealed class RoutedChatApplicationService(
     private static string BuildSystemPrompt(PromptProfile promptProfile)
     {
         var commonRules =
-            """
+            $"""
             You are Guitar Alchemist.
 
             Global rules:
@@ -124,6 +125,8 @@ public sealed class RoutedChatApplicationService(
             - Do not invent specific chord shapes, tabs, keys, or musical facts unless you can justify them from the user's prompt.
             - If the request is underspecified, say what assumption you are making.
             - Keep the answer useful for a guitarist, not academic for its own sake.
+            - {AssistantScopeRules.SpeakAsAssistant}.
+            - {AssistantScopeRules.DeclineOffTopic}.
             """ +
             Environment.NewLine +
             Environment.NewLine +

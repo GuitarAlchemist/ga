@@ -12,6 +12,9 @@
       .deploy/releases/<sha>/   one `dotnet publish` output per deployed commit
       .deploy/current           junction to the running release
       .deploy/run-chatbot.cmd   launcher run by the scheduled task (restarts on exit)
+      .deploy/local-env.cmd     optional, operator-owned: `set` lines the launcher calls
+                                before the first start (e.g. GA_ROUTER_JEV_SHADOW=1).
+                                Never generated or overwritten; never put secrets in it.
       .deploy/logs/             stdout, stderr and restart logs (rotated at 10 MB, one old copy)
     The host runs with the worktree root as its working directory, so it finds
     `state/` (telemetry) and `.git` (QA summary) there, and keeps them across releases.
@@ -190,6 +193,7 @@ set Chatbot__PathBase=/chatbot
 set AI__CascadeProvider=mistral
 set ASPNETCORE_URLS=$localBase
 $indexLine
+if exist "$deployDir\local-env.cmd" call "$deployDir\local-env.cmd"
 cd /d "$DeployRoot"
 :run
 call :rotate "$logDir\chatbot.out.log"

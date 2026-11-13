@@ -1,11 +1,14 @@
 ﻿namespace GaMcpServer.Tools;
 
+using GA.Business.ML.Agents.Mcp;
 using GA.Domain.Core.Primitives;
 using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Notes;
 using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Theory.Tonal;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
+using ModelContextProtocol;
 using ModelContextProtocol.Server;
 
 [McpServerToolType]
@@ -34,10 +37,9 @@ public static class KeyTool
 
     [McpServerTool]
     [Description("Get key signature information")]
-    public static KeyInfo GetKeySignatureInfo(string keyName)
+    public static KeyInfo GetKeySignatureInfo([Description(KeyNameFormat)] string keyName)
     {
-        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
-                  ?? throw new InvalidOperationException($"Key not found: {keyName}");
+        var key = FindKey(keyName);
 
         return new KeyInfo(
             key.ToString(),
@@ -52,20 +54,18 @@ public static class KeyTool
 
     [McpServerTool]
     [Description("Get all notes in a key")]
-    public static IEnumerable<string> GetKeyNotes(string keyName)
+    public static IEnumerable<string> GetKeyNotes([Description(KeyNameFormat)] string keyName)
     {
-        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
-                  ?? throw new InvalidOperationException($"Key not found: {keyName}");
+        var key = FindKey(keyName);
 
         return key.Notes.Select(n => n.ToString());
     }
 
     [McpServerTool]
     [Description("Get all accidentals in a key signature")]
-    public static string GetKeyAccidentals(string keyName)
+    public static string GetKeyAccidentals([Description(KeyNameFormat)] string keyName)
     {
-        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
-                  ?? throw new InvalidOperationException($"Key not found: {keyName}");
+        var key = FindKey(keyName);
 
         return key.KeySignature.AccidentedNotes.ToString();
     }
@@ -102,7 +102,7 @@ public static class KeyTool
     {
         if (!Enum.TryParse<AccidentalKind>(accidentalKind, true, out var kind))
         {
-            throw new InvalidOperationException($"Invalid accidental kind: {accidentalKind}. Use 'Sharp' or 'Flat'.");
+            throw new McpException($"Invalid accidental kind: {McpEchoSanitizer.SanitizeEcho(accidentalKind)}. Use 'Sharp' or 'Flat'.");
         }
 
         return Key.Items
@@ -112,10 +112,9 @@ public static class KeyTool
 
     [McpServerTool]
     [Description("Get pitch classes for a key")]
-    public static string GetKeyPitchClasses(string keyName)
+    public static string GetKeyPitchClasses([Description(KeyNameFormat)] string keyName)
     {
-        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
-                  ?? throw new InvalidOperationException($"Key not found: {keyName}");
+        var key = FindKey(keyName);
 
         return key.PitchClassSet.ToString();
     }
@@ -123,28 +122,26 @@ public static class KeyTool
     [McpServerTool]
     [Description("Check if a note is in a key")]
     public static bool IsNoteInKey(
-        [Description("Name of the key")] string keyName,
+        [Description(KeyNameFormat)] string keyName,
         [Description("Note to check")] string noteName)
     {
-        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
-                  ?? throw new InvalidOperationException($"Key not found: {keyName}");
+        var key = FindKey(keyName);
 
         return key.Notes.Any(n => n.ToString() == noteName);
     }
 
     [McpServerTool]
     [Description("Get relative key")]
-    public static string GetRelativeKey(string keyName)
+    public static string GetRelativeKey([Description(KeyNameFormat)] string keyName)
     {
-        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
-                  ?? throw new InvalidOperationException($"Key not found: {keyName}");
+        var key = FindKey(keyName);
 
         // Relative keys share a key signature and use opposite modes.
         Key relativeKey = key.KeyMode switch
         {
             KeyMode.Major => new Key.Minor(key.KeySignature),
             KeyMode.Minor => new Key.Major(key.KeySignature),
-            _ => throw new InvalidOperationException($"Unsupported key mode: {key.KeyMode}")
+            _ => throw new McpException($"Unsupported key mode: {key.KeyMode}")
         };
 
         return relativeKey.ToString();
@@ -152,10 +149,9 @@ public static class KeyTool
 
     [McpServerTool]
     [Description("Get parallel key")]
-    public static string GetParallelKey(string keyName)
+    public static string GetParallelKey([Description(KeyNameFormat)] string keyName)
     {
-        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
-                  ?? throw new InvalidOperationException($"Key not found: {keyName}");
+        var key = FindKey(keyName);
 
         var targetMode = key.KeyMode == KeyMode.Major ? KeyMode.Minor : KeyMode.Major;
         var parallelKey = Key.Items.FirstOrDefault(candidate =>
@@ -164,27 +160,25 @@ public static class KeyTool
             candidate.Root.Accidental == key.Root.Accidental)
             ?? Key.Items.FirstOrDefault(candidate =>
                 candidate.KeyMode == targetMode && candidate.Root.PitchClass == key.Root.PitchClass)
-            ?? throw new InvalidOperationException($"Parallel key not found for: {keyName}");
+            ?? throw new McpException($"Parallel key not found for: {McpEchoSanitizer.SanitizeEcho(keyName)}");
 
         return parallelKey.ToString();
     }
 
     [McpServerTool]
     [Description("Get scale degrees for a key")]
-    public static IEnumerable<string> GetScaleDegrees(string keyName)
+    public static IEnumerable<string> GetScaleDegrees([Description(KeyNameFormat)] string keyName)
     {
-        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
-                  ?? throw new InvalidOperationException($"Key not found: {keyName}");
+        var key = FindKey(keyName);
 
         return key.Notes.Select(d => d.ToString());
     }
 
     [McpServerTool]
     [Description("Get key circle of fifths position")]
-    public static int GetCircleOfFifthsPosition(string keyName)
+    public static int GetCircleOfFifthsPosition([Description(KeyNameFormat)] string keyName)
     {
-        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
-                  ?? throw new InvalidOperationException($"Key not found: {keyName}");
+        var key = FindKey(keyName);
 
         var position = key.KeySignature.AccidentalKind switch
         {
@@ -197,10 +191,9 @@ public static class KeyTool
 
     [McpServerTool]
     [Description("Get neighboring keys in circle of fifths")]
-    public static NeighboringKeys GetNeighboringKeys(string keyName)
+    public static NeighboringKeys GetNeighboringKeys([Description(KeyNameFormat)] string keyName)
     {
-        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
-                  ?? throw new InvalidOperationException($"Key not found: {keyName}");
+        var key = FindKey(keyName);
 
         var position = GetCircleOfFifthsPosition(keyName);
         var prevKey = Key.Items.FirstOrDefault(candidate =>
@@ -230,14 +223,12 @@ public static class KeyTool
     [McpServerTool]
     [Description("Compare two keys")]
     public static string CompareKeys(
-        [Description("First key name")] string keyName1,
-        [Description("Second key name")] string keyName2)
+        [Description("First key. " + KeyNameFormat)] string keyName1,
+        [Description("Second key. " + KeyNameFormat)] string keyName2)
     {
-        var key1 = Key.Items.FirstOrDefault(k => k.ToString() == keyName1)
-                   ?? throw new InvalidOperationException($"Key not found: {keyName1}");
+        var key1 = FindKey(keyName1);
 
-        var key2 = Key.Items.FirstOrDefault(k => k.ToString() == keyName2)
-                   ?? throw new InvalidOperationException($"Key not found: {keyName2}");
+        var key2 = FindKey(keyName2);
 
         var commonNotes = key1.Notes.Intersect(key2.Notes);
 
@@ -259,7 +250,7 @@ public static class KeyTool
     {
         if (!Enum.TryParse<KeyMode>(mode, true, out var keyMode))
         {
-            throw new InvalidOperationException($"Invalid mode: {mode}. Use 'Major' or 'Minor'.");
+            throw new McpException($"Invalid mode: {McpEchoSanitizer.SanitizeEcho(mode)}. Use 'Major' or 'Minor'.");
         }
 
         var key = Key.Items.FirstOrDefault(k =>
@@ -267,7 +258,45 @@ public static class KeyTool
             k.KeyMode == keyMode);
 
         return key?.ToString()
-               ?? throw new InvalidOperationException($"No key found with root {rootNote} and mode {mode}");
+               ?? throw new McpException(
+                   $"No key found with root {McpEchoSanitizer.SanitizeEcho(rootNote)} and mode {McpEchoSanitizer.SanitizeEcho(mode)}");
+    }
+
+    /// <summary>The key name format every key tool expects: the strings <see cref="GetAllKeys"/> returns.</summary>
+    private const string KeyNameFormat =
+        "Key name in the format get_all_keys returns: 'Key of C' for C major, 'Key of Am' for A minor " +
+        "(e.g. 'Key of Bb', 'Key of F#m')";
+
+    private static readonly Regex KeyLikeName = new(
+        @"^\s*(?:key\s+of\s+)?(?<letter>[A-Ga-g])(?<accidental>#|b)?\s*(?<mode>major|maj|minor|min|m)?\s*$",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// Finds a key by its <see cref="Key.ToString"/> name. A miss throws <see cref="McpException"/>, whose
+    /// message reaches the client (any other exception surfaces only as the SDK's generic "An error occurred
+    /// invoking …"), and names the expected key when the input reads like "A major" or "F# minor".
+    /// </summary>
+    private static Key FindKey(string keyName)
+    {
+        var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName);
+        if (key is not null)
+            return key;
+
+        var hint = SuggestKeyName(keyName) is { } suggestion ? $" Did you mean '{suggestion}'?" : "";
+        throw new McpException(
+            $"Key not found: '{McpEchoSanitizer.SanitizeEcho(keyName)}'. Use the get_all_keys format: 'Key of C' for C major, 'Key of Am' for A minor.{hint}");
+    }
+
+    private static string? SuggestKeyName(string? keyName)
+    {
+        var match = KeyLikeName.Match(keyName ?? "");
+        if (!match.Success)
+            return null;
+
+        var root = char.ToUpperInvariant(match.Groups["letter"].Value[0]) + match.Groups["accidental"].Value.ToLowerInvariant();
+        var isMinor = match.Groups["mode"].Value.ToLowerInvariant() is "m" or "min" or "minor";
+        var candidate = $"Key of {root}{(isMinor ? "m" : "")}";
+        return Key.Items.Any(k => k.ToString() == candidate) ? candidate : null;
     }
 
     [PublicAPI]
