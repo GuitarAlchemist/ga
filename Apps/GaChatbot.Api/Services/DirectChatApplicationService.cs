@@ -80,7 +80,8 @@ public sealed class DirectChatApplicationService(
                 AssistantScopeRules.DeclineOffTopic + "." +
                 Environment.NewLine +
                 Environment.NewLine +
-                PlayableNotationFormatter.PromptGuidance)
+                // No voicing source reaches this prompt, so the model must not write frets.
+                PlayableNotationFormatter.UngroundedGuidance)
         };
 
         if (request.History is { Count: > 0 })
