@@ -20,11 +20,11 @@ state/digests/
 | Writer | Trigger | Content |
 |---|---|---|
 | `/digest` skill | Model-invoked at breakpoints | Rich — all sections populated |
-| `Scripts/precompact-digest.ps1` (PreCompact hook) | Auto on compaction | Metadata only (fallback if /digest didn't run) |
+| `ga-hooks precompact-digest` (PreCompact hook) | Auto on compaction | Metadata only (fallback if /digest didn't run) |
 
 ## Who reads
 
-- **`Scripts/sessionstart-digest.ps1`** (SessionStart hook) — emits
+- **`ga-hooks session-start`** (SessionStart hook, on compact or resume) — emits
   `latest.md` to stdout. Claude Code captures SessionStart stdout and
   injects it as `additionalContext` for the model on session start.
 

@@ -8,9 +8,9 @@ last_verified: 2026-05-14
 # /digest
 
 Captures the **meaningful state of the current session** to
-`state/digests/latest.md`. The `Scripts/sessionstart-digest.ps1` hook reads
-it on the next session start and emits it as `additionalContext` for the
-model. Pairs with `Scripts/precompact-digest.ps1` which provides a
+`state/digests/latest.md`. The `ga-hooks session-start` hook reads
+it when a session starts from a compaction or a resume and emits it as `additionalContext` for the
+model. Pairs with `ga-hooks precompact-digest` which provides a
 metadata-only fallback when /digest isn't invoked before auto-compaction.
 
 ## When to run
@@ -172,7 +172,7 @@ read this and mark the corresponding `success_criteria` entry as
 ## Related
 
 - [[reference-cherny-learnings-ritual]] / `/learnings` — surprises, not state.
-- `Scripts/precompact-digest.ps1` — automatic fallback on PreCompact event.
-- `Scripts/sessionstart-digest.ps1` — reads `latest.md` back on session start.
+- `ga-hooks precompact-digest` / `digest-stop-finalize` (`go/claudehooks/cmd/ga-hooks`) — automatic fallbacks on PreCompact and Stop.
+- `ga-hooks session-start` — reads `latest.md` back when a session starts from a compaction or a resume.
 - `state/digests/README.md` — directory layout + retention policy.
 - `.claude/agent-memory/octo-personas-context-manager/project_session_digest_design.md` — the original design doc.

@@ -101,7 +101,7 @@ Progressive-disclosure map for fresh agents. Look here before grepping — most 
 
 **Read first (always):**
 - `CLAUDE.md` (this file) — conventions, layered architecture, AI surfaces.
-- `state/digests/latest.md` — last session's cursor + in-flight + hypotheses. Written by `/digest` (or the Stop-hook fallback in `Scripts/precompact-digest.ps1`); auto-injected at session start by `Scripts/sessionstart-digest.ps1`.
+- `state/digests/latest.md` — last session's cursor + in-flight + hypotheses. Written by `/digest` (or the hook fallbacks `ga-hooks precompact-digest` / `digest-stop-finalize`); auto-injected after a compaction or resume by `ga-hooks session-start`. The hooks are one Go program, `go/claudehooks/cmd/ga-hooks` (no shell in hooks; see `.claude/hooks/README.md`).
 - `BACKLOG.md` — H2 epics → H3 sub-sections. Top-of-queue work.
 
 **If you're …**
@@ -121,7 +121,7 @@ Progressive-disclosure map for fresh agents. Look here before grepping — most 
 | Checking quality baselines | `state/quality/` (daily snapshots: chatbot-qa, voicing-analysis, readme-drift). Aggregated trend: `docs/quality/README.md` |
 | Looking up an MCP / federation peer | `.mcp.json` (ix, demerzel, chrome-devtools, context7, ga, tars, notebooklm, sentrux, hari). Capability registry: `../Demerzel/schemas/capability-registry.json` |
 | Updating UI tokens / colors | `DESIGN.md` (canonical YAML frontmatter) → `npm run gen:theme` in `ReactComponents/ga-react-components` → `src/theme.ts`. Pre-commit hook verifies sync. |
-| Running anything | `Scripts/` (`start-all.ps1`, `install-ga-service.ps1`, `run-all-tests.ps1`, `precompact-digest.ps1`, `sessionstart-digest.ps1`); runbooks in `docs/runbooks/` (`chatbot-deploy.md`) |
+| Running anything | `Scripts/` (`start-all.ps1`, `install-ga-service.ps1`, `run-all-tests.ps1`); Claude Code hooks in `go/claudehooks/` (`ga-hooks`); runbooks in `docs/runbooks/` (`chatbot-deploy.md`) |
 | Reading governance / Galactic Protocol | `../Demerzel/` constitutions + IXQL pipelines; `demerzel-*` skills locally |
 
 **Live everything-summary:** `https://demos.guitaralchemist.com/dev-data/manifest` aggregates BACKLOG, quality snapshots, architecture inventory, process health, recent activity, agent files, MCP servers — generated fresh on each request from `vite.config.ts` middleware. The visual dashboard wraps it at `/test` (Demos + Development tabs).
@@ -143,7 +143,7 @@ Self-improvement reflex: when the user corrects you, invoke `/correct` so the ru
 
 ## Session continuity (Cherny pattern)
 
-- `/digest` — captures session state to `state/digests/latest.md`. Auto-fallback via `Scripts/precompact-digest.ps1`; auto-injected via `Scripts/sessionstart-digest.ps1`.
+- `/digest` — captures session state to `state/digests/latest.md`. Auto-fallback via `ga-hooks precompact-digest`; auto-injected via `ga-hooks session-start` (on compact/resume).
 - `/learnings` — captures surprises to `docs/solutions/<category>/<date>-<topic>.md`.
 - `/correct` — turns user corrections into permanent rules below. Keep entries ~5 lines: Rule, Why, How to apply.
 
@@ -155,7 +155,7 @@ _Appended by `/correct` when the user corrects an approach. Persists across sess
 
 ### Stop-hook digest stomp (2026-05-16)
 
-**Rule:** the Stop hook (`Scripts/precompact-digest.ps1`) overwrites `state/digests/latest.md` with a metadata-only stub if `/digest` wasn't recent. Re-write the rich digest as the final action of the session, or rewrite from memory if you see `trigger: stop-hook-finalize` in the frontmatter mid-session.
+**Rule:** the Stop hook (`ga-hooks digest-stop-finalize`) overwrites `state/digests/latest.md` with a metadata-only stub if `/digest` wasn't recent. Re-write the rich digest as the final action of the session, or rewrite from memory if you see `trigger: stop-hook-finalize` in the frontmatter mid-session.
 
 **Why:** observed twice 2026-05-16 (merge drive + supervised `/auto-optimize` cycle). Each stomp reverts `session_id` to `stop-finalize` and bodies to a four-line stub. Family pattern at `docs/solutions/tooling/2026-05-16-auto-optimize-oracle-silent-success-build-failure.md`.
 
