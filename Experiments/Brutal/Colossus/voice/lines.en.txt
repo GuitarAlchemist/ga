@@ -1,0 +1,7 @@
+# The colossus's lines in English, one for each line of lines.fr.txt, in the same order: the subtitles when the scene is
+# in English (--lang en, or L), and the English cues of a stream (--cues). Lines starting with # are skipped.
+Little figure at the end of the bridge… I see you.
+I am made of ten thousand machines. Not one of them knows what a face is. Together, they remember.
+Each time I come apart, I forget a little. Each time I return, I find you again.
+The city sleeps under the mist. I keep watch.
+Listen. The wind runs between the towers… that is my voice.
