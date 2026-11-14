@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "d89065f890bf7e75fcde576e4da7daf907343e45",
-    "generatedAt": "2026-11-14T02:15:47.799559+00:00",
+    "commitSha": "079cb42e488b9360c3ab1763733e34c4860151dc",
+    "generatedAt": "2026-11-14T02:16:43.031953+00:00",
     "repoCount": 5,
-    "totalPRs": 23
+    "totalPRs": 21
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 12,
+      "prCount": 10,
       "prs": [
         {
           "ageDays": 2,
@@ -166,18 +166,6 @@
         {
           "ageDays": 40,
           "author": "spareilleux",
-          "createdAt": "2026-10-04T20:48:18Z",
-          "failingChecks": 0,
-          "headRef": "fix/chord-symbol-parser",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 820,
-          "title": "fix(chords): ChordSymbolParser rejects what it can't read, and reads each alteration",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/820"
-        },
-        {
-          "ageDays": 40,
-          "author": "spareilleux",
           "createdAt": "2026-10-04T16:47:04Z",
           "failingChecks": 4,
           "headRef": "fix/build-ci",
@@ -206,7 +194,7 @@
           "failingChecks": 0,
           "headRef": "fix/771-key-identification",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 780,
           "title": "fix(keys): read the progression as written \u2014 sharps before a space, \u266d/\u266f, \u00f8/\u00b0/m7b5, \u0394, slash chords and repeats (#771)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/780"
@@ -246,18 +234,6 @@
           "number": 738,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/ga/pull/738"
-        },
-        {
-          "ageDays": 103,
-          "author": "spareilleux",
-          "createdAt": "2026-08-02T21:29:06Z",
-          "failingChecks": 0,
-          "headRef": "codex/629-policy-readiness",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 637,
-          "title": "feat(harness): align AFK policy and readiness gates",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/637"
         }
       ]
     },
