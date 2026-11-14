@@ -365,6 +365,7 @@ static async Task RunMongoDbSync(IConfigurationRoot config)
     {
         WriteLine($"Error during sync: {ex.Message}");
         WriteLine($"Stack trace: {ex.StackTrace}");
+        Environment.Exit(1);
     }
 }
 
