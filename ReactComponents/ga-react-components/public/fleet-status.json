@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "7c56155f5f0c9f540502cc8d33180f1f89538435",
-    "generatedAt": "2026-11-14T00:14:47.553372+00:00",
+    "commitSha": "0233f6b3404e5691ce4e00f35456226d46938f8c",
+    "generatedAt": "2026-11-14T01:47:06.636442+00:00",
     "repoCount": 5,
-    "totalPRs": 31
+    "totalPRs": 30
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 18,
+      "prCount": 17,
       "prs": [
         {
           "ageDays": 2,
@@ -250,18 +250,6 @@
         {
           "ageDays": 40,
           "author": "spareilleux",
-          "createdAt": "2026-10-04T07:07:35Z",
-          "failingChecks": 0,
-          "headRef": "fix/music-theory-names",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 810,
-          "title": "fix(domain): tritone scale notes, diminished mode names, equal divisions",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/810"
-        },
-        {
-          "ageDays": 40,
-          "author": "spareilleux",
           "createdAt": "2026-10-04T03:41:20Z",
           "failingChecks": 0,
           "headRef": "fix/chatbot-no-invented-frets",
@@ -353,7 +341,7 @@
           "createdAt": "2026-10-30T00:06:04Z",
           "failingChecks": 0,
           "headRef": "docs/adr-durable-agents",
-          "isDraft": true,
+          "isDraft": false,
           "mergeable": "MERGEABLE",
           "number": 481,
           "title": "docs(adr): durable runs in Starlark, agent DSLs by Earley, durable modules like bzlmod (ADR-0016..0018)",
@@ -363,10 +351,10 @@
           "ageDays": 27,
           "author": "spareilleux",
           "createdAt": "2026-10-17T20:06:48Z",
-          "failingChecks": 0,
+          "failingChecks": 1,
           "headRef": "docs/pr-coordination-room",
-          "isDraft": true,
-          "mergeable": "CONFLICTING",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
           "number": 388,
           "title": "docs(contracts): PR coordination room pilot \u2014 draft, do not merge",
           "url": "https://github.com/GuitarAlchemist/ix/pull/388"
