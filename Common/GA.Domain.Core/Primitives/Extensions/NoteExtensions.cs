@@ -10,6 +10,9 @@ using Interval = Intervals.Interval;
 /// </summary>
 public static class NoteExtensions
 {
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     When no <see cref="IntervalQuality" /> can name the difference (triply diminished/augmented).
+    /// </exception>
     private static IntervalQuality DetermineQuality(SimpleIntervalSize size, Semitones semitones)
     {
         // Grounded in interval quality classification (perfect/major/minor/augmented/diminished).
@@ -27,9 +30,12 @@ public static class NoteExtensions
             _ => 0
         };
 
-        // Handle perfect intervals
+        // The semitone count arrives modulo 12 (0-11). Wrap the distance from the expected
+        // perfect/major interval into -6..5 so that a lowered unison (C# to C) is a diminished
+        // unison (-1), not a perfect one (+11), and a raised seventh (C to B#) is augmented (+1).
         var consonance = size.Consonance;
-        var difference = semitones.Value - expectedSemitones;
+        var difference = (((semitones.Value - expectedSemitones + 6) % 12) + 12) % 12 - 6;
+
         if (consonance == IntervalConsonance.Perfect)
         {
             return difference switch
@@ -39,7 +45,7 @@ public static class NoteExtensions
                 0 => IntervalQuality.Perfect,
                 1 => IntervalQuality.Augmented,
                 2 => IntervalQuality.DoublyAugmented,
-                _ => IntervalQuality.Perfect
+                _ => throw NoStandardQuality(size, difference)
             };
         }
 
@@ -52,9 +58,16 @@ public static class NoteExtensions
             0 => IntervalQuality.Major,
             1 => IntervalQuality.Augmented,
             2 => IntervalQuality.DoublyAugmented,
-            _ => IntervalQuality.Major
+            _ => throw NoStandardQuality(size, difference)
         };
     }
+
+    private static ArgumentOutOfRangeException NoStandardQuality(SimpleIntervalSize size, int difference) =>
+        new(
+            nameof(difference),
+            difference,
+            $"No IntervalQuality names a size-{size.Value} interval that is {difference} semitones from its perfect/major reference " +
+            "(for example B# to Fb or Fb to B#).");
 
     /// <summary>
     ///     Extensions for 2 notes
@@ -101,6 +114,9 @@ public static class NoteExtensions
         ///     Example: <c>new Note.Accidented(NaturalNote.F).GetInterval(new Note.Accidented(NaturalNote.B))</c> returns
         ///     <c>Interval.Simple.A4</c>.
         /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     When the pair has no standard quality (B# to Fb, Fb to B#).
+        /// </exception>
         public Interval.Simple GetInterval(Note.Accidented note2)
         {
             // Calculate the interval size based on natural notes
