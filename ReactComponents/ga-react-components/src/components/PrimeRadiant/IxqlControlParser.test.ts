@@ -202,6 +202,27 @@ describe('parseIxqlCommand', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toContain('nesting depth');
   });
+
+  // RENDER
+  it('parses RENDER CAUSTICS ON with a value', () => {
+    const r = parseIxqlCommand('RENDER CAUSTICS ON 0.5');
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.command).toEqual({ type: 'render', target: 'caustics', action: 'on', value: 0.5 });
+  });
+
+  it('parses RENDER GROMMET ON, OFF and bare toggle', () => {
+    for (const [line, action] of [['RENDER GROMMET ON', 'on'], ['RENDER GROMMET OFF', 'off'], ['RENDER GROMMET', 'toggle']] as const) {
+      const r = parseIxqlCommand(line);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.command).toEqual({ type: 'render', target: 'grommet', action, value: undefined });
+    }
+  });
+
+  it('rejects an unknown RENDER target instead of ignoring it', () => {
+    const r = parseIxqlCommand('RENDER KNOT TOGGLE');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("Unknown RENDER target 'knot'. Expected MOEBIUS, CAUSTICS, DISPERSION, BLOOM, GROMMET");
+  });
 });
 
 // ---------------------------------------------------------------------------
