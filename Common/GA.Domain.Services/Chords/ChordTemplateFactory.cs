@@ -34,32 +34,11 @@ public static class ChordTemplateFactory
     ///     5. All extensions (triad through 13th)
     ///     This is the master method that replaces any hard-coded chord libraries.
     /// </summary>
-    public static IEnumerable<ChordTemplate> GenerateAllPossibleChords()
-    {
-        // 1. Generate from all modal families (systematic approach)
-        foreach (var chord in GenerateFromAllModalFamilies())
-        {
-            yield return chord;
-        }
-
-        // 2. Generate from traditional scale modes (diatonic, harmonic minor, etc.)
-        foreach (var chord in GenerateFromTraditionalScales())
-        {
-            yield return chord;
-        }
-
-        // 3. Generate from symmetrical scales
-        foreach (var chord in GenerateFromSymmetricalScales())
-        {
-            yield return chord;
-        }
-
-        // 4. Generate from pentatonic scales
-        foreach (var chord in GenerateFromPentatonicScales())
-        {
-            yield return chord;
-        }
-    }
+    /// <remarks>
+    ///     <see cref="GenerateFromAllModalFamilies" /> already runs the traditional, symmetrical and pentatonic
+    ///     scales: running them again after it yielded every template twice.
+    /// </remarks>
+    public static IEnumerable<ChordTemplate> GenerateAllPossibleChords() => GenerateFromAllModalFamilies();
 
     /// <summary>
     ///     Same as <see cref="GenerateAllPossibleChords" /> but filters out
