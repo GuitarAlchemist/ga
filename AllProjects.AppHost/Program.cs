@@ -150,7 +150,7 @@ builder.AddProject("ga-mcp-server", @"..\GaMcpServer\GaMcpServer.csproj")
     .WithReference(redis);
 
 // Add ga-client (React frontend) - as NPM project
-builder.AddNpmApp("ga-client", "../Apps/ga-client")
+builder.AddJavaScriptApp("ga-client", "../Apps/ga-client", "start")
     .WithHttpEndpoint(5173, env: "PORT")
     .WithExternalHttpEndpoints()
     .PublishAsDockerFile();
