@@ -18,16 +18,16 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
+| [#858](https://github.com/GuitarAlchemist/ga/pull/858) | feat(scripts): agent-tree-r1 bounded supervision slice (draft, #855) (draft) | 0d | UNKNOWN | 0 | spareilleux |
 | [#856](https://github.com/GuitarAlchemist/ga/pull/856) | fix(domain): GetInterval quality follows signed semitone distance (draft) | 0d | UNKNOWN | 0 | app/claude |
 | [#854](https://github.com/GuitarAlchemist/ga/pull/854) | fix(chatbot): no invented frets, allow user-supplied ones (replaces #8 (draft) | 0d | UNKNOWN | 0 | app/claude |
 | [#853](https://github.com/GuitarAlchemist/ga/pull/853) | fix(skills): theoretical keys + parallel-major notes, reconciled with  (draft) | 0d | UNKNOWN | 0 | app/claude |
 | [#851](https://github.com/GuitarAlchemist/ga/pull/851) | Experiments/Brutal: GeoTiles, OGC 3D Tiles in a BRUTAL window (draft) | 2d | MERGEABLE | 1 | spareilleux |
-| [#845](https://github.com/GuitarAlchemist/ga/pull/845) | fix: clarify scale validation and repair frontend CI (draft) | 18d | UNKNOWN | 0 | spareilleux |
+| [#845](https://github.com/GuitarAlchemist/ga/pull/845) | fix: clarify scale validation and repair frontend CI (draft) | 19d | UNKNOWN | 0 | spareilleux |
 | [#840](https://github.com/GuitarAlchemist/ga/pull/840) | Experiments/Brutal: Lego, composable scenes from typed nested blocks ( (draft) | 24d | CONFLICTING | 0 | spareilleux |
 | [#839](https://github.com/GuitarAlchemist/ga/pull/839) | Experiments/Brutal: BRUTAL evaluation prototype, M1 window lifecycle ( (draft) | 25d | UNKNOWN | 1 | spareilleux |
-| [#812](https://github.com/GuitarAlchemist/ga/pull/812) | build(ci): apply the package Update items, run three orphaned test pro | 41d | MERGEABLE | 1 | spareilleux |
 | [#807](https://github.com/GuitarAlchemist/ga/pull/807) | fix(chatbot): stop ungrounded chat prompts from inviting invented fret | 41d | UNKNOWN | 0 | spareilleux |
-| [#779](https://github.com/GuitarAlchemist/ga/pull/779) | fix(skills): name the relative key by key signature, and theoretical k | 44d | UNKNOWN | 0 | spareilleux |
+| [#779](https://github.com/GuitarAlchemist/ga/pull/779) | fix(skills): name the relative key by key signature, and theoretical k | 45d | UNKNOWN | 0 | spareilleux |
 | [#738](https://github.com/GuitarAlchemist/ga/pull/738) | ci: push to main over the deploy key, and run CI under the merge queue | 50d | UNKNOWN | 2 | spareilleux |
 
 ### ix (1 open)
@@ -40,23 +40,23 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#392](https://github.com/GuitarAlchemist/tars/pull/392) | feat: check the constraints that name code against the code | 32d | UNKNOWN | 0 | spareilleux |
-| [#381](https://github.com/GuitarAlchemist/tars/pull/381) | feat: let evolve's teacher run on a paid API with openai:, gemini: or  | 41d | UNKNOWN | 0 | spareilleux |
-| [#346](https://github.com/GuitarAlchemist/tars/pull/346) | docs: stop calling a project file a one-way door | 46d | UNKNOWN | 0 | spareilleux |
-| [#337](https://github.com/GuitarAlchemist/tars/pull/337) | fix: let the required check run on a pull request that is not based on | 47d | UNKNOWN | 0 | spareilleux |
-| [#319](https://github.com/GuitarAlchemist/tars/pull/319) | ci: push to main over the deploy key, and run CI under the merge queue | 50d | UNKNOWN | 0 | spareilleux |
+| [#392](https://github.com/GuitarAlchemist/tars/pull/392) | feat: check the constraints that name code against the code | 32d | MERGEABLE | 0 | spareilleux |
+| [#381](https://github.com/GuitarAlchemist/tars/pull/381) | feat: let evolve's teacher run on a paid API with openai:, gemini: or  | 41d | MERGEABLE | 0 | spareilleux |
+| [#346](https://github.com/GuitarAlchemist/tars/pull/346) | docs: stop calling a project file a one-way door | 46d | MERGEABLE | 0 | spareilleux |
+| [#337](https://github.com/GuitarAlchemist/tars/pull/337) | fix: let the required check run on a pull request that is not based on | 47d | MERGEABLE | 0 | spareilleux |
+| [#319](https://github.com/GuitarAlchemist/tars/pull/319) | ci: push to main over the deploy key, and run CI under the merge queue | 50d | MERGEABLE | 0 | spareilleux |
 
 ### Demerzel (7 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
 | [#1303](https://github.com/GuitarAlchemist/Demerzel/pull/1303) | chore(hooks): port the Claude Code digest hooks to Go (scripts/claudeh | 0d | MERGEABLE | 1 | spareilleux |
-| [#1126](https://github.com/GuitarAlchemist/Demerzel/pull/1126) | ci: run under the merge queue | 50d | UNKNOWN | 1 | spareilleux |
-| [#1114](https://github.com/GuitarAlchemist/Demerzel/pull/1114) | feat(contracts): validate Gaia continuity receipts | 54d | UNKNOWN | 1 | spareilleux |
-| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 61d | UNKNOWN | 1 | spareilleux |
+| [#1126](https://github.com/GuitarAlchemist/Demerzel/pull/1126) | ci: run under the merge queue | 50d | MERGEABLE | 1 | spareilleux |
+| [#1114](https://github.com/GuitarAlchemist/Demerzel/pull/1114) | feat(contracts): validate Gaia continuity receipts | 54d | MERGEABLE | 1 | spareilleux |
+| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 61d | MERGEABLE | 1 | spareilleux |
 | [#1084](https://github.com/GuitarAlchemist/Demerzel/pull/1084) | ci(registry-check): gate capability-registry breaking changes with ix- | 61d | MERGEABLE | 1 | spareilleux |
-| [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 92d | UNKNOWN | 1 | spareilleux |
-| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 118d | UNKNOWN | 3 | spareilleux |
+| [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 92d | MERGEABLE | 1 | spareilleux |
+| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 119d | MERGEABLE | 3 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -90,6 +90,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-11-14T22:01:16.867615+00:00 UTC_
+_Generated: 2026-11-14T23:41:11.462061+00:00 UTC_
 
-_Commit: `6b775d4070e5`_
+_Commit: `f8443ba5e873`_
