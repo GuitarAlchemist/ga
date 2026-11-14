@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "0233f6b3404e5691ce4e00f35456226d46938f8c",
-    "generatedAt": "2026-11-14T01:47:06.636442+00:00",
+    "commitSha": "a5f420f13e9ef2098078f4d2f61623aa75715256",
+    "generatedAt": "2026-11-14T02:11:00.349793+00:00",
     "repoCount": 5,
-    "totalPRs": 30
+    "totalPRs": 27
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 17,
+      "prCount": 16,
       "prs": [
         {
           "ageDays": 2,
@@ -198,18 +198,6 @@
           "number": 820,
           "title": "fix(chords): ChordSymbolParser rejects what it can't read, and reads each alteration",
           "url": "https://github.com/GuitarAlchemist/ga/pull/820"
-        },
-        {
-          "ageDays": 40,
-          "author": "spareilleux",
-          "createdAt": "2026-10-04T20:13:17Z",
-          "failingChecks": 0,
-          "headRef": "fix/voicing-labels",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 819,
-          "title": "fix(voicings): name drop voicings by their lowered voices, and shells by root, third and seventh",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/819"
         },
         {
           "ageDays": 40,
@@ -333,33 +321,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 2,
-      "prs": [
-        {
-          "ageDays": 15,
-          "author": "spareilleux",
-          "createdAt": "2026-10-30T00:06:04Z",
-          "failingChecks": 0,
-          "headRef": "docs/adr-durable-agents",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 481,
-          "title": "docs(adr): durable runs in Starlark, agent DSLs by Earley, durable modules like bzlmod (ADR-0016..0018)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/481"
-        },
-        {
-          "ageDays": 27,
-          "author": "spareilleux",
-          "createdAt": "2026-10-17T20:06:48Z",
-          "failingChecks": 1,
-          "headRef": "docs/pr-coordination-room",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 388,
-          "title": "docs(contracts): PR coordination room pilot \u2014 draft, do not merge",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/388"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/tars",
@@ -376,7 +339,7 @@
       "prCount": 5,
       "prs": [
         {
-          "ageDays": 31,
+          "ageDays": 32,
           "author": "spareilleux",
           "createdAt": "2026-10-13T02:09:29Z",
           "failingChecks": 0,
