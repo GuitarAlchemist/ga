@@ -1,12 +1,12 @@
 {
   "domain": "voicing-analysis",
-  "emitted_at": "2026-11-14T01:48:15.2669026Z",
+  "emitted_at": "2026-11-14T02:12:01.9571057Z",
   "metric_name": "voicing_analysis_avg_pass_rate",
   "metric_value": 1,
   "oracle_status": "ok",
   "summary": "All 4 voicing metrics at 100% across 313,047 voicings.",
   "problems": [],
-  "Timestamp": "2026-11-14T01:48:15.2628720Z",
+  "Timestamp": "2026-11-14T02:12:01.9513672Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -120,8 +120,29 @@
     "Failures": []
   },
   "DropVoicingDistribution": {
-    "None": 277665,
-    "Drop-2": 35382
+    "None": 242504,
+    "Drop-2\u002B4": 8905,
+    "Drop-3\u002B5": 5835,
+    "Drop-2": 5704,
+    "Drop-3\u002B4": 5519,
+    "Drop-2\u002B3": 5494,
+    "Drop-2\u002B5": 5311,
+    "Drop-2\u002B4\u002B6": 5228,
+    "Drop-3": 5062,
+    "Drop-2\u002B3\u002B5": 4045,
+    "Drop-2\u002B4\u002B5": 3756,
+    "Drop-2\u002B5\u002B6": 3071,
+    "Drop-2\u002B3\u002B6": 2824,
+    "Drop-4": 2274,
+    "Drop-4\u002B5": 2071,
+    "Drop-3\u002B4\u002B6": 1687,
+    "Drop-2\u002B3\u002B4": 1517,
+    "Drop-3\u002B6": 786,
+    "Drop-3\u002B4\u002B5": 564,
+    "Drop-3\u002B5\u002B6": 362,
+    "Drop-5": 228,
+    "Drop-4\u002B6": 150,
+    "Drop-2\u002B6": 150
   },
   "CrossInstrumentConsistency": {
     "SharedSets": 793,
@@ -146,9 +167,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 4.1592629,
-    "VoicingsPerSec": 75265.01871281087,
-    "PeakWorkingSetMb": 395.54296875
+    "RuntimeSeconds": 5.763971,
+    "VoicingsPerSec": 54310.99497204272,
+    "PeakWorkingSetMb": 405.82421875
   },
   "IssueSamples": {
     "NullChordName": [],
