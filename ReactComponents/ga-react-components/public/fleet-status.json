@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "259225e116071451d45bbeba0a89fe30bf8a6b0c",
-    "generatedAt": "2026-11-14T02:17:52.727290+00:00",
+    "commitSha": "9a82115f7079efa9931f1f241a9680987f253c44",
+    "generatedAt": "2026-11-14T02:25:14.331389+00:00",
     "repoCount": 5,
-    "totalPRs": 20
+    "totalPRs": 19
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 9,
+      "prCount": 8,
       "prs": [
         {
           "ageDays": 2,
@@ -198,18 +198,6 @@
           "number": 779,
           "title": "fix(skills): name the relative key by key signature, and theoretical keys past seven accidentals (#769)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/779"
-        },
-        {
-          "ageDays": 44,
-          "author": "spareilleux",
-          "createdAt": "2026-09-30T03:05:02Z",
-          "failingChecks": 0,
-          "headRef": "fix/760-sse-error-event",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 766,
-          "title": "fix(chat): type the stream's error event and stop the page from rendering it as an answer (#760)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/766"
         },
         {
           "ageDays": 49,
