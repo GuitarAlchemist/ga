@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "a5f420f13e9ef2098078f4d2f61623aa75715256",
-    "generatedAt": "2026-11-14T02:11:00.349793+00:00",
+    "commitSha": "f324f7772ead0fcab16afd918e1a5e65d54ccea6",
+    "generatedAt": "2026-11-14T02:14:38.275530+00:00",
     "repoCount": 5,
-    "totalPRs": 27
+    "totalPRs": 25
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 16,
+      "prCount": 14,
       "prs": [
         {
           "ageDays": 2,
@@ -164,18 +164,6 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/839"
         },
         {
-          "ageDays": 33,
-          "author": "spareilleux",
-          "createdAt": "2026-10-11T22:01:56Z",
-          "failingChecks": 0,
-          "headRef": "codex/fretboard-demo-note",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 833,
-          "title": "fix(frontend): correct low E fretboard demo note",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/833"
-        },
-        {
           "ageDays": 38,
           "author": "spareilleux",
           "createdAt": "2026-10-06T23:58:38Z",
@@ -210,18 +198,6 @@
           "number": 818,
           "title": "fix(config): mode names after a sharp, triad inversions, and alternate names in GetAllModes",
           "url": "https://github.com/GuitarAlchemist/ga/pull/818"
-        },
-        {
-          "ageDays": 40,
-          "author": "spareilleux",
-          "createdAt": "2026-10-04T19:15:36Z",
-          "failingChecks": 0,
-          "headRef": "fix/scale-video-urls",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 817,
-          "title": "fix(domain): embed scale_video_urls.json, so scales find their video URL",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/817"
         },
         {
           "ageDays": 40,
@@ -278,7 +254,7 @@
           "failingChecks": 0,
           "headRef": "fix/760-sse-error-event",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 766,
           "title": "fix(chat): type the stream's error event and stop the page from rendering it as an answer (#760)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/766"
