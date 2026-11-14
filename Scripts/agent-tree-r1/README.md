@@ -3,11 +3,15 @@
 First slice only. Extends (does not replace) the one-cycle `supervised-loop`. All existing
 preflight / stop / exact-SHA / promotion gates are untouched and still apply.
 
-## Gap measured (`Measure-LoopGap`, grep over Scripts/ + supervised-loop SKILL.md, excluding this dir)
-Before: 6 of 8 capabilities missing — durable parent_id nodes, parent verdict on child, cycle rejection,
-dispatch receipt↔run correlation, independent-QA-pending, uncertain-dispatch-no-replay.
-After (including this dir): 0 of 8. **Caveat:** this is a keyword presence check, not a behavioural proof;
-behaviour is covered by `AgentTree.test.ps1`.
+## Gap measured
+**Headline (behavioural):** `Measure-BehaviouralGap` runs `AgentTree.test.ps1` in a child `pwsh` process and
+reports the number of failing assertions (`FAIL:` lines). A non-zero exit with no counted failure (crash, parse
+error) still reports gap >= 1, never 0. `Get-LoopGapReport` returns this as `headline_gap`.
+
+**Secondary (presence only):** `Measure-LoopGap` greps Scripts/ + supervised-loop SKILL.md (excluding this dir
+unless `-IncludeR1`) for 8 capability keywords. Before: 6 of 8 missing; after (including this dir): 0 of 8.
+**Caveat:** this figure is keyword presence only, not a behavioural proof; it is reported as `presence_only`
+and must not be used as the headline. Behaviour is covered by the test run behind the headline.
 
 ## Model
 - Node: node_id, parent_id, scope, objective, baseline/after, acceptance, base/head SHA, budget, permissions,

@@ -118,6 +118,23 @@ Assert ((Request-IndependentQA $t 'a' 'root' { @{ verdict = 'pass' } }).qa -eq '
 Assert ((Request-IndependentQA $t 'a' 'qa-1' { throw 'cannot start' }).qa -eq 'pending') 'failed QA start => pending'
 Assert ((Request-IndependentQA $t 'a' 'qa-1' { @{ verdict = 'pass' } }).qa -eq 'pass') 'separate identity QA recorded (simulated)'
 
+Write-Host 'behavioural gap headline (child pwsh; injected check scripts, real tests untouched)'
+$inj = Join-Path ([IO.Path]::GetTempPath()) ("agent-tree-gap-" + [guid]::NewGuid().ToString('N'))
+$null = New-Item -ItemType Directory -Path $inj
+$passS = Join-Path $inj 'pass.ps1'; $failS = Join-Path $inj 'fail.ps1'; $crashS = Join-Path $inj 'crash.ps1'
+Set-Content -LiteralPath $passS -Value 'Write-Host "  ok: injected"; exit 0'
+Set-Content -LiteralPath $failS -Value 'Write-Host "  ok: a"; Write-Host "  FAIL: injected check one"; Write-Host "  FAIL: injected check two"; exit 1'
+Set-Content -LiteralPath $crashS -Value 'throw "boom"'
+$bp = Measure-BehaviouralGap -TestScript $passS
+Assert ($bp.gap -eq 0 -and $bp.exit_code -eq 0 -and $bp.label -eq 'behavioural') 'headline is 0 when the child run has no failing assertion'
+$bf = Measure-BehaviouralGap -TestScript $failS
+Assert ($bf.gap -eq 2 -and $bf.failing_assertions -eq 2 -and $bf.exit_code -eq 1) 'headline becomes non-zero (counts failing assertions) when an injected check fails'
+$bc = Measure-BehaviouralGap -TestScript $crashS
+Assert ($bc.gap -ge 1 -and $bc.exit_code -ne 0) 'a crashing child run is never reported as gap 0'
+$rep = Get-LoopGapReport -RepoRoot (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path -TestScript $failS -IncludeR1
+Assert ($rep.headline_gap -eq 2 -and $rep.presence_only.label -eq 'presence only' -and $rep.presence_only.total -eq 8) 'report headline is behavioural; keyword figure is secondary, labelled "presence only"'
+Remove-Item -LiteralPath $inj -Recurse -Force
+
 Write-Host 'persistence'
 $tmp = New-TemporaryFile; Save-AgentTree $t $tmp.FullName
 Assert ((Get-Content $tmp -Raw | ConvertFrom-Json).schema -eq 'agent-tree-r1/v1') 'tree serialises to JSON'; Remove-Item $tmp

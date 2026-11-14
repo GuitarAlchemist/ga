@@ -281,7 +281,35 @@ function Measure-LoopGap { param([string]$RepoRoot, [switch]$IncludeR1)
         $hit = $files | Select-String -Pattern $caps[$c] -List -ErrorAction SilentlyContinue
         if ($hit) { $present += $c } else { $missing += $c }
     }
-    return @{ total = $caps.Count; present = $present; missing = $missing; gap = $missing.Count }
+    return @{ total = $caps.Count; present = $present; missing = $missing; gap = $missing.Count; label = 'presence only' }
+}
+
+# Behavioural headline: run a test script in a child pwsh process and count its failing assertions
+# (lines "FAIL: ..." emitted by AgentTree.test.ps1). A non-zero exit with zero counted FAIL lines
+# (crash, parse error, child not started) still yields gap >= 1: never report "0" for an unproven run.
+function Measure-BehaviouralGap { param([Parameter(Mandatory)][string]$TestScript, [int]$TimeoutSeconds = 300)
+    $pwsh = (Get-Process -Id $PID).Path
+    $out = $null; $exit = $null; $timedOut = $false
+    try {
+        $psi = [System.Diagnostics.ProcessStartInfo]::new($pwsh)
+        foreach ($a in '-NoProfile', '-NonInteractive', '-File', $TestScript) { $psi.ArgumentList.Add($a) }
+        $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true; $psi.UseShellExecute = $false
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        $stdoutTask = $proc.StandardOutput.ReadToEndAsync(); $stderrTask = $proc.StandardError.ReadToEndAsync()
+        if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) { $timedOut = $true; $proc.Kill($true); $proc.WaitForExit() }
+        $out = $stdoutTask.Result + $stderrTask.Result; $exit = $proc.ExitCode
+    } catch { $out = "child failed to run: $($_.Exception.Message)"; $exit = -1 }
+    $failing = @([regex]::Matches([string]$out, '(?m)^\s*FAIL:')).Count
+    $gap = if ($exit -ne 0 -and $failing -eq 0) { 1 } else { $failing }
+    return @{ gap = $gap; failing_assertions = $failing; exit_code = $exit; timed_out = $timedOut; label = 'behavioural' }
+}
+
+# Report: behavioural gap is the headline; the keyword figure is secondary and labelled "presence only".
+function Get-LoopGapReport { param([string]$RepoRoot, [Parameter(Mandatory)][string]$TestScript, [switch]$IncludeR1)
+    $b = Measure-BehaviouralGap -TestScript $TestScript
+    $p = Measure-LoopGap -RepoRoot $RepoRoot -IncludeR1:$IncludeR1
+    return @{ headline_gap = $b.gap; headline_basis = 'behavioural: failing assertions in child pwsh run'; behavioural = $b
+              presence_only = @{ gap = $p.gap; total = $p.total; missing = $p.missing; label = 'presence only' } }
 }
 
 Export-ModuleMember -Function *-*
