@@ -1,0 +1,91 @@
+{
+  "schema": "theory-qa-questions/v1",
+  "grading": "Answers are normalized first (♭->b, ♯->#, 'B flat'->'Bb', unicode dashes->'-', superscript digits->digits, markdown ** __ ` removed); then every must_match must hit and no must_not_match may hit. Matching is case-insensitive; (?-i:...) marks case-sensitive note names. Fail-closed: an empty answer, a request error or a regex error is a fail.",
+  "note": "Supplement to questions.json for gaia/807 (P1 of PR 807). Single-turn only: run_eval posts conversationHistory=[], so history-carried shapes are covered by unit tests, not here. Run with --questions Scripts/theory-qa/questions-user-supplied-frets.json, same --target/--model/--system-file before and after, --samples >= 3.",
+  "questions": [
+    {
+      "id": "supplied-x32010-identify",
+      "q": "What chord is x32010 in standard tuning?",
+      "topic": "user-supplied-frets",
+      "expected": "C major (C E G C E)",
+      "must_match": [
+        "(?i)\\bC\\s*major\\b|\\bC\\s*maj\\b|(?-i:\\bC\\b)"
+      ],
+      "must_not_match": [
+        "(?i)\\bG\\s*7\\b"
+      ],
+      "verified_by": "x-3-2-0-1-0 = C3 E3 G3 C4 E4 standard tuning (open C)",
+      "origin": "gaia-807-p1"
+    },
+    {
+      "id": "supplied-x32010-notes",
+      "q": "Which notes does the tab x32010 sound, string by string?",
+      "topic": "user-supplied-frets",
+      "expected": "C E G C E",
+      "must_match": [
+        "(?-i:\\bC\\b)",
+        "(?-i:\\bE\\b)",
+        "(?-i:\\bG\\b)"
+      ],
+      "must_not_match": [],
+      "verified_by": "A3=C, D2=E, G0=G, B1=C, e0=E",
+      "origin": "gaia-807-p1"
+    },
+    {
+      "id": "supplied-x32010-repeat",
+      "q": "Here is my chord: x32010. Repeat it back to me exactly as I typed it.",
+      "topic": "user-supplied-frets",
+      "expected": "x32010 repeated verbatim",
+      "must_match": [
+        "(?i)x-?3-?2-?0-?1-?0"
+      ],
+      "must_not_match": [],
+      "verified_by": "verbatim echo of user input",
+      "origin": "gaia-807-p1"
+    },
+    {
+      "id": "complete-tab-partial",
+      "q": "Complete this tab for me, I only have the first three strings: x32",
+      "topic": "no-completion",
+      "expected": "no invented fret numbers; offers chord name and notes",
+      "must_match": [],
+      "must_not_match": [
+        "(?i)\\btabstave\\b",
+        "(?i)```\\s*vextab",
+        "(?-i:(?<![\\w#b])[x\\d]{6}(?![\\w]))"
+      ],
+      "verified_by": "fail-closed: any new six-position shape, tabstave or vextab block is invented",
+      "origin": "gaia-807-p1"
+    },
+    {
+      "id": "complete-tab-fix-g7",
+      "q": "Fix my tab x32010 so that it becomes a G7 chord. Write the new frets.",
+      "topic": "no-completion",
+      "expected": "no invented fret numbers",
+      "must_match": [],
+      "must_not_match": [
+        "(?i)\\btabstave\\b",
+        "(?i)```\\s*vextab",
+        "(?-i:(?<![\\w#b])(?!x32010)[x\\d]{6}(?![\\w]))"
+      ],
+      "verified_by": "fail-closed: any six-position shape other than the user's x32010 is invented",
+      "origin": "gaia-807-p1"
+    },
+    {
+      "id": "complete-tab-give-shape",
+      "q": "Give me the exact frets for a Db7 chord.",
+      "topic": "no-completion",
+      "expected": "names Db7 notes (Db F Ab Cb/B), no frets",
+      "must_match": [
+        "(?-i:\\bDb\\b)"
+      ],
+      "must_not_match": [
+        "(?i)\\btabstave\\b",
+        "(?i)```\\s*vextab",
+        "(?-i:(?<![\\w#b])[x\\d]{6}(?![\\w]))"
+      ],
+      "verified_by": "Db7 = Db F Ab Cb; the 2026-10-03 production run gave xx4564 (F# C F G#)",
+      "origin": "gaia-807-p1"
+    }
+  ]
+}

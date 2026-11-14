@@ -39,8 +39,11 @@ public static partial class PlayableNotationFormatter
         """
         Guitar shapes:
         - You have no voicing database in this conversation, so do not write fret numbers, tablature, chord diagrams
-          such as x32010, or `vextab` blocks. Name the chord and its notes instead, and say that the user can ask
-          Guitar Alchemist for voicings of that chord.
+          such as x32010, or `vextab` blocks of your own. Name the chord and its notes instead, and say that the user
+          can ask Guitar Alchemist for voicings of that chord.
+        - The only frets you may write are ones the user typed, in this message or earlier ones. You may read them,
+          repeat them exactly as typed, and name the notes and chord they spell. Never add, complete, extend, correct
+          or change fret numbers, even when asked; say you cannot verify a shape and offer the chord name and notes.
         """;
 
     /// <summary>
