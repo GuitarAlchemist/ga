@@ -18,8 +18,8 @@ and must not be used as the headline. Behaviour is covered by the test run behin
   mode (read|write), status, evidence, execution_identity, parent_verdict, ancestry, events.
 - Statuses: pending → dispatched | uncertain → reported (leaf self-report) → accepted | failed | blocked | escalated.
   `success/failure/blocked/unknown` are distinct report results; only the **immediate parent** can accept.
-- Limits (cumulative, tree-wide): 3 live executions, 7 nodes, depth 3, 2 attempts/leaf, 2 concurrent children
-  per parent, 30 min wall clock. Children inherit the intersection of parent permissions and min budget.
+- Limits (cumulative, tree-wide): 3 live executions, 7 nodes, depth 3, 2 attempts/leaf, 2 concurrent in-flight children
+  anywhere in the tree (enforced at live dispatch; per-parent only bounds planning), 30 min wall clock. Children inherit the intersection of parent permissions and min budget.
 - Reparenting: root only, cycle/depth checked, can only shrink permissions; ancestry history preserved.
 - Escalation records a proposal; it grants no privileges.
 - Dispatch: dry-run by default (a draft is never a launch). Live requires an injected `-Sender` returning a

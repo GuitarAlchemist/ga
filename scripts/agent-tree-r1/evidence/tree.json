@@ -1,0 +1,215 @@
+{
+  "allowed_senders": [],
+  "root_id": "root",
+  "stop": false,
+  "started_at": "2026-11-14T22:38:28.2157775Z",
+  "seen_nonces": [],
+  "executions": 3,
+  "dispatches": [
+    {
+      "receipt": "https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885307238",
+      "kind": "live",
+      "key": "865b1b6fe80de90c5525c5ec",
+      "agent": "claude",
+      "launched": true,
+      "node_id": "fix-gap-measure"
+    },
+    {
+      "receipt": "https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885445236",
+      "kind": "live",
+      "key": "0ff48d4b4a9f91dfe69c2f55",
+      "agent": "claude",
+      "launched": true,
+      "node_id": "qa-1"
+    }
+  ],
+  "nodes": {
+    "root": {
+      "budget": 3,
+      "base_sha": null,
+      "baseline": null,
+      "simulated": false,
+      "permissions": [
+        "read",
+        "write"
+      ],
+      "qa": "pending",
+      "parent_id": null,
+      "evidence": [],
+      "mode": "read",
+      "head_sha": null,
+      "execution_identity": null,
+      "status": "running",
+      "correlated": false,
+      "scope": "root",
+      "report": null,
+      "node_id": "root",
+      "after": null,
+      "events": [],
+      "depth": 1,
+      "attempts": 0,
+      "target": null,
+      "parent_verdict": null,
+      "objective": "AGENTIC-TREE-E2E-R1 parent (local Claude session)",
+      "acceptance": [],
+      "ancestry": []
+    },
+    "fix-gap-measure": {
+      "budget": 1,
+      "base_sha": "f0f5ddb88bd798f3962ed1dcee00674ed48e517f",
+      "baseline": 1,
+      "simulated": false,
+      "permissions": [
+        "read",
+        "write"
+      ],
+      "qa": "fail (independent run 43650162072)",
+      "parent_id": "root",
+      "evidence": [
+        "https://github.com/GuitarAlchemist/ga/actions/runs/43649154259",
+        "https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885312495",
+        "https://github.com/GuitarAlchemist/ga/commit/1c7bb15339023ac34952632fb618012ea8093aae"
+      ],
+      "mode": "write",
+      "head_sha": "1c7bb15339023ac34952632fb618012ea8093aae",
+      "execution_identity": {
+        "key": "865b1b6fe80de90c5525c5ec",
+        "run_url": "https://github.com/GuitarAlchemist/ga/actions/runs/43649154259",
+        "response_url": "https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885312495",
+        "receipt": "https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885307238",
+        "agent": "claude"
+      },
+      "status": "accepted",
+      "correlated": true,
+      "scope": "Scripts/agent-tree-r1/",
+      "report": {
+        "after": 0,
+        "evidence": [
+          "https://github.com/GuitarAlchemist/ga/commit/1c7bb15339023ac34952632fb618012ea8093aae"
+        ],
+        "result": "success"
+      },
+      "node_id": "fix-gap-measure",
+      "after": 0,
+      "events": [
+        "2026-11-14T22:38:28.2582987Z created under root (mode=write budget=1 perms=read,write)",
+        "2026-11-14T22:38:29.6890998Z dispatched to claude, receipt=https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885307238 (run not yet correlated)",
+        "2026-11-14T22:50:14.4673287Z run correlated: https://github.com/GuitarAlchemist/ga/actions/runs/43649154259",
+        "2026-11-14T22:50:14.4840142Z self-report: success (awaiting parent verdict)",
+        "2026-11-14T22:50:14.4937351Z parent verdict by root: accept (parent re-ran AgentTree.test.ps1 on 1c7bb15: exit 0, 49 ok, 0 FAIL; Get-LoopGapReport headline_gap=0 (behavioural); diff limited to Scripts/agent-tree-r1/)"
+      ],
+      "depth": 2,
+      "attempts": 1,
+      "target": 0,
+      "parent_verdict": {
+        "by": "root",
+        "reason": "parent re-ran AgentTree.test.ps1 on 1c7bb15: exit 0, 49 ok, 0 FAIL; Get-LoopGapReport headline_gap=0 (behavioural); diff limited to Scripts/agent-tree-r1/",
+        "verdict": "accept"
+      },
+      "objective": "Replace the keyword-presence gap headline in Measure-LoopGap with a behavioural measure",
+      "acceptance": [
+        "Measure-LoopGap headline = failing assertions of AgentTree.test.ps1 run in a child pwsh process; keyword presence kept only as a secondary figure labelled presence-only",
+        "a new test shows the headline goes non-zero when an assertion fails",
+        "pwsh Scripts/agent-tree-r1/AgentTree.test.ps1 exits 0",
+        "only files under Scripts/agent-tree-r1/ change; no .github edits; no merge"
+      ],
+      "ancestry": [
+        "root"
+      ]
+    },
+    "qa-1": {
+      "budget": 1,
+      "events": [
+        "2026-11-14T22:50:14.5249652Z created under root (mode=read budget=1 perms=read,write)",
+        "2026-11-14T22:50:15.7438770Z dispatched to claude, receipt=https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885445236 (run not yet correlated)",
+        "2026-11-14T22:54:01.0455266Z run correlated: https://github.com/GuitarAlchemist/ga/actions/runs/43650162072",
+        "2026-11-14T22:54:01.0549262Z self-report: success (awaiting parent verdict)",
+        "2026-11-14T22:54:01.0649027Z parent verdict by root: accept (QA task completed with evidence; its code verdict is FAIL)"
+      ],
+      "base_sha": "1c7bb15339023ac34952632fb618012ea8093aae",
+      "baseline": null,
+      "permissions": [
+        "read",
+        "write"
+      ],
+      "attempts": 1,
+      "report": {
+        "evidence": [
+          "QA verdict: fail on 1c7bb15 (simulated report releases a concurrency slot)"
+        ],
+        "result": "success",
+        "after": null
+      },
+      "evidence": [
+        "https://github.com/GuitarAlchemist/ga/actions/runs/43650162072",
+        "https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885451742",
+        "QA verdict: fail on 1c7bb15 (simulated report releases a concurrency slot)"
+      ],
+      "mode": "read",
+      "head_sha": "",
+      "simulated": false,
+      "status": "accepted",
+      "qa": "pending",
+      "correlated": true,
+      "scope": "read-only QA of 1c7bb15",
+      "parent_id": "root",
+      "node_id": "qa-1",
+      "after": null,
+      "execution_identity": {
+        "key": "0ff48d4b4a9f91dfe69c2f55",
+        "run_url": "https://github.com/GuitarAlchemist/ga/actions/runs/43650162072",
+        "response_url": "https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885451742",
+        "receipt": "https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885445236",
+        "agent": "claude"
+      },
+      "depth": 2,
+      "target": null,
+      "parent_verdict": {
+        "reason": "QA task completed with evidence; its code verdict is FAIL",
+        "verdict": "accept",
+        "by": "root"
+      },
+      "objective": "Independent read-only QA of commit 1c7bb15 (behavioural gap headline + tree-wide concurrency)",
+      "acceptance": [
+        "verdict pass|fail with file:line findings",
+        "no push, no file edit, no branch"
+      ],
+      "ancestry": [
+        "root"
+      ]
+    }
+  },
+  "limits": {
+    "MaxDepth": 3,
+    "MaxNodes": 7,
+    "MaxAttempts": 2,
+    "MaxConcurrent": 2,
+    "MaxExecutions": 3,
+    "WallClockMinutes": 30
+  },
+  "schema": "agent-tree-r1/v1",
+  "history": [
+    {
+      "at": "2026-11-14T22:38:28.2241901Z",
+      "text": "executions pre-charged with 1: cloud run 43566102411 (#855 invocation)"
+    },
+    "fix-gap-measure: 2026-11-14T22:38:28.2582987Z created under root (mode=write budget=1 perms=read,write)",
+    "fix-gap-measure: 2026-11-14T22:38:29.6890998Z dispatched to claude, receipt=https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885307238 (run not yet correlated)",
+    "fix-gap-measure: 2026-11-14T22:50:14.4673287Z run correlated: https://github.com/GuitarAlchemist/ga/actions/runs/43649154259",
+    "fix-gap-measure: 2026-11-14T22:50:14.4840142Z self-report: success (awaiting parent verdict)",
+    {
+      "at": "2026-11-14T22:50:14.4852537Z",
+      "text": "DEVIATION: child pushed to gaia/agent-tree-r1 (fast-forward, no force) instead of its own branch; sole writer, so no overlap"
+    },
+    "fix-gap-measure: 2026-11-14T22:50:14.4937351Z parent verdict by root: accept (parent re-ran AgentTree.test.ps1 on 1c7bb15: exit 0, 49 ok, 0 FAIL; Get-LoopGapReport headline_gap=0 (behavioural); diff limited to Scripts/agent-tree-r1/)",
+    "qa-1: 2026-11-14T22:50:14.5249652Z created under root (mode=read budget=1 perms=read,write)",
+    "qa-1: 2026-11-14T22:50:15.7438770Z dispatched to claude, receipt=https://github.com/GuitarAlchemist/ga/pull/858#issuecomment-6885445236 (run not yet correlated)",
+    "qa-1: 2026-11-14T22:54:01.0455266Z run correlated: https://github.com/GuitarAlchemist/ga/actions/runs/43650162072",
+    "qa-1: 2026-11-14T22:54:01.0549262Z self-report: success (awaiting parent verdict)",
+    "qa-1: 2026-11-14T22:54:01.0649027Z parent verdict by root: accept (QA task completed with evidence; its code verdict is FAIL)",
+    {
+      "at": "2026-11-14T22:54:01.0718439Z",
+      "text": "QA fail on 1c7bb15 -> parent fixed locally (red test first) in follow-up commit; execution budget exhausted (3/3), fix NOT independently re-QA'd"
+    }
+  ]
+}

@@ -186,6 +186,8 @@ function Submit-ChildReport { param($Tree, [string]$NodeId, [ValidateSet('succes
     if (-not $n) { return @{ ok = $false; reason = 'unknown_node' } }
     if ($n.status -notin 'dispatched', 'uncertain', 'pending') { return @{ ok = $false; reason = "bad_state_$($n.status)" } }
     if (-not $Simulated -and -not $n.correlated) { return @{ ok = $false; reason = 'uncorrelated_report' } }
+    # A node with a live receipt may only be reported through a correlated run: -Simulated would drop it from the in-flight count.
+    if ($Simulated -and $n.execution_identity) { return @{ ok = $false; reason = 'simulated_report_on_live_node' } }
     if ($Simulated) { $n.simulated = $true }
     $n.report = @{ result = $Result; evidence = $Evidence; after = $After }
     $n.evidence += $Evidence; $n.status = 'reported'

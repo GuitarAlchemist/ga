@@ -73,7 +73,11 @@ $t = New-AgentTree -RootId 'root'; $null = Leaf $t 'p1'; $null = Leaf $t 'p2'; $
 $null = Invoke-AgentDispatch $t 'q1' -Live -Sender $okSender; $null = Invoke-AgentDispatch $t 'q2' -Live -Sender $okSender
 $r = Invoke-AgentDispatch $t 'q3' -Live -Sender $okSender
 Assert ($r.reason -eq 'concurrency_limit' -and $t.executions -eq 2 -and $t.nodes['q3'].status -eq 'pending' -and $t.nodes['q3'].attempts -eq 0) 'third in-flight child anywhere in the tree is refused before send; no budget spent'
-$null = Submit-ChildReport -Tree $t -NodeId 'q1' -Result success -Evidence 'e1' -Simulated
+# QA finding (run 43650162072): a -Simulated report must not release the slot of a node that has a live receipt.
+Assert ((Submit-ChildReport -Tree $t -NodeId 'q1' -Result unknown -Simulated).reason -eq 'simulated_report_on_live_node' -and $t.nodes['q1'].status -eq 'dispatched') 'simulated report on a live-dispatched node is refused and keeps its slot'
+Assert ((Invoke-AgentDispatch $t 'q3' -Live -Sender $okSender).reason -eq 'concurrency_limit') 'so a third live child is still refused'
+$null = Confirm-AgentRun -Tree $t -NodeId 'q1' -RunUrl 'https://example.invalid/sim/run' -ResponseUrl 'https://example.invalid/sim/resp'
+$null = Submit-ChildReport -Tree $t -NodeId 'q1' -Result success -Evidence 'e1'
 Assert ((Invoke-AgentDispatch $t 'q3' -Live -Sender $okSender).launched -eq $true) 'a slot frees once an in-flight child has reported'
 $t = New-AgentTree -RootId 'root'; $null = Leaf $t 'u1'; $null = Leaf $t 'u2'; $null = Leaf $t 'u3' 'u1'
 $null = Invoke-AgentDispatch $t 'u1' -Live -Sender $badSender; $null = Invoke-AgentDispatch $t 'u2' -Live -Sender $okSender
