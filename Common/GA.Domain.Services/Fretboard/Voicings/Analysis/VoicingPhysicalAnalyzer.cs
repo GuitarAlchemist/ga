@@ -206,7 +206,7 @@ public static class VoicingPhysicalAnalyzer
         if (layout.OpenStrings.Length > 0) tags.Add("open-strings");
         if (layout.OpenStrings.Length >= 3) tags.Add("ambient-open");
         if (playability.CagedShape != null) tags.Add(playability.CagedShape.ToLowerInvariant());
-        if (playability.ShellFamily != null) tags.Add("shell-voicing");
+        // No shell-voicing tag from ShellFamily, which counts strings: ChordClassificationEngine tags shells by their notes
 
         // Ergonomic Tags
         if (ergonomics.RequiresThumb) tags.Add("thumb-chord");
