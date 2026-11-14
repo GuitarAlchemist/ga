@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "86e5748741ce9bee1e3bb183a0bcf6a63f1da973",
-    "generatedAt": "2026-11-14T00:10:52.908323+00:00",
+    "commitSha": "15ff5ac3161967a2bb0a78bc0bcfb01b53c5e596",
+    "generatedAt": "2026-11-14T00:12:35.223141+00:00",
     "repoCount": 5,
-    "totalPRs": 34
+    "totalPRs": 33
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 21,
+      "prCount": 20,
       "prs": [
         {
           "ageDays": 2,
@@ -218,7 +218,7 @@
           "failingChecks": 0,
           "headRef": "fix/modes-catalog",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 818,
           "title": "fix(config): mode names after a sharp, triad inversions, and alternate names in GetAllModes",
           "url": "https://github.com/GuitarAlchemist/ga/pull/818"
@@ -258,18 +258,6 @@
           "number": 812,
           "title": "build(ci): apply the package Update items, run three orphaned test projects, gate the security scan",
           "url": "https://github.com/GuitarAlchemist/ga/pull/812"
-        },
-        {
-          "ageDays": 40,
-          "author": "spareilleux",
-          "createdAt": "2026-10-04T15:52:36Z",
-          "failingChecks": 0,
-          "headRef": "fix/csharp-reliability",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 811,
-          "title": "fix: knowledge reload, artist breakdown, naturalness CSV, GaCLI exit code",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/811"
         },
         {
           "ageDays": 40,
@@ -390,7 +378,7 @@
           "failingChecks": 0,
           "headRef": "docs/adr-durable-agents",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 481,
           "title": "docs(adr): durable runs in Starlark, agent DSLs by Earley, durable modules like bzlmod (ADR-0016..0018)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/481"
@@ -402,7 +390,7 @@
           "failingChecks": 0,
           "headRef": "docs/pr-coordination-room",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 388,
           "title": "docs(contracts): PR coordination room pilot \u2014 draft, do not merge",
           "url": "https://github.com/GuitarAlchemist/ix/pull/388"
@@ -508,7 +496,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1126,
           "title": "ci: run under the merge queue",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
@@ -520,7 +508,7 @@
           "failingChecks": 1,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
@@ -532,7 +520,7 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
@@ -544,7 +532,7 @@
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -556,7 +544,7 @@
           "failingChecks": 1,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -568,7 +556,7 @@
           "failingChecks": 3,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
