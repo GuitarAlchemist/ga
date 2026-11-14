@@ -1,16 +1,48 @@
-# `.claude/hooks/` — project-local Claude Code hook scripts
+# `.claude/hooks/` — project-local Claude Code hooks
 
-This directory holds hook scripts wired into `.claude/settings.json`. Hooks
-let us extend Claude Code with deterministic side effects (telemetry,
-governance enforcement, etc.) without changing the model's behavior.
+Every hook wired into `.claude/settings.json` is a subcommand of one Go
+program, `ga-hooks` (`go/claudehooks/cmd/ga-hooks`, standard library only).
+No hook runs a shell, PowerShell, Python or Node (the user's rule,
+2026-11-05: "jamais de shell dans les hooks"); CI fails a hook command that
+does (`.github/workflows/karpathy-cherny-discipline.yml`). The same layout
+is used by ix (`go/claudehooks`, ix PR #512) and tars (tars PR #419).
 
-Most existing GA hooks live in `Scripts/` (digest-staleness-nudge,
-digest-stop-finalize, etc.). New hook scripts that don't double as
-human-runnable utilities belong here so they're easy to find.
+- **SessionStart** runs `go -C "$CLAUDE_PROJECT_DIR/go/claudehooks" run
+  ./cmd/ga-hooks session-start`. Go builds (and caches) the program from
+  the checked-out source; `session-start` copies it to
+  `.claude/hooks/bin/ga-hooks[.exe]` (gitignored), prints the session
+  banner and, after a compaction or a resume, injects
+  `state/digests/latest.md`.
+- **Every other hook** calls `"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks"
+  <subcommand>` directly: no build, no interpreter start-up.
+
+| Event | Matcher | Subcommand | Was |
+|---|---|---|---|
+| PostToolUse | `Edit\|Write` | `dsl-changed` | inline `pwsh -Command` (GA.Business.DSL notice) |
+| PostToolUse | `Edit\|Write\|Bash` | `digest-activity-tracker` | `Scripts/digest-activity-tracker.ps1` |
+| PostToolUse | `Edit\|Write` | `ai-annotation-scan` | `Scripts/ai-annotation-scan.ps1` |
+| PreToolUse | `Bash` | `pr-rationale-capture` | `Scripts/pr-rationale-capture.ps1` |
+| PreToolUse | `Bash` | `ai-annotation-merge-gate` (exit 2 blocks `gh pr merge`) | `Scripts/ai-annotation-merge-gate.ps1` |
+| UserPromptSubmit | — | `digest-staleness-nudge` | `Scripts/digest-staleness-nudge.ps1` |
+| UserPromptSubmit | — | `correction-detector` | `Scripts/correction-detector.ps1` |
+| UserPromptSubmit | — | `loops-goals-tracker prompt` | `.claude/hooks/loops-goals-tracker.ps1 prompt` |
+| PreCompact | — | `precompact-digest` | `Scripts/precompact-digest.ps1` |
+| SessionStart | — | `session-start` (banner; digest on `compact\|resume`) | inline `pwsh -Command` banner + `Scripts/sessionstart-digest.ps1` |
+| Stop | — | `session-pr-check` | `Scripts/session-pr-check.ps1` |
+| Stop | — | `digest-stop-finalize` | `Scripts/digest-stop-finalize.ps1` |
+| Stop | — | `loops-goals-tracker stop` | `.claude/hooks/loops-goals-tracker.ps1 stop` |
+
+`ga-hooks digest-validate [path]` checks a digest's frontmatter like
+`Scripts/digest-validate.ps1` (kept: the `/digest` skill runs it).
+
+To work on a hook: edit `go/claudehooks/cmd/ga-hooks/*.go`, then
+`cd go/claudehooks && GOPROXY=off go vet ./... && GOPROXY=off go test ./...`.
+Tests fake git, gh and HTTP; they never start a real program or reach the
+network. The next session start installs the new build.
 
 ---
 
-## `loops-goals-tracker.ps1` — runtime visibility for `/loop` and `/goal`
+## `loops-goals-tracker` — runtime visibility for `/loop` and `/goal`
 
 ### Problem
 
@@ -128,16 +160,19 @@ recent record per `id` and uses its `status` as the current state.
 
 ```powershell
 # Simulate a /loop invocation
-echo '{"prompt":"/loop 5m check deploys","session_id":"manual-test"}' | `
-  pwsh -NoProfile -File .\.claude\hooks\loops-goals-tracker.ps1 prompt
+'{"prompt":"/loop 5m check deploys","session_id":"manual-test"}' | `
+  .\.claude\hooks\bin\ga-hooks.exe loops-goals-tracker prompt
 
 # Simulate a Stop event (bumps turn_count for every active record in the session)
-echo '{"session_id":"manual-test"}' | `
-  pwsh -NoProfile -File .\.claude\hooks\loops-goals-tracker.ps1 stop
+'{"session_id":"manual-test"}' | `
+  .\.claude\hooks\bin\ga-hooks.exe loops-goals-tracker stop
 
 # Inspect the repo-local mirror
 Get-Content .\state\.runtime-loops-goals.jsonl
 ```
+
+The cases are pinned by `TestLoopsGoalsTracker` in
+`go/claudehooks/cmd/ga-hooks/ga_test.go`.
 
 ### Limitations (intentional, not gold-plating)
 
@@ -157,6 +192,7 @@ Get-Content .\state\.runtime-loops-goals.jsonl
 
 ### Related files
 
+- `go/claudehooks/cmd/ga-hooks/loopsgoals.go` — the tracker.
 - `.claude/settings.json` — wires `prompt` and `stop` invocations into
   the corresponding hook chains.
 - `ReactComponents/ga-react-components/vite.config.ts` — serves

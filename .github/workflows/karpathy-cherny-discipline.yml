@@ -8,9 +8,9 @@ on:
       - '.claude/settings.json'
       - '.claude/skills/digest/**'
       - '.claude/skills/correct/**'
-      - 'Scripts/digest-*.ps1'
-      - 'Scripts/precompact-digest.ps1'
-      - 'Scripts/sessionstart-digest.ps1'
+      - 'Scripts/digest-validate.ps1'
+      - '.claude/hooks/**'
+      - 'go/claudehooks/**'
       - 'CLAUDE.md'
       - '.github/workflows/karpathy-cherny-discipline.yml'
 
@@ -44,23 +44,40 @@ jobs:
             exit 1
           fi
 
-      - name: Verify required hook scripts exist (pwsh variants in GA)
+      # The hooks are one Go program, go/claudehooks (ga-hooks <hook>): no shell in hooks (the
+      # user's rule, 2026-11-05). Mirrors ix's go/claudehooks (ix PR #512) and tars's (#419).
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go/claudehooks/go.mod
+          cache: false
+
+      - name: Vet and test the hooks (go/claudehooks)
+        working-directory: go/claudehooks
+        env:
+          GOPROXY: 'off'
+        run: |
+          go vet ./...
+          go test -count=1 ./...
+
+      - name: Verify every hook is wired to ga-hooks, none to a shell or a script
         shell: bash
         run: |
-          missing=0
-          for f in \
-            "Scripts/precompact-digest.ps1" \
-            "Scripts/sessionstart-digest.ps1" \
-            "Scripts/digest-validate.ps1" \
-            "Scripts/digest-staleness-nudge.ps1" \
-            "Scripts/digest-activity-tracker.ps1" \
-            "Scripts/digest-stop-finalize.ps1"; do
-            if [ ! -f "$f" ]; then
-              echo "::error file=$f::Required Karpathy/Cherny hook script missing: $f"
-              missing=1
+          fail=0
+          for h in dsl-changed digest-activity-tracker ai-annotation-scan pr-rationale-capture ai-annotation-merge-gate digest-staleness-nudge correction-detector "loops-goals-tracker prompt" precompact-digest session-pr-check digest-stop-finalize "loops-goals-tracker stop"; do
+            if ! grep -q "ga-hooks\\\\\" $h\"" .claude/settings.json; then
+              echo "::error file=.claude/settings.json::hook $h is not wired to ga-hooks"
+              fail=1
             fi
           done
-          exit $missing
+          if ! grep -q 'run ./cmd/ga-hooks session-start' .claude/settings.json; then
+            echo "::error file=.claude/settings.json::session-start (banner, digest injection, binary install) is not wired"
+            fail=1
+          fi
+          if grep '"command"' .claude/settings.json | grep -Eiq '\b(bash|sh|pwsh|powershell|python3?|node)\b|\.(sh|ps1|py|js)\b'; then
+            echo "::error file=.claude/settings.json::a hook runs a shell or a script; hooks are Go only (go/claudehooks)"
+            fail=1
+          fi
+          exit $fail
 
       - name: Verify .claude/settings.json is valid JSON
         run: python -c "import json; json.load(open('.claude/settings.json'))"

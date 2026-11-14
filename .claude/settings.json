@@ -9,7 +9,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -Command \"try { $hookData = $input | ConvertFrom-Json; $f = $hookData.tool_input.file_path; if ($f -and $f -match 'GA\\.Business\\.DSL') { Write-Host 'DSL file changed' } } catch { }\""
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" dsl-changed"
           }
         ]
       },
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/digest-activity-tracker.ps1"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" digest-activity-tracker"
           }
         ]
       },
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/ai-annotation-scan.ps1"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" ai-annotation-scan"
           }
         ]
       }
@@ -38,11 +38,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/pr-rationale-capture.ps1"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" pr-rationale-capture"
           },
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/ai-annotation-merge-gate.ps1"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" ai-annotation-merge-gate"
           }
         ]
       }
@@ -52,15 +52,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/digest-staleness-nudge.ps1"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" digest-staleness-nudge"
           },
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/correction-detector.ps1"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" correction-detector"
           },
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/.claude/hooks/loops-goals-tracker.ps1 prompt"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" loops-goals-tracker prompt"
           }
         ]
       }
@@ -70,7 +70,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/precompact-digest.ps1"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" precompact-digest"
           }
         ]
       }
@@ -80,16 +80,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -Command \"Write-Host ''; Write-Host 'Guitar Alchemist Session' -ForegroundColor Cyan; Write-Host ('  Branch: ' + (git branch --show-current)) -ForegroundColor Gray; try { $vite = (Invoke-WebRequest -Uri 'http://localhost:5176' -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop).StatusCode; Write-Host ('  Vite: OK (' + $vite + ')') -ForegroundColor Green } catch { Write-Host '  Vite: DOWN (port 5176) - run: pwsh Scripts/start-dev.ps1' -ForegroundColor Red }; try { $api = (Invoke-WebRequest -Uri 'http://localhost:5232/health' -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop).Content; Write-Host ('  API: ' + $api) -ForegroundColor $(if($api -eq 'Healthy'){'Green'}else{'Yellow'}) } catch { Write-Host '  API: DOWN (port 5232)' -ForegroundColor Red }; Write-Host ''\""
-          }
-        ]
-      },
-      {
-        "matcher": "compact|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/sessionstart-digest.ps1"
+            "command": "go -C \"$CLAUDE_PROJECT_DIR/go/claudehooks\" run ./cmd/ga-hooks session-start",
+            "timeout": 120
           }
         ]
       }
@@ -99,15 +91,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/session-pr-check.ps1"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" session-pr-check"
           },
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/digest-stop-finalize.ps1"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" digest-stop-finalize"
           },
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/.claude/hooks/loops-goals-tracker.ps1 stop"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bin/ga-hooks\" loops-goals-tracker stop"
           }
         ]
       }
