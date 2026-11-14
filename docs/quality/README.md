@@ -53,7 +53,7 @@ _None. All tracked metrics are within threshold vs their 7-day average._
 
 ## Embeddings detail
 
-_169 snapshot(s) loaded. Sparklines show up to 24 most recent points._
+_170 snapshot(s) loaded. Sparklines show up to 24 most recent points._
 
 | Metric | Latest | Δ vs prev | Δ vs 7d | Drift | 30d avg | n | n_degraded | Sparkline |
 |---|---|---|---|---|---|---|---|---|
@@ -84,11 +84,11 @@ _75 snapshot(s) loaded. Sparklines show up to 24 most recent points._
 
 ## Chatbot QA detail
 
-_86 snapshot(s) loaded. Sparklines show up to 24 most recent points._
+_87 snapshot(s) loaded. Sparklines show up to 24 most recent points._
 
 | Metric | Latest | Δ vs prev | Δ vs 7d | Drift | 30d avg | n | n_degraded | Sparkline |
 |---|---|---|---|---|---|---|---|---|
-| Δ Chatbot · overall pass rate ⚠️ | 98.08% | 0.0% | 0.0% | since 2026-06-15 | 98.08% | 77 | 74 | ████████████████████████ |
+| Δ Chatbot · overall pass rate ⚠️ | 98.08% | 0.0% | 0.0% | since 2026-06-15 | 98.08% | 78 | 75 | ████████████████████████ |
 | · Chatbot · avg response time | — | — | — | — | — | 0 | 0 | — |
 | → Chatbot · atonal pass rate | 100.00% | +300.0% | 0.0% | — | 100.00% | 3 | 0 | █▁█ |
 | → Chatbot · case-variants pass rate | 100.00% | — | 0.0% | — | 100.00% | 3 | 0 | ▅▁█ |
@@ -105,7 +105,7 @@ _86 snapshot(s) loaded. Sparklines show up to 24 most recent points._
 ## Methodology
 
 - **Snapshots root:** `state/quality`
-- **Snapshots loaded:** 169 embeddings / 75 voicing-analysis / 86 chatbot-qa
+- **Snapshots loaded:** 170 embeddings / 75 voicing-analysis / 87 chatbot-qa
 - **Regression threshold:** 5.0% absolute Δ vs 7-day average, in the "bad" direction
 - **Drift detection:** Page-Hinkley over direction-adjusted metric levels; only higher-is-better and lower-is-better metrics participate
 - **Direction semantics:** higher-is-better (pass rates, coverage, consistency), lower-is-better (leak accuracy, unknown-chord rate, invariant failures), neutral (corpus counts, Betti numbers — reported for context only)
