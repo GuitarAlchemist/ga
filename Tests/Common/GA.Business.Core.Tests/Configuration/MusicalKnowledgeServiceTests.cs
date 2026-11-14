@@ -80,6 +80,17 @@ public class MusicalKnowledgeServiceTests
         }
     }
     [Test]
+    public void KnowledgeFiles_ShouldLoadMoreThanTheirFallbackItem() =>
+        // Each loader falls back to one built-in item when its YAML file doesn't deserialize (#797):
+        // more than one item means the file itself was read
+        Assert.Multiple(() =>
+        {
+            Assert.That(IconicChordsService.GetAllChords().Count(), Is.GreaterThan(1), "IconicChords.yaml");
+            Assert.That(ChordProgressionsService.GetAllProgressions().Count(), Is.GreaterThan(1), "ChordProgressions.yaml");
+            Assert.That(GuitarTechniquesService.GetAllTechniques().Count(), Is.GreaterThan(1), "GuitarTechniques.yaml");
+            Assert.That(SpecializedTuningsService.GetAllTunings().Count(), Is.GreaterThan(1), "SpecializedTunings.yaml");
+        });
+    [Test]
     public void MusicalKnowledgeService_ShouldValidateAllConfigurations()
     {
         // Act
@@ -106,7 +117,6 @@ public class MusicalKnowledgeServiceTests
             $"Configuration validation failed with errors: {string.Join("; ", validation.AllErrors)}");
     }
     [Test]
-    [Ignore("Configuration files not loaded in test environment")]
     public void ChordProgressionsService_ShouldLoadAndQueryProgressions()
     {
         // Act
@@ -139,7 +149,6 @@ public class MusicalKnowledgeServiceTests
         }
     }
     [Test]
-    [Ignore("Configuration files not loaded in test environment")]
     public void GuitarTechniquesService_ShouldLoadAndQueryTechniques()
     {
         // Act
@@ -150,6 +159,10 @@ public class MusicalKnowledgeServiceTests
         Assert.That(allTechniques, Is.Not.Empty, "Should load guitar techniques from YAML");
         Assert.That(pitchAxisTechnique, Is.Not.Null, "Should find Pitch Axis Theory");
         Assert.That(leadTechniques, Is.Not.Empty, "Should find lead guitar techniques");
+        Assert.That(GuitarTechniquesService.FindTechniqueByName("Legato Playing")?.Applications.Select(a => a.Name),
+            Is.EqualTo(new[] { "Hammer-ons", "Pull-offs", "Slides", "Trills" }));
+        Assert.That(GuitarTechniquesService.FindTechniqueByName("Sweep Picking")?.PracticeSteps, Has.Count.EqualTo(4)
+            .And.Contains("Build speed gradually"), "The YAML's practice steps load into PracticeSteps");
         // Display technique details
         Console.WriteLine("=== Guitar Techniques ===");
         Console.WriteLine($"Total techniques loaded: {allTechniques.Count}");
@@ -175,12 +188,9 @@ public class MusicalKnowledgeServiceTests
         var nashvilleTuning = SpecializedTuningsService.FindTuningByName("Nashville Tuning");
         var studioTunings = SpecializedTuningsService.FindTuningsByCategory("Studio Technique").ToList();
         // Assert
-        // Note: Specialized tunings configuration not loaded in test environment
-        if (allTunings.Count == 0)
-        {
-            Assert.Inconclusive("Specialized tunings not loaded from configuration");
-        }
-        Assert.That(allTunings, Is.Not.Empty, "Should load specialized tunings from YAML");
+        Assert.That(allTunings, Has.Count.GreaterThan(1), "Should load specialized tunings from YAML");
+        Assert.That(nashvilleTuning, Is.Not.Null, "Should find Nashville Tuning");
+        Assert.That(studioTunings, Is.Not.Empty, "Should find studio technique tunings");
         // Display tuning details
         Console.WriteLine("=== Specialized Tunings ===");
         Console.WriteLine($"Total tunings loaded: {allTunings.Count}");
@@ -205,7 +215,6 @@ public class MusicalKnowledgeServiceTests
         }
     }
     [Test]
-    [Ignore("Configuration files not loaded in test environment")]
     public void MusicalKnowledgeService_ShouldProvideComprehensiveSearch()
     {
         // Test searching for different musical concepts
@@ -213,6 +222,7 @@ public class MusicalKnowledgeServiceTests
         foreach (var searchTerm in testSearches)
         {
             var results = MusicalKnowledgeService.SearchAll(searchTerm);
+            Assert.That(results.TotalResults, Is.GreaterThan(0), $"Should find content for '{searchTerm}'");
             Console.WriteLine($"\n=== Search Results for '{searchTerm}' ===");
             Console.WriteLine($"Total Results: {results.TotalResults}");
             if (results.IconicChords.Any())

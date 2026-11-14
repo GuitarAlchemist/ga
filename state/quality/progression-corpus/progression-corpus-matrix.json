@@ -30,8 +30,8 @@
     }
   ],
   "totals": {
-    "pass": 51,
-    "fail": 21,
+    "pass": 58,
+    "fail": 14,
     "blocked": 73
   },
   "cases": [
@@ -96,21 +96,21 @@
           "check": "key.forbidden_center_excluded",
           "seam": "key.identify",
           "status": "pass",
-          "observed": "top-tied: A minor | C major",
+          "observed": "top-tied: C major",
           "expected": "at least one candidate, and none of: D major | D minor | G major"
         },
         {
           "check": "key.single_reading_when_confident",
           "seam": "key.identify",
-          "status": "fail",
-          "observed": "2 tied candidate(s): A minor | C major",
+          "status": "pass",
+          "observed": "1 tied candidate(s): C major",
           "expected": "exactly 1 top candidate"
         },
         {
           "check": "key.top_candidate_acceptable",
           "seam": "key.identify",
           "status": "pass",
-          "observed": "top-tied: A minor | C major",
+          "observed": "top-tied: C major",
           "expected": "one of: C major"
         },
         {
@@ -201,21 +201,21 @@
           "check": "key.forbidden_center_excluded",
           "seam": "key.identify",
           "status": "pass",
-          "observed": "top-tied: A major | E minor | F# minor | G major",
+          "observed": "top-tied: A minor",
           "expected": "at least one candidate, and none of: B minor | E major | C major"
         },
         {
           "check": "key.single_reading_when_confident",
           "seam": "key.identify",
-          "status": "fail",
-          "observed": "4 tied candidate(s): A major | E minor | F# minor | G major",
+          "status": "pass",
+          "observed": "1 tied candidate(s): A minor",
           "expected": "exactly 1 top candidate"
         },
         {
           "check": "key.top_candidate_acceptable",
           "seam": "key.identify",
-          "status": "fail",
-          "observed": "top-tied: A major | E minor | F# minor | G major",
+          "status": "pass",
+          "observed": "top-tied: A minor",
           "expected": "one of: A minor"
         },
         {
@@ -725,22 +725,22 @@
         {
           "check": "key.forbidden_center_excluded",
           "seam": "key.identify",
-          "status": "fail",
-          "observed": "forbidden in top-tied: A minor",
+          "status": "pass",
+          "observed": "top-tied: C major",
           "expected": "at least one candidate, and none of: E major | A minor | A major"
         },
         {
           "check": "key.single_reading_when_confident",
           "seam": "key.identify",
-          "status": "fail",
-          "observed": "2 tied candidate(s): A minor | C major",
+          "status": "pass",
+          "observed": "1 tied candidate(s): C major",
           "expected": "exactly 1 top candidate"
         },
         {
           "check": "key.top_candidate_acceptable",
           "seam": "key.identify",
           "status": "pass",
-          "observed": "top-tied: A minor | C major",
+          "observed": "top-tied: C major",
           "expected": "one of: C major"
         },
         {
@@ -936,21 +936,21 @@
           "check": "key.forbidden_center_excluded",
           "seam": "key.identify",
           "status": "pass",
-          "observed": "top-tied: A minor | C major",
+          "observed": "top-tied: C major",
           "expected": "at least one candidate, and none of: F major | E minor | D minor | G major"
         },
         {
           "check": "key.single_reading_when_confident",
           "seam": "key.identify",
-          "status": "fail",
-          "observed": "2 tied candidate(s): A minor | C major",
+          "status": "pass",
+          "observed": "1 tied candidate(s): C major",
           "expected": "exactly 1 top candidate"
         },
         {
           "check": "key.top_candidate_acceptable",
           "seam": "key.identify",
           "status": "pass",
-          "observed": "top-tied: A minor | C major",
+          "observed": "top-tied: C major",
           "expected": "one of: C major"
         },
         {
@@ -1041,28 +1041,28 @@
           "check": "key.forbidden_center_excluded",
           "seam": "key.identify",
           "status": "pass",
-          "observed": "top-tied: C minor | Eb major",
+          "observed": "top-tied: Eb major",
           "expected": "at least one candidate, and none of: E major | B major | F major | C# minor"
         },
         {
           "check": "key.single_reading_when_confident",
           "seam": "key.identify",
-          "status": "fail",
-          "observed": "2 tied candidate(s): C minor | Eb major",
+          "status": "pass",
+          "observed": "1 tied candidate(s): Eb major",
           "expected": "exactly 1 top candidate"
         },
         {
           "check": "key.top_candidate_acceptable",
           "seam": "key.identify",
           "status": "pass",
-          "observed": "top-tied: C minor | Eb major",
+          "observed": "top-tied: Eb major",
           "expected": "one of: Eb major"
         },
         {
           "check": "spelling.equivalent_spellings_agree",
           "seam": "key.identify",
           "status": "fail",
-          "observed": "\u0027E-flat maj7\u0027 -\u003E A major,Ab minor,B major,C# minor,Cb major,E major,F# minor,G# minor != \u0027Ebmaj7\u0027 -\u003E Ab major,Bb major,C minor,Eb major,F minor,G minor; \u0027E flat maj7\u0027 -\u003E A major,Ab minor,B major,C# minor,Cb major,E major,F# minor,G# minor != \u0027Ebmaj7\u0027 -\u003E Ab major,Bb major,C minor,Eb major,F minor,G minor; \u0027E-flatmaj7\u0027 -\u003E A major,Ab minor,B major,C# minor,Cb major,E major,F# minor,G# minor != \u0027Ebmaj7\u0027 -\u003E Ab major,Bb major,C minor,Eb major,F minor,G minor; \u0027B-flat 7\u0027 -\u003E Ab minor,B major,C# minor,Cb major,D# minor,E major,Eb minor,F# major,G# minor,Gb major != \u0027Bb7\u0027 -\u003E Bb major,C minor,D minor,Eb major,F major,G minor; \u0027B flat 7\u0027 -\u003E Ab minor,B major,C# minor,Cb major,D# minor,E major,Eb minor,F# major,G# minor,Gb major != \u0027Bb7\u0027 -\u003E Bb major,C minor,D minor,Eb major,F major,G minor; \u0027B-flat7\u0027 -\u003E Ab minor,B major,C# minor,Cb major,D# minor,E major,Eb minor,F# major,G# minor,Gb major != \u0027Bb7\u0027 -\u003E Bb major,C minor,D minor,Eb major,F major,G minor; \u0027F-sharp minor\u0027 -\u003E A minor,Bb major,C major,D minor,F major,G minor != \u0027F#m\u0027 -\u003E A major,B minor,C# minor,D major,E major,F# minor; \u0027F sharp minor\u0027 -\u003E A minor,Bb major,C major,D minor,F major,G minor != \u0027F#m\u0027 -\u003E A major,B minor,C# minor,D major,E major,F# minor; \u0027F-sharpm\u0027 -\u003E A minor,Bb major,C major,D minor,F major,G minor != \u0027F#m\u0027 -\u003E A major,B minor,C# minor,D major,E major,F# minor",
+          "observed": "\u0027E-flat maj7\u0027 -\u003E A major,Ab minor,B major,C# minor,Cb major,E major,F# minor,G# minor != \u0027Ebmaj7\u0027 -\u003E Ab major,Bb major,C minor,Eb major,F minor,G minor; \u0027E flat maj7\u0027 -\u003E A major,Ab minor,B major,C# minor,Cb major,E major,F# minor,G# minor != \u0027Ebmaj7\u0027 -\u003E Ab major,Bb major,C minor,Eb major,F minor,G minor; \u0027E-flatmaj7\u0027 -\u003E A major,Ab minor,B major,C# minor,Cb major,E major,F# minor,G# minor != \u0027Ebmaj7\u0027 -\u003E Ab major,Bb major,C minor,Eb major,F minor,G minor; \u0027B-flat 7\u0027 -\u003E Ab minor,B major,C# minor,Cb major,D# minor,E major,Eb minor,F# major,G# minor,Gb major != \u0027Bb7\u0027 -\u003E C minor,Eb major; \u0027B flat 7\u0027 -\u003E Ab minor,B major,C# minor,Cb major,D# minor,E major,Eb minor,F# major,G# minor,Gb major != \u0027Bb7\u0027 -\u003E C minor,Eb major; \u0027B-flat7\u0027 -\u003E Ab minor,B major,C# minor,Cb major,D# minor,E major,Eb minor,F# major,G# minor,Gb major != \u0027Bb7\u0027 -\u003E C minor,Eb major; \u0027F-sharp minor\u0027 -\u003E A minor,Bb major,C major,D minor,F major,G minor != \u0027F#m\u0027 -\u003E A major,B minor,C# minor,D major,E major,F# minor; \u0027F sharp minor\u0027 -\u003E A minor,Bb major,C major,D minor,F major,G minor != \u0027F#m\u0027 -\u003E A major,B minor,C# minor,D major,E major,F# minor; \u0027F-sharpm\u0027 -\u003E A minor,Bb major,C major,D minor,F major,G minor != \u0027F#m\u0027 -\u003E A major,B minor,C# minor,D major,E major,F# minor",
           "expected": "spelled-out and shorthand accidentals resolve identically (GuitarAlchemist/ga#554)",
           "blocked_on": [
             554

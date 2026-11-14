@@ -281,7 +281,9 @@ module ModesConfig =
                             let intervalVector = if isNull family.IntervalClassVector then "" else family.IntervalClassVector
 
                             let description = if isNull m.Description then None else Some m.Description
-                            let alternateNames = None
+                            let alternateNames =
+                                if isNull m.AlternateNames || m.AlternateNames.Length = 0 then None
+                                else Some(m.AlternateNames :> IReadOnlyList<string>)
 
                             builder.Add(
                                 { Name = name
@@ -416,27 +418,26 @@ module ModesConfig =
         match modeByNameCache.TryGetValue(normalizedName) with
         | true, mode -> Some mode
         | false, _ ->
+            let matches (candidate: string) =
+                String.Equals(candidate, name, StringComparison.OrdinalIgnoreCase)
+
+            let modes = GetAllModes()
+
+            // A mode's own name comes before another mode's alternate name ("Whole-Half Diminished", "Blues Scale")
             let result =
-                GetAllModes()
-                |> Seq.tryFind (fun mode ->
-                    String.Equals(mode.Name, name, StringComparison.OrdinalIgnoreCase)
-                    || match mode.AlternateNames with
-                       | Some alternateNames ->
-                           alternateNames
-                           |> Seq.exists (fun altName ->
-                               String.Equals(altName, name, StringComparison.OrdinalIgnoreCase))
-                       | None -> false)
+                modes
+                |> Seq.tryFind (fun mode -> matches mode.Name)
+                |> Option.orElseWith (fun () ->
+                    modes
+                    |> Seq.tryFind (fun mode ->
+                        match mode.AlternateNames with
+                        | Some alternateNames -> alternateNames |> Seq.exists matches
+                        | None -> false))
 
             match result with
             | Some mode ->
+                // Only the name asked for: an alternate name cached here could hide a mode that has it as its own name
                 modeByNameCache.TryAdd(normalizedName, mode) |> ignore
-                // Also cache alternate names
-                match mode.AlternateNames with
-                | Some alternateNames ->
-                    for altName in alternateNames do
-                        modeByNameCache.TryAdd(altName.ToUpperInvariant(), mode) |> ignore
-                | None -> ()
-
                 Some mode
             | None -> None
 

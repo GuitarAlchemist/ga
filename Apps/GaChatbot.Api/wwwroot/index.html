@@ -739,6 +739,10 @@
   // Backend emits a single routing JSON event first (with the full trace),
   // then text chunks, then `[DONE]`. We render the trace as soon as routing
   // arrives so the right panel populates before the answer text streams in.
+  // A failure is a named `error` event (`event: error`, then `data:
+  // {"error":"…"}`) with no `[DONE]` after it, before or after the routing
+  // event. Only the event name marks it: an answer chunk can be any text.
+  // We throw so the caller reports it and keeps it out of the history.
   async function consumeSseStream(response, signal) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
@@ -761,11 +765,19 @@
       while ((sep = buffer.indexOf('\n\n')) >= 0) {
         const rawEvent = buffer.slice(0, sep);
         buffer = buffer.slice(sep + 2);
-        const dataLines = rawEvent.split('\n')
+        const lines = rawEvent.split('\n');
+        const eventName = lines.find(l => l.startsWith('event:'))?.slice(6).trim();
+        const dataLines = lines
           .filter(l => l.startsWith('data: '))
           .map(l => l.slice(6));
         if (dataLines.length === 0) continue;
         const data = dataLines.join('\n');
+
+        if (eventName === 'error') {
+          let message = 'The server reported an error.';
+          try { message = JSON.parse(data).error || message; } catch { /* keep the generic message */ }
+          throw new Error(message);
+        }
 
         if (data === '[DONE]') {
           return { answer, routing };

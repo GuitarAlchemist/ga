@@ -14,7 +14,7 @@
 #   L : M(x) <-> m(x+4)      (root moves 1 semitone)
 #   R : M(x) <-> m(x+9)      (5th moves 2 semitones)
 #   S = L o P o R   : M(x) <-> m(x+1)   (shares 3rd; 2 voices move)
-#   N = R o L o P   : M(x) <-> m(x+5)   (shares root; 2 voices move)
+#   N = R o L o P   : M(x) <-> m(x+5)   (M's root is m's 5th; 2 voices move)
 #   H = L o P o L   : M(x) <-> m(x+8)   (no common tones; 3 voices move)
 #
 # All six transforms are involutions: T(T(x)) = x for every triad x.
@@ -138,7 +138,7 @@ Transforms:
       C_min: B_maj
 
   N:
-    Description: "Nebenverwandt — R o L o P; M(x) paired with m(x+5); shares the root, 2 voices move"
+    Description: "Nebenverwandt — R o L o P; M(x) paired with m(x+5); shares one tone, the root of M and the 5th of m, 2 voices move"
     VoiceLeadingCost: 2
     Mappings:
       C_maj: F_min
@@ -196,9 +196,10 @@ Transforms:
       G_min: B_maj
 
 # Hexatonic cycles: 4 disjoint cycles of 6 triads each, produced by alternating
-# P and L. Roots in each cycle form a hexatonic pitch-class set (union of two
-# augmented triads related by semitone). Names are derived from the three
-# major-triad roots present in each cycle.
+# P and L. Roots in each cycle form an augmented triad; the notes of its six
+# triads form a hexatonic pitch-class set (union of two augmented triads related
+# by semitone). Names are derived from the three major-triad roots present in
+# each cycle.
 HexatonicCycles:
   - Name: "Cycle_C_E_G#"
     Triads: [C_maj, C_min, G#_maj, G#_min, E_maj, E_min]
@@ -211,8 +212,9 @@ HexatonicCycles:
 
 # Octatonic cycles: 3 disjoint cycles of 8 triads each, produced by alternating
 # P and R. Roots in each cycle form a diminished-7 pitch-class set {pc, pc+3,
-# pc+6, pc+9}. Names use OCT(i,j) notation, where {i,j} are the two smallest
-# interval classes of the underlying octatonic scale — a math-derivation label.
+# pc+6, pc+9}. Names use OCT(i,j) notation, where i and j are two pitch classes
+# of the underlying octatonic collection, a semitone apart: of the three
+# collections, OCT(i,j) is the one that holds both.
 OctatonicCycles:
   - Name: "OCT(0,1)"
     Triads: [C_maj, C_min, D#_maj, D#_min, F#_maj, F#_min, A_maj, A_min]

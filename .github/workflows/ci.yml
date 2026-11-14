@@ -331,6 +331,11 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         cache-dependency-path: Apps/ga-client/package.json
+
+    # Node 20 bundles npm 10, whose peer resolver can traverse detached Vitest nodes.
+    # npm/cli#8448 fixes that crash in npm 11.6.0; keep normal peer validation.
+    - name: Setup npm peer resolver
+      run: npm install --global npm@11.6.0 --ignore-scripts --no-audit --no-fund
         
     - name: Install dependencies
       run: |

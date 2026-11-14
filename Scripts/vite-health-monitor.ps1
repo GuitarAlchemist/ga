@@ -62,11 +62,49 @@ function Emit-Algedonic {
   Add-Content -Path $algedonicInbox -Value $json
 }
 
+function Get-ViteMonitorMutex {
+  param([int]$Port)
+  $mutex = [System.Threading.Mutex]::new($false, "Global\GA.Vite.HealthMonitor.$Port")
+  try {
+    try { $acquired = $mutex.WaitOne(0) }
+    catch [System.Threading.AbandonedMutexException] { $acquired = $true }
+    if (-not $acquired) { $mutex.Dispose(); return $null }
+    return $mutex
+  } catch {
+    $mutex.Dispose()
+    throw
+  }
+}
+
 function Restart-Vite {
+  # Failed HTTP probes can mean a busy server, not a dead listener. Never
+  # replace an unknown owner or let npm choose the next available port.
+  try {
+    $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction Stop |
+      Where-Object LocalPort -eq $Port)
+    if ($listeners.Count -gt 0) {
+      Write-Log 'WARN' "Probe failed but :$Port still has a listener; restart skipped"
+      return
+    }
+    if ($null -ne $script:pendingViteProcess) {
+      $script:pendingViteProcess.Refresh()
+      if (-not $script:pendingViteProcess.HasExited) {
+        Write-Log 'WARN' "Previous Vite launch is still running; restart skipped"
+        return
+      }
+      $script:pendingViteProcess = $null
+    }
+  } catch {
+    Write-Log 'ERROR' "Cannot verify Vite listener/launch state; restart skipped: $_"
+    return
+  }
   Write-Log 'WARN' "Vite down on :$Port — restarting `npm run dev` in $WorkingDir"
   Push-Location $WorkingDir
   try {
-    Start-Process -FilePath 'cmd' -ArgumentList '/c', 'npm', 'run', 'dev' -WindowStyle Hidden
+    $script:pendingViteProcess = Start-Process -FilePath 'cmd' -ArgumentList '/c', 'npm', 'run', 'dev', '--', '--port', "$Port", '--strictPort' -WindowStyle Hidden -PassThru -ErrorAction Stop
+  } catch {
+    Write-Log 'ERROR' "Vite launch failed: $_"
+    return
   } finally {
     Pop-Location
   }
@@ -74,21 +112,35 @@ function Restart-Vite {
   Start-Sleep -Seconds $StartupWaitSeconds
 }
 
-Write-Log 'INFO' "vite-health-monitor started — polling :$Port every $IntervalSeconds s"
-$consecutiveFailures = 0
-while ($true) {
-  if (Test-ViteUp) {
-    if ($consecutiveFailures -gt 0) {
-      Write-Log 'INFO' "Vite back up after $consecutiveFailures consecutive failures"
-      $consecutiveFailures = 0
-    }
-  } else {
-    $consecutiveFailures++
-    Write-Log 'WARN' "Vite probe failed (consecutive=$consecutiveFailures)"
-    if ($consecutiveFailures -ge 2) {
-      Restart-Vite
-      $consecutiveFailures = 0
-    }
+$monitorMutex = $null
+$script:pendingViteProcess = $null
+try {
+  $monitorMutex = Get-ViteMonitorMutex -Port $Port
+  if ($null -eq $monitorMutex) {
+    Write-Log 'WARN' "Another Vite monitor already owns :$Port; exiting"
+    return
   }
-  Start-Sleep -Seconds $IntervalSeconds
+  Write-Log 'INFO' "vite-health-monitor started — polling :$Port every $IntervalSeconds s"
+  $consecutiveFailures = 0
+  while ($true) {
+    if (Test-ViteUp) {
+      if ($consecutiveFailures -gt 0) {
+        Write-Log 'INFO' "Vite back up after $consecutiveFailures consecutive failures"
+        $consecutiveFailures = 0
+      }
+    } else {
+      $consecutiveFailures++
+      Write-Log 'WARN' "Vite probe failed (consecutive=$consecutiveFailures)"
+      if ($consecutiveFailures -ge 2) {
+        Restart-Vite
+        $consecutiveFailures = 0
+      }
+    }
+    Start-Sleep -Seconds $IntervalSeconds
+  }
+} finally {
+  if ($null -ne $monitorMutex) {
+    $monitorMutex.ReleaseMutex()
+    $monitorMutex.Dispose()
+  }
 }

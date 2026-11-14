@@ -92,7 +92,7 @@ AlternativeStringConfigurations:
       Configuration: [ "B", "E", "A", "D", "F#", "B" ]
       PitchClasses: [ 11, 4, 9, 2, 6, 11 ]
       Interval: "Perfect fourth below standard tuning"
-      StringGauges: [ ".013-.062" or ".014-.068" ]
+      StringGauges: [ ".013-.062", ".014-.068" ]
     AlternativeBaritone:
       - Name: "A Tuning"
         Configuration: [ "A", "D", "G", "C", "E", "A" ]
@@ -305,6 +305,7 @@ MultiscaleInstruments:
 
   - Name: "Multiscale Tuning Considerations"
     Description: "Tuning adjustments for fanned fret instruments"
+    Category: "Advanced Construction"
     Factors:
       - "Scale length affects string tension"
       - "Longer scales may require lighter gauges"

@@ -1,5 +1,6 @@
 namespace GA.Domain.Services.Fretboard.Voicings.Filtering;
 
+using Analysis;
 using Business.Core.Analysis.Voicings;
 using Domain.Core.Instruments.Primitives;
 
@@ -115,8 +116,7 @@ public static class VoicingFilters
             VoicingTypeFilter.Drop3 => dropVoicing == "Drop-3",
             VoicingTypeFilter.Drop2And4 => dropVoicing == "Drop-2+4",
             VoicingTypeFilter.Rootless => isRootless,
-            VoicingTypeFilter.ShellVoicings => analysis.MidiNotes.Select(n => n).Distinct().Count() == 3 &&
-                                               isRootless, // Shell voicings are typically rootless 3-note voicings
+            VoicingTypeFilter.ShellVoicings => VoicingHarmonicAnalyzer.IsShellVoicing(analysis.MidiNotes),
             VoicingTypeFilter.ClosedPosition => !isOpen,
             VoicingTypeFilter.OpenPosition => isOpen,
             _ => true

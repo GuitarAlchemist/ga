@@ -47,18 +47,52 @@ public static class VoicingHarmonicAnalyzer
         );
     }
 
+    /// <summary>
+    ///     Names a drop voicing by the voices it lowers: a close position under the top note, its voices counted
+    ///     from the top, some of them an octave lower ("Drop-2", "Drop-3", "Drop-2+4"). A note's place in the close
+    ///     position is the highest pitch of its pitch class below the top note. Returns <c>null</c> for a close
+    ///     position, a doubled pitch class, or a note more than an octave below its place.
+    /// </summary>
     private static string? DetectDropVoicing(int[] midiNotes)
     {
         if (midiNotes.Length < 4) return null;
-        var sorted = midiNotes.OrderBy(n => n).ToArray();
+        // One voice per pitch class: a doubled note has no single place in the close position
+        if (midiNotes.Select(n => n % 12).Distinct().Count() != midiNotes.Length) return null;
 
-        // General Drop-2 detection: Raise the bass note 1 octave.
-        // If the resulting set is "closed" (span <= 12), it's identified as a Drop-2 voicing.
-        var raisedBass = sorted[0] + 12;
-        var newSet = sorted.Skip(1).Append(raisedBass).OrderBy(n => n).ToArray();
-        if (newSet.Max() - newSet.Min() <= 12) return "Drop-2";
+        var top = midiNotes.Max();
+        int Place(int note) => top - (top - note) % 12;
+        var closeFromTop = midiNotes.Select(Place).OrderDescending().ToList();
 
-        return null;
+        var dropped = new List<int>();
+        foreach (var note in midiNotes)
+        {
+            switch ((Place(note) - note) / 12)
+            {
+                case 0:
+                    break;
+                case 1:
+                    dropped.Add(closeFromTop.IndexOf(Place(note)) + 1);
+                    break;
+                default:
+                    return null;
+            }
+        }
+
+        return dropped.Count == 0 ? null : "Drop-" + string.Join("+", dropped.Order());
+    }
+
+    /// <summary>
+    ///     A shell voicing: three notes, the root in the bass with a third (minor or major) and a seventh (minor or
+    ///     major) above it, as Freddie Green comped on strings 6-4-3 and 5-4-3.
+    /// </summary>
+    public static bool IsShellVoicing(IReadOnlyCollection<int> midiNotes)
+    {
+        var notes = midiNotes.Distinct().Order().ToArray();
+        if (notes.Length != 3) return false;
+
+        // Semitones above the root within the octave: a third (3 or 4) sorts before a seventh (10 or 11)
+        var above = notes.Skip(1).Select(n => (n - notes[0]) % 12).Order().ToArray();
+        return above is [3 or 4, 10 or 11];
     }
 
     /// <summary>

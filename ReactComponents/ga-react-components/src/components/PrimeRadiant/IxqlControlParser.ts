@@ -290,9 +290,12 @@ export interface FixCommand {
 
 // ── Rendering control ──
 
+// 'grommet' is not a post-fx pass: it swaps the Godot scene's moon rings for a laid-rope grommet.
+export const RENDER_TARGETS = ['moebius', 'caustics', 'dispersion', 'bloom', 'grommet'] as const;
+
 export interface RenderCommand {
   type: 'render';
-  target: 'moebius' | 'caustics' | 'dispersion' | 'bloom';
+  target: typeof RENDER_TARGETS[number];
   action: 'on' | 'off' | 'toggle';
   value?: number; // intensity/spread (0.0-1.0)
 }
@@ -1661,7 +1664,11 @@ export function parseIxqlCommand(input: string, _depth: number = 0): IxqlParseRe
       // ── RENDER <target> ON|OFF|TOGGLE [<value>] ──
       case 'RENDER': {
         next(ctx);
-        const renderTarget = (nextRaw(ctx)).toLowerCase() as RenderCommand['target'];
+        const rawTarget = (nextRaw(ctx)).toLowerCase();
+        if (!(RENDER_TARGETS as readonly string[]).includes(rawTarget)) {
+          return { ok: false, error: `Unknown RENDER target '${rawTarget}'. Expected ${RENDER_TARGETS.map(t => t.toUpperCase()).join(', ')}` };
+        }
+        const renderTarget = rawTarget as RenderCommand['target'];
         const actionToken = peek(ctx);
         let renderAction: RenderCommand['action'] = 'toggle';
         let renderValue: number | undefined;

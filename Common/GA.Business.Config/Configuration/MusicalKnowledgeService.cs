@@ -223,7 +223,7 @@ public static class MusicalKnowledgeService
     {
         var breakdown = new Dictionary<string, int>();
 
-        foreach (var artist in GetAllArtists().Take(20)) // Top 20 artists
+        foreach (var artist in GetAllArtists())
         {
             var count = IconicChordsService.FindChordsByArtist(artist).Count() +
                         ChordProgressionsService.FindProgressionsByArtist(artist).Count() +
@@ -232,7 +232,9 @@ public static class MusicalKnowledgeService
             breakdown[artist] = count;
         }
 
-        return breakdown.OrderByDescending(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        // Top 20 artists, the most entries first: GetAllArtists is in alphabetical order, so the cut comes after the sort
+        return breakdown.OrderByDescending(kvp => kvp.Value).ThenBy(kvp => kvp.Key).Take(20)
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 }
 

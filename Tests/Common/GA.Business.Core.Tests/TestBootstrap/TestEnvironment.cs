@@ -1,4 +1,5 @@
-namespace GA.Business.Core.Tests.TestBootstrap;
+// The project's root namespace: NUnit runs a setup fixture only for the tests of its namespace and the namespaces inside it
+namespace GA.Business.Core.Tests;
 
 /// <summary>
 ///     Ensures configuration-backed services can locate their YAML/JSON inputs during tests

@@ -35,4 +35,20 @@ public class AtonalAnalysisMetadataTests
             Assert.That(analysis.SuggestedName, Is.Not.Null.And.Not.Empty);
         });
     }
+
+    // IsSymmetrical means an equal division of the octave: the step from the last pitch class back to the first
+    // counts too, so C D and C D E are not symmetrical
+    [TestCase(new[] { 0, 6 }, true)]
+    [TestCase(new[] { 0, 4, 8 }, true)]
+    [TestCase(new[] { 0, 3, 6, 9 }, true)]
+    [TestCase(new[] { 0, 2, 4, 6, 8, 10 }, true)]
+    [TestCase(new[] { 0, 2 }, false)]
+    [TestCase(new[] { 0, 2, 4 }, false)]
+    [TestCase(new[] { 0, 2, 10 }, false)]
+    public void AnalyzeAtonally_IsSymmetrical_OnlyForEqualDivisionsOfTheOctave(int[] pitchClasses, bool expected)
+    {
+        var set = new PitchClassSet(pitchClasses.Select(PitchClass.FromValue));
+        var chord = ChordTemplate.Analytical.FromPitchClassSet(set, "Symmetry");
+        Assert.That(AtonalChordAnalysisService.AnalyzeAtonally(chord, PitchClass.C).IsSymmetrical, Is.EqualTo(expected));
+    }
 }

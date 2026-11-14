@@ -437,8 +437,10 @@ public class ProgressionCorpusMatrixTests
     private static IEnumerable<CheckResult> KeyChecks(
         ProgressionCase c, IReadOnlyList<KeyIdentificationService.KeyCandidate> candidates)
     {
-        var topScore = candidates.Count == 0 ? 0 : candidates.Max(x => x.MatchCount);
-        var topTied = candidates.Where(x => x.MatchCount == topScore)
+        // Tied on the seam's own ranking score (diatonic count plus cadence weight), as its callers
+        // group them: on the count alone a minor ii-V-i ties with its relative major (#771).
+        var topScore = candidates.Count == 0 ? 0 : candidates.Max(x => x.Score);
+        var topTied = candidates.Where(x => x.Score == topScore)
             .Select(x => x.Key).Order(StringComparer.Ordinal).ToList();
         var observed = topTied.Count == 0 ? "(no candidate)" : string.Join(" | ", topTied);
 

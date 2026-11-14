@@ -35,6 +35,7 @@ public static class VoicingTagEnricher
             IsRootless = characteristics.IsRootless,
             IsOpenVoicing = characteristics.IsOpenVoicing,
             DropVoicing = characteristics.DropVoicing,
+            IsShellVoicing = VoicingHarmonicAnalyzer.IsShellVoicing(sortedMidiNotes),
             NoteCount = characteristics.NoteCount,
             IntervalSpread = characteristics.IntervalSpread,
             MeanMidi = sortedMidiNotes is { Count: > 0 } ? sortedMidiNotes.Average() : null

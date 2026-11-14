@@ -68,6 +68,13 @@ public class ChordTests
     [TestCase("C13", ChordExtension.Thirteenth)]
     public void FromSymbol_ShouldCreateCorrectExtension(string symbol, ChordExtension expectedExtension) => Assert.That(Chord.FromSymbol(symbol).Extension, Is.EqualTo(expectedExtension));
 
+    // A capital M is major: lower-cased, CM7 read as Cm7
+    [TestCase("CM7", new[] { 0, 4, 7, 11 })]
+    [TestCase("CM9", new[] { 0, 2, 4, 7, 11 })]
+    [TestCase("CM", new[] { 0, 4, 7 })]
+    public void FromSymbol_ReadsACapitalMAsMajor(string symbol, int[] pitchClasses) =>
+        Assert.That(Chord.FromSymbol(symbol).PitchClassSet.Select(pc => pc.Value), Is.EqualTo(pitchClasses));
+
     [Test]
     public void FromSymbol_ParsesRootWithAccidental()
     {

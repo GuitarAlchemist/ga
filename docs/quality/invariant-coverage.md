@@ -71,8 +71,8 @@ These carry status `T` (tested) but observed zero firings. Either the test is va
 
 ## Catalog summary by status
 
-- Tested (T): 12
-- Claimed but untested (C): 12
+- Tested (T): 13
+- Claimed but untested (C): 11
 - Latent / not claimed (N): 10
 - Known failing (FAIL): 4
 

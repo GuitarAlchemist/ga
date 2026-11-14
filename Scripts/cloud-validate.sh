@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Keep this script LF-only; it is the canonical cross-platform L2 verifier.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
