@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "079cb42e488b9360c3ab1763733e34c4860151dc",
-    "generatedAt": "2026-11-14T02:16:43.031953+00:00",
+    "commitSha": "259225e116071451d45bbeba0a89fe30bf8a6b0c",
+    "generatedAt": "2026-11-14T02:17:52.727290+00:00",
     "repoCount": 5,
-    "totalPRs": 21
+    "totalPRs": 20
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 10,
+      "prCount": 9,
       "prs": [
         {
           "ageDays": 2,
@@ -186,18 +186,6 @@
           "number": 807,
           "title": "fix(chatbot): stop ungrounded chat prompts from inviting invented frets",
           "url": "https://github.com/GuitarAlchemist/ga/pull/807"
-        },
-        {
-          "ageDays": 44,
-          "author": "spareilleux",
-          "createdAt": "2026-09-30T23:50:29Z",
-          "failingChecks": 0,
-          "headRef": "fix/771-key-identification",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 780,
-          "title": "fix(keys): read the progression as written \u2014 sharps before a space, \u266d/\u266f, \u00f8/\u00b0/m7b5, \u0394, slash chords and repeats (#771)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/780"
         },
         {
           "ageDays": 44,
