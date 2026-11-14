@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "f324f7772ead0fcab16afd918e1a5e65d54ccea6",
-    "generatedAt": "2026-11-14T02:14:38.275530+00:00",
+    "commitSha": "d89065f890bf7e75fcde576e4da7daf907343e45",
+    "generatedAt": "2026-11-14T02:15:47.799559+00:00",
     "repoCount": 5,
-    "totalPRs": 25
+    "totalPRs": 23
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 14,
+      "prCount": 12,
       "prs": [
         {
           "ageDays": 2,
@@ -164,18 +164,6 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/839"
         },
         {
-          "ageDays": 38,
-          "author": "spareilleux",
-          "createdAt": "2026-10-06T23:58:38Z",
-          "failingChecks": 0,
-          "headRef": "feat/ixql-render-grommet",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 826,
-          "title": "feat(prime-radiant): forward IXQL RENDER GROMMET to the Godot scene",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/826"
-        },
-        {
           "ageDays": 40,
           "author": "spareilleux",
           "createdAt": "2026-10-04T20:48:18Z",
@@ -186,18 +174,6 @@
           "number": 820,
           "title": "fix(chords): ChordSymbolParser rejects what it can't read, and reads each alteration",
           "url": "https://github.com/GuitarAlchemist/ga/pull/820"
-        },
-        {
-          "ageDays": 40,
-          "author": "spareilleux",
-          "createdAt": "2026-10-04T19:15:38Z",
-          "failingChecks": 0,
-          "headRef": "fix/modes-catalog",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 818,
-          "title": "fix(config): mode names after a sharp, triad inversions, and alternate names in GetAllModes",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/818"
         },
         {
           "ageDays": 40,
@@ -254,7 +230,7 @@
           "failingChecks": 0,
           "headRef": "fix/760-sse-error-event",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 766,
           "title": "fix(chat): type the stream's error event and stop the page from rendering it as an answer (#760)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/766"
