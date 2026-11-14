@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -154,7 +155,7 @@ func activeLoopRecords(path string) []loopRecord {
 		if !seen {
 			order = append(order, r.ID)
 		}
-		if !seen || r.LastActivityAt >= prev.LastActivityAt { // ISO-8601 UTC: text order is time order
+		if !seen || !activityBefore(r.LastActivityAt, prev.LastActivityAt) {
 			byID[r.ID] = r
 		}
 	}
@@ -165,6 +166,18 @@ func activeLoopRecords(path string) []loopRecord {
 		}
 	}
 	return active
+}
+
+// activityBefore: timestamp a is strictly earlier than b, compared as instants (the hooks write
+// whole seconds, the dashboard toISOString() milliseconds, so text order is not time order), as
+// the script compared deserialized dates; as text when either does not parse.
+func activityBefore(a, b string) bool {
+	ta, errA := time.Parse(time.RFC3339Nano, a)
+	tb, errB := time.Parse(time.RFC3339Nano, b)
+	if errA != nil || errB != nil {
+		return a < b
+	}
+	return ta.Before(tb)
 }
 
 // safeText: CR, LF and tabs as spaces, cut to max characters with "..." appended.

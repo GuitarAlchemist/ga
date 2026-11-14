@@ -509,3 +509,31 @@ func TestSettingsWireOnlyGaHooks(t *testing.T) {
 		t.Errorf("%d hook commands, want 13", n)
 	}
 }
+
+// The dashboard writes toISOString() (milliseconds), the hooks whole seconds: a stop written in the
+// same second as the last hook event is later as an instant though earlier as text (Codex P2 on #857).
+func TestActiveLoopRecordsCompareInstants(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "loops.jsonl")
+	write := func(lines ...string) {
+		if err := os.WriteFile(path, []byte(strings.Join(lines, "\n")+"\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write(`{"id":"a","status":"active","last_activity_at":"2026-11-14T12:00:00Z"}`,
+		`{"id":"a","status":"completed","last_activity_at":"2026-11-14T12:00:00.500Z"}`)
+	if got := activeLoopRecords(path); len(got) != 0 {
+		t.Errorf("stopped 500 ms after the last hook event, still active: %+v", got)
+	}
+	// Equal instants spelled differently: the later record wins.
+	write(`{"id":"b","status":"active","last_activity_at":"2026-11-14T12:00:00.000Z"}`,
+		`{"id":"b","status":"completed","last_activity_at":"2026-11-14T12:00:00Z"}`)
+	if got := activeLoopRecords(path); len(got) != 0 {
+		t.Errorf("equal instants, later record completed, still active: %+v", got)
+	}
+	// An earlier instant never replaces a later one.
+	write(`{"id":"c","status":"active","last_activity_at":"2026-11-14T12:00:01Z"}`,
+		`{"id":"c","status":"completed","last_activity_at":"2026-11-14T12:00:00.900Z"}`)
+	if got := activeLoopRecords(path); len(got) != 1 || got[0].ID != "c" {
+		t.Errorf("an older completion replaced a newer activity: %+v", got)
+	}
+}
