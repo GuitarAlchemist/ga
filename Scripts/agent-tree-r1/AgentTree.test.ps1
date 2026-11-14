@@ -137,7 +137,35 @@ $bc = Measure-BehaviouralGap -TestScript $crashS
 Assert ($bc.gap -ge 1 -and $bc.exit_code -ne 0) 'a crashing child run is never reported as gap 0'
 $rep = Get-LoopGapReport -RepoRoot (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path -TestScript $failS -IncludeR1
 Assert ($rep.headline_gap -eq 2 -and $rep.presence_only.label -eq 'presence only' -and $rep.presence_only.total -eq 8) 'report headline is behavioural; keyword figure is secondary, labelled "presence only"'
+# QA findings (run 43650162072, item 3): a run that executed no assertion, or whose FAIL line is wrapped in colour codes, is not gap 0.
+$emptyS = Join-Path $inj 'empty.ps1'; $ansiS = Join-Path $inj 'ansi.ps1'; $earlyS = Join-Path $inj 'early.ps1'
+Set-Content -LiteralPath $emptyS -Value ''
+Set-Content -LiteralPath $ansiS -Value 'Write-Host "  ok: a"; Write-Host ([char]27 + "[31m  FAIL: coloured"); exit 0'
+Set-Content -LiteralPath $earlyS -Value 'exit 0'
+$be = Measure-BehaviouralGap -TestScript $emptyS
+Assert ($be.gap -ge 1 -and $be.reason -eq 'no_assertions_ran') 'exit 0 with no assertion executed is never gap 0'
+Assert ((Measure-BehaviouralGap -TestScript $earlyS).gap -ge 1) 'an early exit 0 is never gap 0'
+$ba = Measure-BehaviouralGap -TestScript $ansiS
+Assert ($ba.gap -eq 1 -and $ba.failing_assertions -eq 1) 'a FAIL line wrapped in ANSI colour codes is still counted'
+Assert ($bp.passing_assertions -eq 1) 'passing assertions are counted too'
 Remove-Item -LiteralPath $inj -Recurse -Force
+
+Write-Host 'regression: resume, uncertain, simulation, stop, evidence (QA item 4)'
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'r1'; $null = Leaf $t 'r2'
+$null = Invoke-AgentDispatch $t 'r1' -Live -Sender $badSender; $null = Invoke-AgentDispatch $t 'r2' -Live -Sender $okSender
+$tmp = Join-Path ([IO.Path]::GetTempPath()) ("agent-tree-resume-" + [guid]::NewGuid().ToString('N') + '.clixml')
+$t | Export-Clixml $tmp; $t2 = Import-Clixml $tmp; Remove-Item $tmp
+Assert ((Invoke-AgentDispatch $t2 'r1' -Live -Sender $okSender).reason -eq 'uncertain_dispatch_no_replay' -and $t2.executions -eq 2) 'resume from saved state: an uncertain dispatch is still never replayed'
+$null = Leaf $t2 'r3' 'r2'
+Assert ((Invoke-AgentDispatch $t2 'r3' -Live -Sender $okSender).reason -eq 'concurrency_limit') 'resume from saved state: both slots are still held'
+Assert ((Submit-ChildReport -Tree $t2 -NodeId 'r2' -Result success -Evidence 'e').reason -eq 'uncorrelated_report') 'an uncorrelated live node cannot be reported at all'
+$null = Set-TreeStop $t2
+Assert ((Invoke-AgentDispatch $t2 'r3' -Live -Sender $okSender).reason -eq 'stop_switch') 'stop switch also blocks live dispatch'
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'v1'; $null = Invoke-AgentDispatch $t 'v1' -Live -Sender $okSender
+$null = Confirm-AgentRun -Tree $t -NodeId 'v1' -RunUrl 'https://example.invalid/r' -ResponseUrl 'https://example.invalid/c'
+$null = Submit-ChildReport -Tree $t -NodeId 'v1' -Result success
+$t.nodes['v1'].evidence = @()
+Assert ((Set-ParentVerdict -Tree $t -NodeId 'v1' -Actor 'root' -Verdict accept).reason -eq 'insufficient_evidence') 'a correlated report without evidence cannot be accepted'
 
 Write-Host 'persistence'
 $tmp = New-TemporaryFile; Save-AgentTree $t $tmp.FullName

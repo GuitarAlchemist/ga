@@ -301,9 +301,13 @@ function Measure-BehaviouralGap { param([Parameter(Mandatory)][string]$TestScrip
         if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) { $timedOut = $true; $proc.Kill($true); $proc.WaitForExit() }
         $out = $stdoutTask.Result + $stderrTask.Result; $exit = $proc.ExitCode
     } catch { $out = "child failed to run: $($_.Exception.Message)"; $exit = -1 }
-    $failing = @([regex]::Matches([string]$out, '(?m)^\s*FAIL:')).Count
-    $gap = if ($exit -ne 0 -and $failing -eq 0) { 1 } else { $failing }
-    return @{ gap = $gap; failing_assertions = $failing; exit_code = $exit; timed_out = $timedOut; label = 'behavioural' }
+    $clean = [regex]::Replace([string]$out, '\x1b\[[0-9;]*[A-Za-z]', '')      # colour codes must not hide a FAIL line
+    $failing = @([regex]::Matches($clean, '(?m)^\s*FAIL:')).Count
+    $passing = @([regex]::Matches($clean, '(?m)^\s*ok:')).Count
+    $reason = $null; $gap = $failing
+    if ($exit -ne 0 -and $failing -eq 0) { $gap = 1; $reason = 'nonzero_exit' }
+    elseif ($failing -eq 0 -and $passing -eq 0) { $gap = 1; $reason = 'no_assertions_ran' }   # nothing was checked: not a pass
+    return @{ gap = $gap; failing_assertions = $failing; passing_assertions = $passing; reason = $reason; exit_code = $exit; timed_out = $timedOut; label = 'behavioural' }
 }
 
 # Report: behavioural gap is the headline; the keyword figure is secondary and labelled "presence only".
