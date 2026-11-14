@@ -68,6 +68,17 @@ $t = New-AgentTree -RootId 'root' -Limits @{ MaxConcurrent = 99 }
 foreach ($i in 1..4) { $null = Leaf $t "e$i"; $null = Invoke-AgentDispatch $t "e$i" -Live -Sender $okSender }
 Assert ($t.executions -eq 3 -and $t.nodes['e4'].status -eq 'pending') 'only 3 live executions total across the tree'
 
+Write-Host 'concurrency is tree-wide at dispatch (#855: at most 2 concurrent children, cumulative)'
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'p1'; $null = Leaf $t 'p2'; $null = Leaf $t 'q1' 'p1'; $null = Leaf $t 'q2' 'p2'; $null = Leaf $t 'q3' 'p2'
+$null = Invoke-AgentDispatch $t 'q1' -Live -Sender $okSender; $null = Invoke-AgentDispatch $t 'q2' -Live -Sender $okSender
+$r = Invoke-AgentDispatch $t 'q3' -Live -Sender $okSender
+Assert ($r.reason -eq 'concurrency_limit' -and $t.executions -eq 2 -and $t.nodes['q3'].status -eq 'pending' -and $t.nodes['q3'].attempts -eq 0) 'third in-flight child anywhere in the tree is refused before send; no budget spent'
+$null = Submit-ChildReport -Tree $t -NodeId 'q1' -Result success -Evidence 'e1' -Simulated
+Assert ((Invoke-AgentDispatch $t 'q3' -Live -Sender $okSender).launched -eq $true) 'a slot frees once an in-flight child has reported'
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'u1'; $null = Leaf $t 'u2'; $null = Leaf $t 'u3' 'u1'
+$null = Invoke-AgentDispatch $t 'u1' -Live -Sender $badSender; $null = Invoke-AgentDispatch $t 'u2' -Live -Sender $okSender
+Assert ((Invoke-AgentDispatch $t 'u3' -Live -Sender $okSender).reason -eq 'concurrency_limit') 'an uncertain dispatch still occupies a slot (it may be running)'
+
 Write-Host 'permissions, writers'
 $t = New-AgentTree -RootId 'root'
 $null = Add-AgentNode $t 'ro' 'root' 's1' 'o' -Mode read -Permissions 'read'

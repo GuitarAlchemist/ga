@@ -137,6 +137,9 @@ function Invoke-AgentDispatch {
     if ($n.attempts -ge $Tree.limits.MaxAttempts) { return @{ ok = $false; reason = 'attempt_limit' } }
     $key = Get-IdempotencyKey $n ($n.attempts + 1)
     if ($Tree.dispatches | Where-Object { $_.key -eq $key -and $_.kind -eq 'live' }) { return @{ ok = $false; reason = 'duplicate_key' } }
+    # Tree-wide, not per parent: #855 caps concurrent children cumulatively. An uncertain send may be running, so it holds a slot.
+    $inFlight = @($Tree.nodes.Values | Where-Object { $_.node_id -ne $NodeId -and $_.status -in 'dispatched', 'uncertain' }).Count
+    if ($Live -and $inFlight -ge $Tree.limits.MaxConcurrent) { return @{ ok = $false; reason = 'concurrency_limit' } }
     if ($n.mode -eq 'write') {
         $w = $Tree.nodes.Values | Where-Object { $_.node_id -ne $NodeId -and $_.mode -eq 'write' -and $_.status -in 'dispatched', 'uncertain' }
         if ($w) { return @{ ok = $false; reason = 'duplicate_writer' } }
