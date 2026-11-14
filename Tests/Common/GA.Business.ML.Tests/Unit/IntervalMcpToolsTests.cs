@@ -159,4 +159,15 @@ public class IntervalMcpToolsTests
         Assert.That(result.Error.All(c => !char.IsControl(c)), Is.True,
             "no control character of any kind should reach the echoed Error");
     }
+
+    [TestCase("B#", "Fb")]
+    [TestCase("Fb", "B#")]
+    public void IntervalCompute_PairWithNoStandardName_ReturnsErrorWithoutThrowing(string lower, string upper)
+    {
+        var result = IntervalMcpTools.IntervalCompute(lower, upper);
+
+        Assert.That(result.Error, Does.Contain("no standard name"));
+        Assert.That(result.Name, Is.Empty);
+        Assert.That(result.Semitones, Is.Zero);
+    }
 }

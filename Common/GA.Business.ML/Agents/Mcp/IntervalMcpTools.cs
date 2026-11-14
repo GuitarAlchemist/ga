@@ -2,6 +2,7 @@ namespace GA.Business.ML.Agents.Mcp;
 
 using System.ComponentModel;
 using GA.Domain.Core.Primitives.Extensions;
+using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Notes;
 using ModelContextProtocol.Server;
 
@@ -41,7 +42,18 @@ public sealed class IntervalMcpTools
         if (!IntervalNaming.TryParseNote(upperNote, out var note2))
             return IntervalResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(upperNote)}' as a note name. Try C, F#, Bb, etc.");
 
-        var interval = note1.GetInterval(note2);
+        Interval.Simple interval;
+        try
+        {
+            interval = note1.GetInterval(note2);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return IntervalResult.Failure(
+                $"The interval from {IntervalNaming.FormatNote(lowerNote)} to {IntervalNaming.FormatNote(upperNote)} " +
+                "has no standard name (it would need a triply diminished or triply augmented quality).");
+        }
+
         return new IntervalResult
         {
             LowerNote   = IntervalNaming.FormatNote(lowerNote),
