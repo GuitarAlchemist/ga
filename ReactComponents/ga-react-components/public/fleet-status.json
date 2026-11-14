@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "15ff5ac3161967a2bb0a78bc0bcfb01b53c5e596",
-    "generatedAt": "2026-11-14T00:12:35.223141+00:00",
+    "commitSha": "df177ecfeafc41d3c59fc96afbf7c3aee0df37a1",
+    "generatedAt": "2026-11-14T00:13:16.178371+00:00",
     "repoCount": 5,
-    "totalPRs": 33
+    "totalPRs": 32
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 20,
+      "prCount": 19,
       "prs": [
         {
           "ageDays": 2,
@@ -170,7 +170,7 @@
           "failingChecks": 0,
           "headRef": "codex/fretboard-demo-note",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 833,
           "title": "fix(frontend): correct low E fretboard demo note",
           "url": "https://github.com/GuitarAlchemist/ga/pull/833"
@@ -206,7 +206,7 @@
           "failingChecks": 0,
           "headRef": "fix/voicing-labels",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 819,
           "title": "fix(voicings): name drop voicings by their lowered voices, and shells by root, third and seventh",
           "url": "https://github.com/GuitarAlchemist/ga/pull/819"
@@ -242,7 +242,7 @@
           "failingChecks": 0,
           "headRef": "fix/csharp-leftovers",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 816,
           "title": "fix: print a chord template's name, and run the Business.Core test setup fixture",
           "url": "https://github.com/GuitarAlchemist/ga/pull/816"
@@ -266,22 +266,10 @@
           "failingChecks": 0,
           "headRef": "fix/music-theory-names",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 810,
           "title": "fix(domain): tritone scale notes, diminished mode names, equal divisions",
           "url": "https://github.com/GuitarAlchemist/ga/pull/810"
-        },
-        {
-          "ageDays": 40,
-          "author": "spareilleux",
-          "createdAt": "2026-10-04T06:32:26Z",
-          "failingChecks": 0,
-          "headRef": "fix/797-yaml-knowledge-files",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 808,
-          "title": "fix(config): load the three music-knowledge YAML files (#797)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/808"
         },
         {
           "ageDays": 40,
@@ -326,7 +314,7 @@
           "failingChecks": 0,
           "headRef": "fix/760-sse-error-event",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 766,
           "title": "fix(chat): type the stream's error event and stop the page from rendering it as an answer (#760)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/766"
