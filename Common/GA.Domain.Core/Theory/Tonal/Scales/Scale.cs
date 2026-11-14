@@ -64,7 +64,7 @@ public sealed class Scale : IStaticReadonlyCollection<Scale>,
     // Other scales
     public static Scale Blues => new("C Eb F F# G Bb");
     public static Scale BebopDominant => new("C D E F G A Bb B");
-    public static Scale Tritone => new("C Db E F# G A");
+    public static Scale Tritone => new("C Db E Gb G Bb");
     public static Scale DoubleHarmonic => new("C Db E F G Ab B");
     public static Scale Enigmatic => new("C Db E F# G# A# B");
     public static Scale Prometheus => new("C D E F# A Bb");
