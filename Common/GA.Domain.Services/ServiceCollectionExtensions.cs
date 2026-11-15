@@ -1,8 +1,5 @@
 namespace GA.Domain.Services;
 
-using Chords;
-using Chords.Abstractions;
-using Chords.Analysis.Atonal;
 using Core.Theory.Tonal.Modes.Unified;
 using Microsoft.Extensions.DependencyInjection;
 using Unified;
@@ -17,10 +14,6 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddGaMusicTheoryServices(this IServiceCollection services)
     {
-        // Chord Services
-        services.AddSingleton<IChordNamingService, ChordNamingService>();
-        services.AddSingleton<IChordAnalysisService, AtonalChordAnalysisServiceAdapter>();
-
         // Unified Mode Services
         services.AddSingleton<IUnifiedModeService, UnifiedModeService>();
 

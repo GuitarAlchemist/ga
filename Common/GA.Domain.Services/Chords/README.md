@@ -18,7 +18,8 @@ Sub-namespaces
 
 - GA.Business.Core.Chords.Naming
     - Naming helpers/services focused on generating human-readable chord names/symbols.
-    - Example: ChordTemplateNamingService; legacy adapter stub: ChordFormulaNamingService.
+    - The single chord-naming authority is CanonicalChordRecognizer (reached through
+      VoicingHarmonicAnalyzer.IdentifyChord).
 
 - GA.Business.Core.Chords.Parsing
     - Parsing of chord symbols into structured representations (if/when implemented here).
@@ -28,7 +29,7 @@ Sub-namespaces
 
 - GA.Business.Core.Chords.Analysis.Atonal
     - Atonal/set-theory analysis that provides prime form, Forte numbers, interval class vectors, etc.
-    - Example: AtonalChordAnalysisService and its adapter for IChordAnalysisService.
+    - Example: AtonalChordAnalysisService.
 
 Layering rules (allowed references)
 
