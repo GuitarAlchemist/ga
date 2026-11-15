@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "6d84f1a6385112590cecebbd8a35120310405694",
-    "generatedAt": "2026-11-15T18:44:35.411766+00:00",
+    "commitSha": "fca88e8f88a63a6388aa35e888109936f7d05ee2",
+    "generatedAt": "2026-11-15T18:53:29.864924+00:00",
     "repoCount": 5,
-    "totalPRs": 31
+    "totalPRs": 30
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 12,
+      "prCount": 11,
       "prs": [
         {
           "ageDays": 0,
@@ -126,18 +126,6 @@
           "number": 861,
           "title": "fix(ci): diff Agent Blackbox evidence from the PR merge base",
           "url": "https://github.com/GuitarAlchemist/ga/pull/861"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-15T16:46:14Z",
-          "failingChecks": 0,
-          "headRef": "fix/chord-symbol-major-case",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 860,
-          "title": "fix(chat): read CM7 as major seventh in the atonal skills",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/860"
         },
         {
           "ageDays": 0,
@@ -472,7 +460,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1126,
           "title": "ci: run under the merge queue",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
@@ -484,7 +472,7 @@
           "failingChecks": 1,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
@@ -496,7 +484,7 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
@@ -508,7 +496,7 @@
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -520,7 +508,7 @@
           "failingChecks": 1,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -532,7 +520,7 @@
           "failingChecks": 3,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
