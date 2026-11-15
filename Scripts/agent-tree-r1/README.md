@@ -33,3 +33,6 @@ and must not be used as the headline. Behaviour is covered by the test run behin
 
 ## Not done in this slice
 No sender is wired in this module (no network code ships here). The pilot's two real dispatches were posted by the parent session with `gh pr comment` through an injected sender: see `EVIDENCE.md` and `evidence/tree.json`. The unit tests dispatch only through simulated senders.
+
+## GitHub sender (R2, separate branch)
+`GitHubSender.psm1` builds the `-Sender` for `Invoke-AgentDispatch -Live`: one `gh issue comment` on one allow-listed repo, one post per sender, receipt = comment URL, any doubt = `uncertain` (never replayed). Dry-run stays the default. Tests (`GitHubSender.test.ps1`) use a fake `gh`; nothing is posted. No real child has been launched from this module.
