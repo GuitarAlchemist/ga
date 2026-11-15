@@ -47,8 +47,12 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" > dist/changed-files.txt
-          git diff "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" > dist/diff.patch
+          # Three-dot diff from the merge base to the PR head: only what the PR itself changes.
+          # Diffing base.sha against github.sha (the test merge commit) also counted every
+          # commit main gained since the PR base, so older PRs inherited main's workflow and
+          # csproj changes as blocked-path findings (#845: 4 changed files reported as 165).
+          git diff --name-only "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" > dist/changed-files.txt
+          git diff "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" > dist/diff.patch
           set +e
           bash -lc "$VERIFY_COMMAND" > dist/test-output.txt 2>&1
           verify_exit=$?
