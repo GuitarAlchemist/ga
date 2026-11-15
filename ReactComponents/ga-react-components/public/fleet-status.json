@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "fca88e8f88a63a6388aa35e888109936f7d05ee2",
-    "generatedAt": "2026-11-15T18:53:29.864924+00:00",
+    "commitSha": "dd4921b888052223de106f49b70b9ce7b32890f6",
+    "generatedAt": "2026-11-15T18:55:19.358290+00:00",
     "repoCount": 5,
-    "totalPRs": 30
+    "totalPRs": 29
   },
   "repos": [
     {
@@ -113,20 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 11,
+      "prCount": 10,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-15T18:07:37Z",
-          "failingChecks": 1,
-          "headRef": "fix/agent-blackbox-pr-diff",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 861,
-          "title": "fix(ci): diff Agent Blackbox evidence from the PR merge base",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/861"
-        },
         {
           "ageDays": 0,
           "author": "spareilleux",
