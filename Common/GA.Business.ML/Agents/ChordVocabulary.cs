@@ -56,7 +56,21 @@ public static class ChordVocabulary
     ///     goes through <see cref="NormalizeQuality"/>, so <c>"M"</c>/<c>"M7"</c> stay major; an unknown
     ///     quality falls back to a major triad, as <see cref="GetFormula"/> does.
     /// </remarks>
-    public static bool TryGetPitchClasses(string symbol, out IReadOnlyList<int> pitchClasses)
+    public static bool TryGetPitchClasses(string symbol, out IReadOnlyList<int> pitchClasses) =>
+        TryReadPitchClasses(symbol, strict: false, out pitchClasses);
+
+    /// <summary>
+    ///     Like <see cref="TryGetPitchClasses"/>, but also false when the quality is not in the vocabulary
+    ///     (<c>"Cadd11"</c>, <c>"C7sus4"</c>), instead of falling back to a major triad.
+    /// </summary>
+    /// <remarks>
+    ///     For callers that must refuse a chord they cannot read rather than answer about the wrong one
+    ///     (<see cref="Skills.VoiceLeadingSkill"/>, <see cref="Mcp.ChordSubstitutionMcpTools"/>).
+    /// </remarks>
+    public static bool TryGetPitchClassesStrict(string symbol, out IReadOnlyList<int> pitchClasses) =>
+        TryReadPitchClasses(symbol, strict: true, out pitchClasses);
+
+    private static bool TryReadPitchClasses(string symbol, bool strict, out IReadOnlyList<int> pitchClasses)
     {
         pitchClasses = [];
         var t = symbol.Replace("♯", "#").Replace("♭", "b").Trim();
@@ -65,7 +79,11 @@ public static class ChordVocabulary
         var rootLength = t.Length >= 2 && t[1] is '#' or 'b' ? 2 : 1;
         if (!TryGetPitchClass(NormalizeRoot(t[..rootLength]), out var root)) return false;
 
-        var formula = GetFormula(NormalizeQuality(t[rootLength..]));
+        var quality = NormalizeQuality(t[rootLength..]);
+        var formula = GetFormula(quality);
+        // Every GetFormula arm names its formula after its own key, so a mismatch means the major fallback.
+        if (strict && formula.Quality != quality) return false;
+
         pitchClasses = [.. formula.Intervals.Select(i => (root + i) % 12).Distinct()];
         return true;
     }
