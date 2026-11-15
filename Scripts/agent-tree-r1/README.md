@@ -32,4 +32,4 @@ and must not be used as the headline. Behaviour is covered by the test run behin
 `pwsh Scripts/agent-tree-r1/AgentTree.test.ps1` — deterministic; every dispatch in it is **simulated**.
 
 ## Not done in this slice
-No real GitHub dispatch sender is wired (no network code ships here). Nothing was launched live.
+No sender is wired in this module (no network code ships here). The pilot's two real dispatches were posted by the parent session with `gh pr comment` through an injected sender: see `EVIDENCE.md` and `evidence/tree.json`. The unit tests dispatch only through simulated senders.

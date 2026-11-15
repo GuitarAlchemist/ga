@@ -31,7 +31,7 @@ $g = Get-TreeGap $t; Assert ($g.before -eq 8 -or $g.before -eq 4) 'gap aggregate
 Assert ($g.after -lt $g.before) 'accepted node reduces aggregate gap'
 
 Write-Host 'failure / blocked / unknown distinctions'
-$t = New-AgentTree -RootId 'root' -Limits @{ MaxConcurrent = 5; MaxExecutions = 5 }; foreach ($id in 'f', 'b', 'u') { $null = Leaf $t $id; $null = Invoke-AgentDispatch -Tree $t -NodeId $id -Live -Sender $okSender
+$t = New-AgentTree -RootId 'root' -UnsafeAllowWidenLimitsForTests -Limits @{ MaxConcurrent = 5; MaxExecutions = 5 }; foreach ($id in 'f', 'b', 'u') { $null = Leaf $t $id; $null = Invoke-AgentDispatch -Tree $t -NodeId $id -Live -Sender $okSender
     $null = Confirm-AgentRun $t $id 'r' 's' }
 $null = Submit-ChildReport $t 'f' failure; $null = Submit-ChildReport $t 'b' blocked; $null = Submit-ChildReport $t 'u' unknown
 Assert (-not (Set-ParentVerdict $t 'f' 'root' accept).ok) 'failure cannot be accepted'
@@ -61,10 +61,10 @@ Assert ((Leaf $t 'c1').ok -and (Leaf $t 'c2').ok) 'two concurrent children allow
 Assert ((Leaf $t 'c3').reason -eq 'concurrency_limit') 'third concurrent child refused'
 $t = New-AgentTree -RootId 'root'; $null = Leaf $t 'c1'; $null = Leaf $t 'c2' ; $null = Leaf $t 'g1' 'c1'; $null = Leaf $t 'g2' 'c1'
 Assert ((Leaf $t 'x' 'g1').reason -eq 'depth_limit') 'depth 4 refused (max 3)'
-$t = New-AgentTree -RootId 'root' -Limits @{ MaxConcurrent = 99; MaxDepth = 99 }
+$t = New-AgentTree -RootId 'root' -UnsafeAllowWidenLimitsForTests -Limits @{ MaxConcurrent = 99; MaxDepth = 99 }
 1..6 | ForEach-Object { $null = Leaf $t "n$_" }
 Assert ((Leaf $t 'n7').reason -eq 'node_limit' -and $t.nodes.Count -eq 7) '7-node cumulative cap (root included)'
-$t = New-AgentTree -RootId 'root' -Limits @{ MaxConcurrent = 99 }
+$t = New-AgentTree -RootId 'root' -UnsafeAllowWidenLimitsForTests -Limits @{ MaxConcurrent = 99 }
 foreach ($i in 1..4) { $null = Leaf $t "e$i"; $null = Invoke-AgentDispatch $t "e$i" -Live -Sender $okSender }
 Assert ($t.executions -eq 3 -and $t.nodes['e4'].status -eq 'pending') 'only 3 live executions total across the tree'
 
@@ -87,7 +87,7 @@ Write-Host 'permissions, writers'
 $t = New-AgentTree -RootId 'root'
 $null = Add-AgentNode $t 'ro' 'root' 's1' 'o' -Mode read -Permissions 'read'
 Assert ((Add-AgentNode $t 'w' 'ro' 's2' 'o' -Mode write).reason -eq 'write_not_permitted') 'child cannot gain write from a read-only parent'
-$t = New-AgentTree -RootId 'root' -Limits @{ MaxConcurrent = 5 }
+$t = New-AgentTree -RootId 'root' -UnsafeAllowWidenLimitsForTests -Limits @{ MaxConcurrent = 5 }
 Assert ((Add-AgentNode $t 'w1' 'root' 'branch' 'o' -Mode write).ok -and (Add-AgentNode $t 'w2' 'root' 'branch' 'o' -Mode write).reason -eq 'duplicate_writer') 'one writer per scope'
 
 Write-Host 'cycle rejection / reparenting / escalation'
@@ -170,6 +170,53 @@ Assert ((Set-ParentVerdict -Tree $t -NodeId 'v1' -Actor 'root' -Verdict accept).
 Write-Host 'persistence'
 $tmp = New-TemporaryFile; Save-AgentTree $t $tmp.FullName
 Assert ((Get-Content $tmp -Raw | ConvertFrom-Json).schema -eq 'agent-tree-r1/v1') 'tree serialises to JSON'; Remove-Item $tmp
+
+Write-Host 'Codex round 1 findings (independent review of 6c453ccef): each one red before its fix'
+# P1-1: an uncertain send may still be running; a simulated report must neither free its slot nor allow a replay
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'a'; $null = Invoke-AgentDispatch $t 'a' -Live -Sender $badSender
+Assert ((Submit-ChildReport -Tree $t -NodeId 'a' -Result unknown -Simulated).reason -eq 'simulated_report_on_live_node' -and $t.nodes['a'].status -eq 'uncertain') 'simulated report on an UNCERTAIN node is refused (it may be running)'
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'u1'; $null = Leaf $t 'u2'; $null = Leaf $t 'u3' 'u2'
+$null = Invoke-AgentDispatch $t 'u1' -Live -Sender $badSender; $null = Invoke-AgentDispatch $t 'u2' -Live -Sender $okSender
+$null = Submit-ChildReport -Tree $t -NodeId 'u1' -Result unknown -Simulated
+Assert ((Invoke-AgentDispatch $t 'u3' -Live -Sender $okSender).reason -eq 'concurrency_limit') 'uncertain slot cannot be released by a simulated report (3 live children never in flight)'
+# P1-2 / P1-3: limits can only be lowered; a caller cannot widen them or rewind the clock
+$t = New-AgentTree -RootId 'root' -Limits @{ MaxExecutions = 4; MaxConcurrent = 4; MaxNodes = 8; MaxDepth = 9; MaxAttempts = 5; WallClockMinutes = 600 }
+Assert ($t.limits.MaxExecutions -eq 3 -and $t.limits.MaxConcurrent -eq 2 -and $t.limits.MaxNodes -eq 7 -and $t.limits.MaxDepth -eq 3 -and $t.limits.MaxAttempts -eq 2 -and $t.limits.WallClockMinutes -eq 30) 'limits passed by a caller can lower, never widen, the #855 caps'
+$old = [datetime]::UtcNow.AddMinutes(-60)
+$t = New-AgentTree -RootId 'root' -Now $old
+Assert ((Leaf $t 'a').reason -eq 'wall_clock_exceeded') 'a tree 60 minutes old refuses new nodes even when the caller passes an old -Now'
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'a'; $t.started_at = [datetime]::UtcNow.AddMinutes(-60)
+Assert ((Invoke-AgentDispatch $t 'a' -Live -Sender $okSender -Now $old).reason -eq 'wall_clock_exceeded') 'live dispatch after 30 minutes is refused whatever -Now is passed'
+# P1-4: reparenting updates the whole subtree
+$t = New-AgentTree -RootId 'root' -UnsafeAllowWidenLimitsForTests -Limits @{ MaxConcurrent = 10; MaxDepth = 4 }
+$null = Leaf $t 'ro'; $null = Add-AgentNode -Tree $t -NodeId 'ro2' -ParentId 'root' -Scope s -Objective o -Permissions read -BaseSha x
+$null = Add-AgentNode -Tree $t -NodeId 'c' -ParentId 'root' -Scope sc -Objective o -BaseSha x; $null = Add-AgentNode -Tree $t -NodeId 'd' -ParentId 'c' -Scope sd -Objective o -BaseSha x
+$mv = Move-AgentNode -Tree $t -NodeId 'c' -NewParentId 'ro2' -Requester 'root'
+Assert ($mv.ok -and $t.nodes['d'].depth -eq 4 -and $t.nodes['d'].permissions -notcontains 'write') 'reparent recomputes descendant depth and intersects descendant permissions'
+Assert ((Add-AgentNode -Tree $t -NodeId 'e' -ParentId 'd' -Scope se -Objective o -BaseSha x).reason -eq 'depth_limit') 'a node under a moved subtree is checked against its real depth'
+# P1-5: a retry starts clean: no stale identity, no acceptance without a new execution, simulated retries are bounded
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'a'; $null = Invoke-AgentDispatch $t 'a' -Live -Sender $okSender
+$null = Confirm-AgentRun -Tree $t -NodeId 'a' -RunUrl 'https://example.invalid/r1' -ResponseUrl 'https://example.invalid/c1'
+$null = Submit-ChildReport -Tree $t -NodeId 'a' -Result failure -Evidence 'e'; $null = Set-ParentVerdict -Tree $t -NodeId 'a' -Actor 'root' -Verdict retry -NewApproach 'second'
+Assert ((Confirm-AgentRun -Tree $t -NodeId 'a' -RunUrl 'https://example.invalid/r2' -ResponseUrl 'https://example.invalid/c2').reason -eq 'not_dispatched') 'after a retry the node cannot be correlated or accepted without a new live dispatch'
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'a'; $n = 0
+foreach ($i in 1..5) { $null = Submit-ChildReport -Tree $t -NodeId 'a' -Result unknown -Simulated; if ((Set-ParentVerdict -Tree $t -NodeId 'a' -Actor 'root' -Verdict retry -NewApproach "x$i").ok) { $n++ } }
+Assert ($n -le 1) 'simulated report/retry cycles are bounded by the attempt cap (at most 1 retry of 2 attempts)'
+# P1-6: inbound requests: closed kinds, scalar nonce
+$t = New-AgentTree -RootId 'root' -AllowedSenders @('owner'); $null = Leaf $t 'a'
+Assert ((Test-InboundRequest $t @{ sender = 'owner'; node_id = 'a'; nonce = 'k'; kind = 'unknown-kind' }).reason -eq 'malformed') 'unknown inbound kind is rejected'
+Assert ((Test-InboundRequest $t @{ sender = 'owner'; node_id = 'a'; nonce = @('n', 'x'); kind = 'report' }).reason -eq 'malformed') 'a non-scalar nonce is rejected'
+# P1-7: stderr noise on exit 0 is a gap, an ok: line cannot hide it
+$inj2 = Join-Path ([IO.Path]::GetTempPath()) ("agent-tree-gap2-" + [guid]::NewGuid().ToString('N')); $null = New-Item -ItemType Directory -Path $inj2
+$errS = Join-Path $inj2 'err.ps1'; Set-Content -LiteralPath $errS -Value 'Write-Host "  ok: setup"; Write-Error "ASSERTION FAILED" -ErrorAction Continue; exit 0'
+Assert ((Measure-BehaviouralGap -TestScript $errS).gap -ge 1) 'error output on stderr with exit 0 is never gap 0'
+Remove-Item -LiteralPath $inj2 -Recurse -Force
+# stop switch halts every mutation; QA identity
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'a'; $null = Invoke-AgentDispatch $t 'a' -Live -Sender $okSender; Set-TreeStop $t
+Assert ((Confirm-AgentRun -Tree $t -NodeId 'a' -RunUrl 'https://example.invalid/r' -ResponseUrl 'https://example.invalid/c').reason -eq 'stop_switch') 'stop switch blocks run correlation'
+Assert ((Submit-ChildReport -Tree $t -NodeId 'a' -Result success -Simulated).reason -eq 'stop_switch') 'stop switch blocks reports'
+$t = New-AgentTree -RootId 'root'; $null = Leaf $t 'a'; $null = Invoke-AgentDispatch $t 'a' -Live -Agent 'claude' -Sender $okSender
+Assert (-not (Request-IndependentQA -Tree $t -NodeId 'a' -QaIdentity 'claude' -Starter { @{ verdict = 'pass' } }).ok) 'QA by the producer agent name is refused (stays pending)'
 
 if ($failures.Count) { Write-Host "`n$($failures.Count) FAILED" -ForegroundColor Red; exit 1 }
 Write-Host "`nAll agent-tree-r1 tests passed (simulated dispatch only)." -ForegroundColor Green

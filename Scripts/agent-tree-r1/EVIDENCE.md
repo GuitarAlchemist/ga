@@ -7,8 +7,8 @@ Labels: **cloud-executed** = a real GitHub Claude run answered a real comment; *
 | node | parent | agent / run | status | gap before -> after | parent verdict |
 |---|---|---|---|---|---|
 | root | - | local session | running | - | - |
-| fix-gap-measure (write) | root | cloud-executed: run 43649154259, receipt comment 6885307238, response 6885312495, commit 1c7bb15 | reported, correlated | headline measure not behavioural (1) -> behavioural, 0 failing assertions (0) | accepted after parent re-ran the tests on 1c7bb15 (49 ok, 0 FAIL) |
-| qa-1 (read-only) | root | cloud-executed: run 43650162072, receipt 6885445236, response 6885451742 | reported, correlated | - | task accepted; its code verdict on 1c7bb15 is **fail** |
+| fix-gap-measure (write) | root | cloud-executed: run 43649154259, receipt comment 6885307238, response 6885312495, commit 1c7bb15 | accepted (correlated) | headline measure not behavioural (1) -> behavioural, 0 failing assertions (0) | accepted after parent re-ran the tests on 1c7bb15 (49 ok, 0 FAIL) |
+| qa-1 (read-only) | root | cloud-executed: run 43650162072, receipt 6885445236, response 6885451742 | accepted (correlated) | - | task accepted; its code verdict on 1c7bb15 is **fail** |
 
 Budget (#855 reading: the invoking run 43566102411 counts): 3 of 3 executions, 3 of 7 nodes, depth 2 of 3, 1 attempt per leaf, at most 1 child in flight, started 22:38 UTC (30 min cap).
 
@@ -29,3 +29,7 @@ QA (a separate run that shares no context with the author run, same GitHub integ
 - Item 4 partly covered by new regression tests (resume from saved state keeps uncertain/no-replay and both slots, stop switch blocks live dispatch, uncorrelated live node cannot be reported, correlated report without evidence cannot be accepted). These pin existing behaviour and cannot go red by themselves; permission-intersection on reparent and min-budget inheritance remain untested.
 - **No new real dispatch.** The cumulative limits of #855 are exhausted: 3 of 3 executions (invoking run 43566102411 counted) and the 30-minute window opened 22:38 UTC expired at 23:08 UTC. The fixes since `1c7bb15` (`dc2023cd1` and this one) have therefore had no independent QA run.
 - The comments posted on #858 that trigger agents are the loop's dispatches only where the ledger lists them (`evidence/tree.json`: nodes `fix-gap-measure`, `qa-1`); the parent that posted them is a local session, so this proves delivery and correlation, not that a loop with no human session can dispatch.
+
+## Independent review by another model: Codex round 1 on 6c453ccef (local, read-only, not a GitHub agent)
+
+Verdict **fail**: 7 P1 findings, all reproduced as red tests (14 failures) before the fixes. Fixed: an uncertain send could be released by a simulated report and replayed (also after save/reload); caller-supplied `-Limits` and `-Now` could widen the caps or rewind the clock; reparenting left descendant depth and permissions stale; a retry kept the previous execution identity and simulated retries were unbounded; `Test-InboundRequest` accepted unknown kinds and array nonces; stderr output with exit 0 was reported as gap 0; the stop switch did not block correlation, reports and verdicts; QA by the producer's agent name was accepted. 75 assertions pass on the fixed head. **The fixed head has had no second independent review.** Codex is a different model but ran in the same session's tooling; it is independent of the author's context, not of the owner of this PR.

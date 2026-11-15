@@ -3,6 +3,7 @@
 # injected -Sender scriptblock, so default behaviour is dry-run and tests are deterministic.
 Set-StrictMode -Version Latest
 
+$script:InboundKinds = @('report', 'receipt', 'stop')
 $script:Terminal = @('accepted', 'failed', 'blocked', 'escalated', 'cancelled', 'rejected')
 
 function New-AgentTree {
@@ -12,10 +13,12 @@ function New-AgentTree {
         [hashtable]$Limits = @{},
         [string[]]$Permissions = @('read', 'write'),
         [string[]]$AllowedSenders = @(),
-        [datetime]$Now = [datetime]::UtcNow
+        [datetime]$Now = [datetime]::UtcNow,
+        [switch]$UnsafeAllowWidenLimitsForTests   # test harness only: the real driver never passes it
     )
     $lim = @{ MaxExecutions = 3; MaxNodes = 7; MaxDepth = 3; MaxAttempts = 2; MaxConcurrent = 2; WallClockMinutes = 30 }
-    foreach ($k in $Limits.Keys) { $lim[$k] = $Limits[$k] }
+    # #855 caps are ceilings: a caller may lower them, never widen them (unless a test asks explicitly).
+    foreach ($k in $Limits.Keys) { $lim[$k] = if ($UnsafeAllowWidenLimitsForTests -or -not $lim.ContainsKey($k)) { $Limits[$k] } else { [math]::Min($lim[$k], $Limits[$k]) } }
     $tree = @{
         schema = 'agent-tree-r1/v1'; root_id = $RootId; stop = $false; limits = $lim
         started_at = $Now; executions = 0; nodes = [ordered]@{}; dispatches = @(); history = @()
@@ -37,6 +40,7 @@ function New-NodeRecord {
         mode = $Mode; depth = $Depth; status = 'pending'; attempts = 0; evidence = @()
         execution_identity = $null; report = $null; parent_verdict = $null
         simulated = $false; correlated = $false; qa = 'pending'; ancestry = @(); events = @()
+        retries = 0; live_attempted = $false; live_agent = $null
     }
 }
 
@@ -47,6 +51,7 @@ function Add-TreeEvent { param($Tree, $Node, [string]$Text)
 function Test-TreeHalted {
     param($Tree, [datetime]$Now = [datetime]::UtcNow)
     if ($Tree.stop) { return 'stop_switch' }
+    $real = [datetime]::UtcNow; if ($Now -lt $real) { $Now = $real }   # a caller can move the clock forward, never back
     if (($Now - $Tree.started_at).TotalMinutes -gt $Tree.limits.WallClockMinutes) { return 'wall_clock_exceeded' }
     return $null
 }
@@ -114,6 +119,13 @@ function Move-AgentNode {
     $n.permissions = @($n.permissions | Where-Object { $_ -in $np.permissions })
     $n.budget = [math]::Min($n.budget, $np.budget)
     $n.ancestry = @(Get-Ancestry $Tree $NewParentId) + @("(was child of $old)")
+    # descendants follow, parents first
+    foreach ($id in (Get-Subtree $Tree $NodeId | Where-Object { $_ -ne $NodeId } | Sort-Object { $Tree.nodes[$_].depth })) {
+        $d = $Tree.nodes[$id]; $dp = $Tree.nodes[$d.parent_id]
+        $d.depth = $dp.depth + 1
+        $d.permissions = @($d.permissions | Where-Object { $_ -in $dp.permissions })
+        $d.budget = [math]::Min($d.budget, $dp.budget)
+    }
     Add-TreeEvent $Tree $n "reparented $old -> $NewParentId by $Requester"
     return @{ ok = $true; node = $n }
 }
@@ -153,6 +165,7 @@ function Invoke-AgentDispatch {
     if ($Tree.executions -ge $Tree.limits.MaxExecutions) { return @{ ok = $false; reason = 'execution_limit' } }
     $Tree.executions++; $n.attempts++            # counted before send: an uncertain send still spends budget
     $rec = @{ key = $key; node_id = $NodeId; kind = 'live'; agent = $Agent; launched = $false; receipt = $null }
+    $n.live_attempted = $true; $n.live_agent = $Agent      # set before the send: an uncertain send may be running
     $Tree.dispatches += $rec
     try {
         $r = & $Sender $n $key
@@ -170,6 +183,7 @@ function Invoke-AgentDispatch {
 
 # Correlate receipt -> agent run + response. Without both URLs the node stays uncorrelated.
 function Confirm-AgentRun { param($Tree, [string]$NodeId, [string]$RunUrl, [string]$ResponseUrl)
+    if ($Tree.stop) { return @{ ok = $false; reason = 'stop_switch' } }
     $n = $Tree.nodes[$NodeId]
     if (-not $n -or -not $n.execution_identity) { return @{ ok = $false; reason = 'not_dispatched' } }
     if (-not $RunUrl -or -not $ResponseUrl) { return @{ ok = $false; reason = 'missing_correlation' } }
@@ -182,12 +196,13 @@ function Confirm-AgentRun { param($Tree, [string]$NodeId, [string]$RunUrl, [stri
 # Leaf self-report. NOT acceptance.
 function Submit-ChildReport { param($Tree, [string]$NodeId, [ValidateSet('success', 'failure', 'blocked', 'unknown')][string]$Result,
                                    [string[]]$Evidence = @(), $After = $null, [switch]$Simulated)
+    if ($Tree.stop) { return @{ ok = $false; reason = 'stop_switch' } }
     $n = $Tree.nodes[$NodeId]
     if (-not $n) { return @{ ok = $false; reason = 'unknown_node' } }
     if ($n.status -notin 'dispatched', 'uncertain', 'pending') { return @{ ok = $false; reason = "bad_state_$($n.status)" } }
     if (-not $Simulated -and -not $n.correlated) { return @{ ok = $false; reason = 'uncorrelated_report' } }
     # A node with a live receipt may only be reported through a correlated run: -Simulated would drop it from the in-flight count.
-    if ($Simulated -and $n.execution_identity) { return @{ ok = $false; reason = 'simulated_report_on_live_node' } }
+    if ($Simulated -and ($n.execution_identity -or $n.live_attempted -or $n.status -eq 'uncertain')) { return @{ ok = $false; reason = 'simulated_report_on_live_node' } }
     if ($Simulated) { $n.simulated = $true }
     $n.report = @{ result = $Result; evidence = $Evidence; after = $After }
     $n.evidence += $Evidence; $n.status = 'reported'
@@ -200,6 +215,7 @@ function Set-ParentVerdict {
     param([Parameter(Mandatory)]$Tree, [Parameter(Mandatory)][string]$NodeId, [Parameter(Mandatory)][string]$Actor,
           [Parameter(Mandatory)][ValidateSet('accept', 'retry', 'escalate', 'reject')][string]$Verdict,
           [string]$Reason = '', [string]$NewApproach = '')
+    if ($Tree.stop) { return @{ ok = $false; reason = 'stop_switch' } }
     $n = $Tree.nodes[$NodeId]
     if (-not $n) { return @{ ok = $false; reason = 'unknown_node' } }
     if ($Actor -ne $n.parent_id) { return @{ ok = $false; reason = 'not_immediate_parent' } }
@@ -211,9 +227,10 @@ function Set-ParentVerdict {
             $n.status = 'accepted'; $n.after = $n.report.after
         }
         'retry' {
-            if ($n.attempts -ge $Tree.limits.MaxAttempts) { return @{ ok = $false; reason = 'attempt_limit' } }
+            if ($n.attempts -ge $Tree.limits.MaxAttempts -or [int]$n.retries -ge ($Tree.limits.MaxAttempts - 1)) { return @{ ok = $false; reason = 'attempt_limit' } }
             if (-not $NewApproach) { return @{ ok = $false; reason = 'retry_must_differ' } }
-            $n.status = 'pending'; $n.correlated = $false; $n.report = $null; $n.objective += " [retry: $NewApproach]"
+            $n.retries = [int]$n.retries + 1
+            $n.status = 'pending'; $n.correlated = $false; $n.report = $null; $n.execution_identity = $null; $n.simulated = $false; $n.objective += " [retry: $NewApproach]"
         }
         'reject' { $n.status = if ($n.report.result -eq 'blocked') { 'blocked' } else { 'failed' } }
         'escalate' {
@@ -230,6 +247,7 @@ function Set-ParentVerdict {
 # Inbound requests (e.g. child callbacks) are data: allow-listed sender, well-formed, single-use nonce.
 function Test-InboundRequest { param($Tree, [hashtable]$Request)
     foreach ($f in 'sender', 'node_id', 'nonce', 'kind') { if (-not $Request.ContainsKey($f) -or -not $Request[$f]) { return @{ ok = $false; reason = 'malformed' } } }
+    if ($Request.kind -notin $script:InboundKinds -or $Request.nonce -isnot [string] -or $Request.sender -isnot [string] -or $Request.node_id -isnot [string]) { return @{ ok = $false; reason = 'malformed' } }
     if ($Request.sender -notin $Tree.allowed_senders) { return @{ ok = $false; reason = 'unauthorized' } }
     if (-not $Tree.nodes.Contains($Request.node_id)) { return @{ ok = $false; reason = 'malformed' } }
     if ($Request.nonce -in $Tree.seen_nonces) { return @{ ok = $false; reason = 'replayed' } }
@@ -240,7 +258,8 @@ function Test-InboundRequest { param($Tree, [hashtable]$Request)
 # QA must run in a different identity and must be read-only; otherwise it stays pending.
 function Request-IndependentQA { param($Tree, [string]$NodeId, [string]$QaIdentity, [scriptblock]$Starter)
     $n = $Tree.nodes[$NodeId]
-    $producers = @($Tree.nodes.Values | Where-Object { $_.execution_identity } | ForEach-Object { $_.execution_identity.agent + ':' + $_.execution_identity.key })
+    $producers = @($Tree.nodes.Values | Where-Object { $_.execution_identity } | ForEach-Object { $_.execution_identity.agent + ':' + $_.execution_identity.key; $_.execution_identity.agent })
+    $producers += @($Tree.nodes.Values | Where-Object { $_.live_agent } | ForEach-Object { $_.live_agent })
     if (-not $Starter -or -not $QaIdentity -or $QaIdentity -in $producers -or $QaIdentity -eq $Tree.root_id) {
         $n.qa = 'pending'; Add-TreeEvent $Tree $n 'QA pending: no independent read-only context started'
         return @{ ok = $false; qa = 'pending' }
@@ -291,7 +310,7 @@ function Measure-LoopGap { param([string]$RepoRoot, [switch]$IncludeR1)
 # (crash, parse error, child not started) still yields gap >= 1: never report "0" for an unproven run.
 function Measure-BehaviouralGap { param([Parameter(Mandatory)][string]$TestScript, [int]$TimeoutSeconds = 300)
     $pwsh = (Get-Process -Id $PID).Path
-    $out = $null; $exit = $null; $timedOut = $false
+    $out = $null; $errOut = ''; $exit = $null; $timedOut = $false
     try {
         $psi = [System.Diagnostics.ProcessStartInfo]::new($pwsh)
         foreach ($a in '-NoProfile', '-NonInteractive', '-File', $TestScript) { $psi.ArgumentList.Add($a) }
@@ -299,13 +318,14 @@ function Measure-BehaviouralGap { param([Parameter(Mandatory)][string]$TestScrip
         $proc = [System.Diagnostics.Process]::Start($psi)
         $stdoutTask = $proc.StandardOutput.ReadToEndAsync(); $stderrTask = $proc.StandardError.ReadToEndAsync()
         if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) { $timedOut = $true; $proc.Kill($true); $proc.WaitForExit() }
-        $out = $stdoutTask.Result + $stderrTask.Result; $exit = $proc.ExitCode
+        $errOut = [string]$stderrTask.Result; $out = $stdoutTask.Result + $errOut; $exit = $proc.ExitCode
     } catch { $out = "child failed to run: $($_.Exception.Message)"; $exit = -1 }
     $clean = [regex]::Replace([string]$out, '\x1b\[[0-9;]*[A-Za-z]', '')      # colour codes must not hide a FAIL line
     $failing = @([regex]::Matches($clean, '(?m)^\s*FAIL:')).Count
     $passing = @([regex]::Matches($clean, '(?m)^\s*ok:')).Count
     $reason = $null; $gap = $failing
     if ($exit -ne 0 -and $failing -eq 0) { $gap = 1; $reason = 'nonzero_exit' }
+    elseif ($failing -eq 0 -and $errOut.Trim()) { $gap = 1; $reason = 'stderr_output' }   # errors on stderr are never a pass
     elseif ($failing -eq 0 -and $passing -eq 0) { $gap = 1; $reason = 'no_assertions_ran' }   # nothing was checked: not a pass
     return @{ gap = $gap; failing_assertions = $failing; passing_assertions = $passing; reason = $reason; exit_code = $exit; timed_out = $timedOut; label = 'behavioural' }
 }
