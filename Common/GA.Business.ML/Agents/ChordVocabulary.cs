@@ -48,6 +48,29 @@ public static class ChordVocabulary
     }
 
     /// <summary>
+    ///     Reads a chord symbol (<c>"CM7"</c>, <c>"F#°7"</c>, <c>"B♭9"</c>) into its pitch classes, root first,
+    ///     in formula order, without duplicates. False when the root is not a note name.
+    /// </summary>
+    /// <remarks>
+    ///     The single reader the atonal skills cross instead of carrying their own quality tables. Quality
+    ///     goes through <see cref="NormalizeQuality"/>, so <c>"M"</c>/<c>"M7"</c> stay major; an unknown
+    ///     quality falls back to a major triad, as <see cref="GetFormula"/> does.
+    /// </remarks>
+    public static bool TryGetPitchClasses(string symbol, out IReadOnlyList<int> pitchClasses)
+    {
+        pitchClasses = [];
+        var t = symbol.Replace("♯", "#").Replace("♭", "b").Trim();
+        if (t.Length == 0) return false;
+
+        var rootLength = t.Length >= 2 && t[1] is '#' or 'b' ? 2 : 1;
+        if (!TryGetPitchClass(NormalizeRoot(t[..rootLength]), out var root)) return false;
+
+        var formula = GetFormula(NormalizeQuality(t[rootLength..]));
+        pitchClasses = [.. formula.Intervals.Select(i => (root + i) % 12).Distinct()];
+        return true;
+    }
+
+    /// <summary>
     ///     Normalises a quality suffix to its canonical form (the key <see cref="GetFormula"/> switches on).
     /// </summary>
     /// <remarks>
@@ -68,7 +91,7 @@ public static class ChordVocabulary
                 "" => "major",
                 "maj" or "major" => "major",
                 "m" or "min" or "minor" => "minor",
-                "dim" or "diminished" => "diminished",
+                "dim" or "diminished" or "°" => "diminished",
                 "aug" or "augmented" or "+" => "augmented",
                 "5" or "no3" or "power" => "power",
                 // Triad extensions
