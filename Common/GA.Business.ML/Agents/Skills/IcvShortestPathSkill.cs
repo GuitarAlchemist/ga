@@ -92,17 +92,6 @@ public sealed class IcvShortestPathSkill(
         new(@"\bhow\s+do\s+i\s+get\s+from\s+(?<a>[A-Ga-g][b#♭♯]?(?:maj|min|m|dim|aug|sus|add|dom)?\d*(?:[b#♭♯]\d+)*°?)\s+to\s+(?<b>[A-Ga-g][b#♭♯]?(?:maj|min|m|dim|aug|sus|add|dom)?\d*(?:[b#♭♯]\d+)*°?)\b[^.?!]*?\bharmonic",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    private static readonly Dictionary<string, int> RootPc = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["C"]  = 0,  ["C#"] = 1, ["Db"] = 1,
-        ["D"]  = 2,  ["D#"] = 3, ["Eb"] = 3,
-        ["E"]  = 4,
-        ["F"]  = 5,  ["F#"] = 6, ["Gb"] = 6,
-        ["G"]  = 7,  ["G#"] = 8, ["Ab"] = 8,
-        ["A"]  = 9,  ["A#"] = 10, ["Bb"] = 10,
-        ["B"]  = 11,
-    };
-
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
         var msg = message ?? string.Empty;
@@ -165,39 +154,9 @@ public sealed class IcvShortestPathSkill(
     private static PitchClassSet? TryBuildPcSet(string token)
     {
         if (string.IsNullOrWhiteSpace(token)) return null;
-        var t = token.Replace("♯", "#").Replace("♭", "b").Trim();
-
-        var rootLen = t.Length >= 2 && (t[1] == '#' || t[1] == 'b') ? 2 : 1;
-        if (rootLen > t.Length) return null;
-        var rootStr = char.ToUpperInvariant(t[0]) + (rootLen == 2 ? t[1].ToString().ToLowerInvariant() : "");
-        if (!RootPc.TryGetValue(rootStr, out var root)) return null;
-
-        var quality = t.Length > rootLen ? t[rootLen..] : string.Empty;
-        var intervals = QualityIntervals(quality);
-        var pcs = intervals.Select(i => PitchClass.FromValue((root + i) % 12)).ToList();
-        return new PitchClassSet(pcs);
-    }
-
-    private static int[] QualityIntervals(string quality)
-    {
-        var q = quality.ToLowerInvariant().Trim();
-        if (q == string.Empty || q == "maj" || q == "major") return [0, 4, 7];
-        if (q is "m" or "min" or "minor" or "-") return [0, 3, 7];
-        if (q is "dim" or "°" or "o") return [0, 3, 6];
-        if (q is "aug" or "+") return [0, 4, 8];
-        if (q is "7") return [0, 4, 7, 10];
-        if (q is "m7" or "min7" or "-7") return [0, 3, 7, 10];
-        if (q is "maj7" or "major7" or "M7") return [0, 4, 7, 11];
-        if (q is "m7b5" or "min7b5" or "ø" or "ø7") return [0, 3, 6, 10];
-        if (q is "dim7" or "°7" or "o7") return [0, 3, 6, 9];
-        if (q is "sus2") return [0, 2, 7];
-        if (q is "sus4" or "sus") return [0, 5, 7];
-        if (q is "6") return [0, 4, 7, 9];
-        if (q is "m6") return [0, 3, 7, 9];
-        if (q is "9") return [0, 4, 7, 10, 2];
-        if (q is "maj9") return [0, 4, 7, 11, 2];
-        if (q is "m9") return [0, 3, 7, 10, 2];
-        return [0, 4, 7];
+        return ChordVocabulary.TryGetPitchClasses(token, out var pcs)
+            ? new PitchClassSet(pcs.Select(PitchClass.FromValue))
+            : null;
     }
 
     private AgentResponse Result(string text, string evidence)
