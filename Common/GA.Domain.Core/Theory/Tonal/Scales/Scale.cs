@@ -34,11 +34,21 @@ public sealed class Scale : IStaticReadonlyCollection<Scale>,
     {
     }
 
+    /// <summary>
+    ///     Creates a scale from an ordered snapshot of notes, with intervals relative to the first note.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="notes" /> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="notes" /> is empty.</exception>
     public Scale(IEnumerable<Note> notes)
     {
         ArgumentNullException.ThrowIfNull(notes);
 
         _notes = notes.ToImmutableList().AsPrintable();
+        if (_notes.Count == 0)
+        {
+            throw new ArgumentException("A scale must have at least one note.", nameof(notes));
+        }
+
         PitchClassSet = _notes.ToPitchClassSet();
         IntervalClassVector = PitchClassSet.IntervalClassVector;
         Intervals = new LazyScaleIntervals(_notes);
