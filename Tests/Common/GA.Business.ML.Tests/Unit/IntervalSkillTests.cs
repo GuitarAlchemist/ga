@@ -120,4 +120,19 @@ public class IntervalSkillTests
         Assert.That(response.Evidence, Has.Some.Contains("A"));
         Assert.That(response.Evidence, Has.Some.Contains("Semitones"));
     }
+
+    // Fb to B# is not tested here: the skill's regex drops a trailing sharp (separate defect), so it never reaches GetInterval.
+    [Test]
+    public async Task ExecuteAsync_PairWithNoStandardName_AnswersWithoutThrowing()
+    {
+        var skill = MakeSkill();
+
+        var response = await skill.ExecuteAsync("interval from B# to Fb");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Confidence, Is.EqualTo(0.0f));
+            Assert.That(response.Result, Does.Contain("no standard name"));
+        });
+    }
 }

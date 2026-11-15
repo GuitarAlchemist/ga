@@ -2,6 +2,7 @@ namespace GA.Business.ML.Agents.Skills;
 
 using System.Text.RegularExpressions;
 using GA.Domain.Core.Primitives.Extensions;
+using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Notes;
 
 /// <summary>
@@ -93,7 +94,18 @@ public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestrator
         }
 
         // Note.Accidented.GetInterval is the canonical interval-between-two-notes API.
-        var interval = note1.GetInterval(note2);
+        Interval.Simple interval;
+        try
+        {
+            interval = note1.GetInterval(note2);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return Task.FromResult(CannotHelp(
+                $"The interval from {IntervalNaming.FormatNote(match.Groups[1].Value)} to {IntervalNaming.FormatNote(match.Groups[2].Value)} " +
+                "has no standard name (it would need a triply diminished or triply augmented quality)."));
+        }
+
         var name1    = IntervalNaming.FormatNote(match.Groups[1].Value);
         var name2    = IntervalNaming.FormatNote(match.Groups[2].Value);
         var qualName = IntervalNaming.QualityLongName(interval.Quality.ToString());
