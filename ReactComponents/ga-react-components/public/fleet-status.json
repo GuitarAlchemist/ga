@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "f8443ba5e873931266045e5bc6dddb77a1901a16",
-    "generatedAt": "2026-11-14T23:41:11.462061+00:00",
+    "commitSha": "a7145d052295ddacabe5a41bc66c107c269a0750",
+    "generatedAt": "2026-11-15T13:07:37.369884+00:00",
     "repoCount": 5,
-    "totalPRs": 24
+    "totalPRs": 26
   },
   "repos": [
     {
@@ -119,7 +119,7 @@
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-11-14T22:37:49Z",
-          "failingChecks": 0,
+          "failingChecks": 1,
           "headRef": "gaia/agent-tree-r1",
           "isDraft": true,
           "mergeable": "UNKNOWN",
@@ -128,7 +128,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/858"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "app/claude",
           "createdAt": "2026-11-14T07:10:41Z",
           "failingChecks": 0,
@@ -140,7 +140,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/856"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "app/claude",
           "createdAt": "2026-11-14T03:15:28Z",
           "failingChecks": 0,
@@ -152,7 +152,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/854"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "app/claude",
           "createdAt": "2026-11-14T03:06:25Z",
           "failingChecks": 0,
@@ -164,7 +164,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/853"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-11-12T00:09:00Z",
           "failingChecks": 1,
@@ -200,7 +200,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/840"
         },
         {
-          "ageDays": 25,
+          "ageDays": 26,
           "author": "spareilleux",
           "createdAt": "2026-10-20T03:36:58Z",
           "failingChecks": 1,
@@ -212,7 +212,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/839"
         },
         {
-          "ageDays": 41,
+          "ageDays": 42,
           "author": "spareilleux",
           "createdAt": "2026-10-04T03:41:20Z",
           "failingChecks": 0,
@@ -261,19 +261,55 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 1,
+      "prCount": 4,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-11-14T04:05:09Z",
-          "failingChecks": 0,
-          "headRef": "gaia/ixforge-cloud-qa-r1",
+          "createdAt": "2026-11-15T05:33:50Z",
+          "failingChecks": 3,
+          "headRef": "feat/ixforge-workshop-r25",
           "isDraft": true,
           "mergeable": "MERGEABLE",
-          "number": 531,
-          "title": "ixforge: opt-in workshop in ixctl, staged for cloud QA (draft, do not merge)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/531"
+          "number": 544,
+          "title": "feat(workshop): import IxForge R14\u2013R25 onto main",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/544"
+        },
+        {
+          "ageDays": 0,
+          "author": "app/openai-code-agent",
+          "createdAt": "2026-11-15T00:44:38Z",
+          "failingChecks": 0,
+          "headRef": "codex/ixforge-counter-access-r1-create-shared-counter",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 543,
+          "title": "Document authorized remote path for IX Forge shared counter creation (no code/data mutation)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/543"
+        },
+        {
+          "ageDays": 0,
+          "author": "app/anthropic-code-agent",
+          "createdAt": "2026-11-15T00:44:33Z",
+          "failingChecks": 0,
+          "headRef": "claude/ixforge-counter-access-r1-create-shared-counter",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 542,
+          "title": "IXFORGE-COUNTER-ACCESS-R1: investigation \u2014 no authorized non-Desktop path to create the shared \u00ab Lectures \u00bb counter",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/542"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-14T23:55:54Z",
+          "failingChecks": 0,
+          "headRef": "docs/learnings-wasi-validator",
+          "isDraft": true,
+          "mergeable": "UNKNOWN",
+          "number": 538,
+          "title": "docs(solutions): two learnings from the IXQL WASI validator prototype",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/538"
         }
       ]
     },
@@ -292,7 +328,7 @@
       "prCount": 5,
       "prs": [
         {
-          "ageDays": 32,
+          "ageDays": 33,
           "author": "spareilleux",
           "createdAt": "2026-10-13T02:09:29Z",
           "failingChecks": 0,
@@ -304,7 +340,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/392"
         },
         {
-          "ageDays": 41,
+          "ageDays": 42,
           "author": "spareilleux",
           "createdAt": "2026-10-04T07:19:24Z",
           "failingChecks": 0,
@@ -316,7 +352,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/381"
         },
         {
-          "ageDays": 46,
+          "ageDays": 47,
           "author": "spareilleux",
           "createdAt": "2026-09-29T03:17:50Z",
           "failingChecks": 0,
@@ -328,7 +364,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
         },
         {
-          "ageDays": 47,
+          "ageDays": 48,
           "author": "spareilleux",
           "createdAt": "2026-09-28T05:06:46Z",
           "failingChecks": 0,
@@ -367,40 +403,28 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 7,
+      "prCount": 6,
       "prs": [
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-14T15:47:04Z",
-          "failingChecks": 1,
-          "headRef": "chore/hooks-go",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 1303,
-          "title": "chore(hooks): port the Claude Code digest hooks to Go (scripts/claudehooks)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1303"
-        },
-        {
-          "ageDays": 50,
+          "ageDays": 51,
           "author": "spareilleux",
           "createdAt": "2026-09-25T12:30:30Z",
           "failingChecks": 1,
           "headRef": "ci/merge-queue",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1126,
           "title": "ci: run under the merge queue",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
         },
         {
-          "ageDays": 54,
+          "ageDays": 55,
           "author": "spareilleux",
           "createdAt": "2026-09-21T03:02:23Z",
           "failingChecks": 1,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
@@ -412,19 +436,19 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
         },
         {
-          "ageDays": 61,
+          "ageDays": 62,
           "author": "spareilleux",
           "createdAt": "2026-09-14T13:05:50Z",
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -436,7 +460,7 @@
           "failingChecks": 1,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -448,7 +472,7 @@
           "failingChecks": 3,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
