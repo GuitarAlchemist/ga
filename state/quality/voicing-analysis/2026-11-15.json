@@ -1,12 +1,12 @@
 {
   "domain": "voicing-analysis",
-  "emitted_at": "2026-11-15T18:45:43.0248118Z",
+  "emitted_at": "2026-11-15T18:54:54.4522421Z",
   "metric_name": "voicing_analysis_avg_pass_rate",
   "metric_value": 1,
   "oracle_status": "ok",
   "summary": "All 4 voicing metrics at 100% across 313,047 voicings.",
   "problems": [],
-  "Timestamp": "2026-11-15T18:45:43.0206006Z",
+  "Timestamp": "2026-11-15T18:54:54.4446452Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -167,9 +167,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 4.0956864,
-    "VoicingsPerSec": 76433.34216213429,
-    "PeakWorkingSetMb": 388.8359375
+    "RuntimeSeconds": 7.33042,
+    "VoicingsPerSec": 42705.19288117188,
+    "PeakWorkingSetMb": 368.921875
   },
   "IssueSamples": {
     "NullChordName": [],
