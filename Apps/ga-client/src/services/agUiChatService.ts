@@ -1,5 +1,5 @@
 /**
- * AG-UI chat service — replaces the ad-hoc SSE parsers in chatApi.ts / chatService.ts.
+ * AG-UI chat service — the single ga-client chat transport (the legacy SSE clients were removed).
  *
  * Posts to POST /api/chatbot/agui/stream, parses the standardised AG-UI event stream,
  * and routes each event type to the appropriate callback.

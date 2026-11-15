@@ -161,10 +161,9 @@ Important: `IChatService` is **not** the same channel as the `IChatClient` (Micr
 | Caller (file) | Endpoint | Notes |
 |---|---|---|
 | `<NebulaChat>` (component inlined/relocated since 2026-04; route still live) | `POST /api/nebula/chat` | Mounted by `HarmonicNebulaDemo` (`ReactComponents/ga-react-components/src/pages/HarmonicNebulaDemo.tsx:1707`). Sends `{ message, mode, history, context: { selectedVoicing, instrumentCounts } }`. Renders `reply` and surfaces `toolCalls` for inspection. Verified working 2026-04-21. |
-| `<GAChatPanel agentUrl={…/api/chatbot/agui/stream}>` (`ReactComponents/ga-react-components/src/main.tsx:358`) | `POST /api/chatbot/agui/stream` | Wraps the AG-UI SSE protocol. Parses `TEXT_MESSAGE_CONTENT`, `CUSTOM` (`ga:diatonic`), `RUN_ERROR` events (`Apps/ga-client/src/services/agUiChatService.ts:88`). |
-| `Apps/ga-client/src/store/chatAtoms.ts:110` (Jotai send-message atom) | `POST /api/chatbot/agui/stream` | Drives the ga-client React UI's chat composer. |
-| `Apps/ga-client/src/services/chatApi.ts` (`ChatApiService.streamChat`, `sendMessage`, `checkStatus`, `getExamples`) | `POST /api/chatbot/chat/stream`, `POST /api/chatbot/chat`, `GET /api/chatbot/status`, `GET /api/chatbot/examples` | Pre-AG-UI SSE protocol still imported by some ga-client surfaces. Singleton exported as `chatApi`. |
-| `Apps/ga-client/src/services/chatService.ts:94` (`sendChatMessageStream`) | `POST /api/chatbot/chat/stream` | Same protocol, alternate functional API. |
+| `<GAChatPanel agentUrl={…/api/chatbot/agui/stream}>` (`ReactComponents/ga-react-components/src/main.tsx:358`) | `POST /api/chatbot/agui/stream` | Uses the `useGAAgent` hook (`ReactComponents/ga-react-components/src/hooks/useGAAgent.ts`), which drives the `@ag-ui/client` SDK `HttpAgent`; handles text messages, state snapshots/deltas and `CUSTOM` (`ga:diatonic`, `ga:scale`) events. |
+| `Apps/ga-client/src/store/chatAtoms.ts:110` (Jotai send-message atom) | `POST /api/chatbot/agui/stream` | Drives the ga-client React UI's chat composer through `Apps/ga-client/src/services/agUiChatService.ts` (hand-rolled AG-UI frame parser: `TEXT_MESSAGE_CONTENT`, `CUSTOM` `ga:diatonic`, `RUN_FINISHED`, `RUN_ERROR`). |
+| `Apps/ga-client/src/services/chatService.ts` (`fetchChatStatus`, `fetchChatExamples`, `fetchChatDemo`) | `GET /api/chatbot/status`, `GET /api/chatbot/examples`, `GET /api/chatbot/demo` | Read-only helpers for the ga-client chat page. The pre-AG-UI SSE clients (`chatApi.ts`, `sendChatMessageStream`) had no importers and were removed 2026-11-15. |
 | `<ChatWidget>` (`ReactComponents/ga-react-components/src/components/PrimeRadiant/ChatWidget.tsx:917`) | `POST /api/chatbot/chat` | Non-streaming. Used inside the Prime Radiant operator console. |
 | `<TriageDropZone>` (`ReactComponents/ga-react-components/src/components/PrimeRadiant/TriageDropZone.tsx:82`) | `POST /api/chatbot/ask` | **No matching server endpoint exists.** Likely 404 today — see Open Questions. |
 | `<ForceRadiant>` (`ReactComponents/ga-react-components/src/components/PrimeRadiant/ForceRadiant.tsx:3502`), `HealthBindingEngine.ts:198` | `GET/HEAD /api/chatbot/status` | Health probe only. |
@@ -236,8 +235,8 @@ At the time (2026-05-07), the deployed `https://demos.guitaralchemist.com/chatbo
 
 | Route | Backend | Active callers |
 |---|---|---|
-| `POST /api/chatbot/chat` | `GaApi ChatbotController.Chat` → `ProductionOrchestrator` | `<ChatWidget>` (`ReactComponents/ga-react-components/src/components/PrimeRadiant/ChatWidget.tsx:917`, non-streaming, Prime Radiant operator console); `ChatApiService.sendMessage` (`Apps/ga-client/src/services/chatApi.ts:179`) |
-| `POST /api/chatbot/chat/stream` | `GaApi ChatbotController.ChatStream` → `ProductionOrchestrator` | `ChatApiService.streamChat` (`Apps/ga-client/src/services/chatApi.ts:85`); `sendChatMessageStream` (`Apps/ga-client/src/services/chatService.ts:94`) |
+| `POST /api/chatbot/chat` | `GaApi ChatbotController.Chat` → `ProductionOrchestrator` | `<ChatWidget>` (`ReactComponents/ga-react-components/src/components/PrimeRadiant/ChatWidget.tsx:917`, non-streaming, Prime Radiant operator console) |
+| `POST /api/chatbot/chat/stream` | `GaApi ChatbotController.ChatStream` → `ProductionOrchestrator` | None in the frontends since 2026-11-15 (the ga-client SSE clients `chatApi.ts` and `sendChatMessageStream` had no importers and were removed). |
 
 (Test suites, `Scripts/*.ps1`, and the `GaChatbot.Api` same-path siblings in §5b are excluded — they don't determine support status. The `GaChatbot.Api` host is governed by the separate §5b canonical-deployable decision.)
 
@@ -247,18 +246,18 @@ While supported, both routes MUST stay wire-equivalent with the canonical orches
 
 - Both back onto the same `ProductionOrchestrator`, so routing (`agentId`, `confidence`, `routingMethod`) and answer text stay consistent across REST/SSE/SignalR/AG-UI by construction — don't fork the orchestrator call.
 - The GaApi `ChatJsonResponse` intentionally omits `Grounding` and `Trace` (those live only on the `GaChatbot.Api` sibling, §5b). That asymmetry is documented, not a bug — don't "fix" one surface in isolation; change the shared contract or neither.
-- `/chat/stream`'s SSE shape (`routing` frame → sentence chunks → `data: [DONE]`) is a distinct protocol from AG-UI. Callers above depend on it; don't alter frame shapes without updating `chatApi.ts` / `chatService.ts` in the same change.
+- `/chat/stream`'s SSE shape (`routing` frame → sentence chunks → `data: [DONE]`) is a distinct protocol from AG-UI. It has no first-party frontend caller left, but external clients may still depend on it; don't alter frame shapes without a deprecation decision.
 
 ### Revisit trigger
 
-Reclassify to `🪦 deprecated-candidate` once `chatApi.ts`, `chatService.ts`, and `<ChatWidget>` have all migrated to the AG-UI surface (`/api/chatbot/agui/{stream,json}`). At that point these two routes have zero first-party callers and can be retired in one cleanup PR.
+Reclassify to `🪦 deprecated-candidate` once `<ChatWidget>` has migrated to the AG-UI surface (`/api/chatbot/agui/{stream,json}`); the ga-client SSE clients were already removed on 2026-11-15. At that point these two routes have zero first-party callers and can be retired in one cleanup PR.
 
 ## 7. Canonical-vs-redundant analysis
 
 | Functional cluster | Canonical path | Parallels / redundancies |
 |---|---|---|
 | **HTTP endpoint serving the Harmonic Nebula React UI** | ✅ `POST /api/nebula/chat` → `NebulaChatController` → `NebulaSidekickService` → Anthropic Claude Haiku 4.5 (`ANTHROPIC_API_KEY`) or local Ollama tool-loop. | None — only `NebulaChat.tsx` consumes this route. |
-| **HTTP endpoint serving the legacy ga-client / Prime Radiant chat UIs** | ✅ AG-UI: `POST /api/chatbot/agui/stream` → `AgUiChatController.AgUiStream` → `IHarmonicChatOrchestrator.AnswerStreamingAsync` (= `ProductionOrchestrator`). | 🟡 `POST /api/chatbot/chat/stream` (`ChatbotController`) — same orchestrator backend, different SSE shape; still consumed by `chatApi.ts` + `chatService.ts`. 🟡 `POST /api/chatbot/agui/json` — non-streaming sibling, same orchestrator, used by MCP / agent callers. 🟡 `POST /api/chatbot/chat` — non-streaming sibling, same orchestrator, used by `<ChatWidget>`. |
+| **HTTP endpoint serving the legacy ga-client / Prime Radiant chat UIs** | ✅ AG-UI: `POST /api/chatbot/agui/stream` → `AgUiChatController.AgUiStream` → `IHarmonicChatOrchestrator.AnswerStreamingAsync` (= `ProductionOrchestrator`). | 🟡 `POST /api/chatbot/chat/stream` (`ChatbotController`) — same orchestrator backend, different SSE shape; no first-party frontend caller since 2026-11-15. 🟡 `POST /api/chatbot/agui/json` — non-streaming sibling, same orchestrator, used by MCP / agent callers. 🟡 `POST /api/chatbot/chat` — non-streaming sibling, same orchestrator, used by `<ChatWidget>`. |
 | **In-process chat for console / CLI** | ✅ `IHarmonicChatOrchestrator` (= `ProductionOrchestrator`) resolved via DI in `GaChatbotCli` and `GaChatbot`. | None notable — both apps share the same `AddChatbotOrchestration` registrations. |
 | **AG-UI protocol bridge** | ✅ `AgUiChatController` (`/agui/stream` for SSE, `/agui/json` for non-streaming). | None (single implementation). |
 | **SignalR streaming chat** | 🟡 `ChatbotHub` at `/hubs/chatbot` on GaApi — same orchestrator substrate as the REST surfaces. Not in the deployed `/chatbot/` flow since 2026-05-13 (§0): the demo is served by `GaChatbot.Api` over REST. | 🟡 Parallel REST/SSE surfaces exist (`/api/chatbot/chat`, `/api/chatbot/chat/stream`) and must stay wire-equivalent where the public demo depends on shared metadata (`Grounding`, `Trace`, routing). |
@@ -280,7 +279,7 @@ flowchart LR
         NB["NebulaChat.tsx<br/>(HarmonicNebulaDemo)"]
         GAP["GAChatPanel<br/>(ga-react-components/main.tsx)"]
         GACL["ga-client chat<br/>(chatAtoms / agUiChatService)"]
-        CHATAPI["chatApi.ts /<br/>chatService.ts"]
+        CHATAPI["ga-client chatService.ts<br/>(status / examples / demo)"]
         CW["PrimeRadiant ChatWidget"]
         TDZ["PrimeRadiant TriageDropZone"]
         CLI["GaChatbotCli /<br/>GaChatbot console"]
@@ -340,8 +339,6 @@ flowchart LR
     AGS --> PROD
     AGJ --> PROD
 
-    CHATAPI --> CCS
-    CHATAPI --> CC
     CHATAPI --> STAT
     CW --> CC
     TDZ -.dangling.-> ASK
