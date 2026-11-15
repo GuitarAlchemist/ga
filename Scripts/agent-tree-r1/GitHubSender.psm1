@@ -13,6 +13,7 @@ $script:CommentUrl = '^https://github\.com/(?<repo>[\w.-]+/[\w.-]+)/(issues|pull
 function ConvertTo-ChildTaskComment {
     param([Parameter(Mandatory)]$Node, [Parameter(Mandatory)][string]$Key, [string]$ParentRef = '#855')
     if (-not $Node.base_sha) { throw 'node has no base_sha: the child cannot be pinned to an exact commit' }
+    if ("$($Node.base_sha)" -notmatch '^[0-9a-fA-F]{7,40}$') { throw 'base_sha is not 7 to 40 hexadecimal characters: refusing to pin a child to it' }
     $mode = if ($Node.mode -eq 'write') { 'WRITE (you are the only writer of this scope)' } else { 'READ-ONLY (do not push, do not edit)' }
     $acc = if (@($Node.acceptance).Count) { (@($Node.acceptance) | ForEach-Object { "- $_" }) -join "`n" } else { '- none stated; report evidence only' }
     $lines = @(
