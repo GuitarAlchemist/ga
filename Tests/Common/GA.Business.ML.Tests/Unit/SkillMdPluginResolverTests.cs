@@ -2,7 +2,6 @@ namespace GA.Business.ML.Tests.Unit;
 
 using System.Diagnostics;
 using GA.Business.ML.Agents.Plugins;
-using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
 /// Tests for <see cref="SkillMdPlugin.ResolveSkillsPath"/> — verifies the
@@ -66,7 +65,7 @@ public class SkillMdPluginResolverTests
     [Test]
     public void ResolveSkillsPath_ReturnsCanonicalWhenNeitherExists()
     {
-        // Neither exists — return the canonical path so the Register() warning
+        // Neither exists — return the canonical path so the CheckSkillsDirectory() warning
         // points users at the right place to author new skills.
         var resolved = SkillMdPlugin.ResolveSkillsPath(_tmpRoot);
 
@@ -151,7 +150,7 @@ public class SkillMdPluginResolverTests
         // The migration footgun: someone runs `mkdir skills` while authoring
         // the canonical home, and the resolver immediately starts returning
         // the empty canonical path — silently shadowing the legacy directory
-        // so production registers ZERO skills. Register() must shout in that
+        // so every SKILL.md-backed skill loses its body. CheckSkillsDirectory() must shout in that
         // exact configuration so the migration doesn't silently brick prod.
         var canonical = Path.Combine(_tmpRoot, "skills");
         var legacyDir = Path.Combine(_tmpRoot, ".agent", "skills", "alpha");
@@ -165,7 +164,7 @@ public class SkillMdPluginResolverTests
         Trace.Listeners.Add(traceListener);
         try
         {
-            SkillMdPlugin.Register(new ServiceCollection(), canonical);
+            SkillMdPlugin.CheckSkillsDirectory(canonical);
         }
         finally
         {
@@ -174,7 +173,7 @@ public class SkillMdPluginResolverTests
 
         var output = traceListener.Output;
         Assert.That(output, Does.Contain("Canonical").And.Contain("empty"),
-            "Register() must warn when canonical is empty and legacy still has skills, otherwise the migration silently bricks production.");
+            "CheckSkillsDirectory() must warn when canonical is empty and legacy still has skills, otherwise the migration silently bricks production.");
         Assert.That(output, Does.Contain("1 SKILL.md"),
             "warning must include the legacy skill count so the operator knows what's being shadowed");
     }

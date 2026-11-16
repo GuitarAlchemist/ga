@@ -39,9 +39,8 @@ public class AddGuitarAlchemistAiRegistrationTests
 
         Assert.That(factory, Is.Not.Null,
             "GaApi calls AddGuitarAlchemistAI (uppercase). If this throws, " +
-            "every chatbot endpoint will 500 once SkillMdPlugin finds a " +
-            "SKILL.md to register, because SkillMdDrivenSkill needs " +
-            "IChatClientFactory.");
+            "every chatbot endpoint will 500, because the SKILL.md-backed " +
+            "skill wrappers (SkillMdDrivenWrapperBase) need IChatClientFactory.");
         Assert.That(factory, Is.InstanceOf<DefaultChatClientFactory>());
     }
 }

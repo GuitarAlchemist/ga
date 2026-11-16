@@ -1,19 +1,24 @@
 namespace GA.Business.ML.Agents.Plugins;
 
 using GA.Business.ML.Agents.Skills;
-using GA.Business.ML.Extensions;
 using GA.Business.ML.Skills;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 /// <summary>
-/// <see cref="IChatPlugin"/> that discovers all SKILL.md files with trigger keywords
-/// and registers each as a <see cref="SkillMdDrivenSkill"/> backed by Anthropic + GA MCP tools.
+/// <see cref="IChatPlugin"/> that checks the SKILL.md tree at startup and owns its
+/// path resolution (<see cref="ResolveSkillsPath"/>).
 ///
-/// Skills directory defaults to <c>.agent/skills</c> under <see cref="AppContext.BaseDirectory"/>
-/// but can be overridden via the <c>SkillMd:SkillsPath</c> environment variable.
-/// Files without frontmatter or without <c>triggers</c> are silently ignored.
-/// Missing directory → logs a warning, 0 dynamic skills registered.
+/// It registers no <see cref="IOrchestratorSkill"/>. A SKILL.md reaches chat only
+/// through a C# wrapper (<see cref="SkillMdDrivenWrapperBase"/>,
+/// <see cref="CatalogSkillBase"/>) registered with <c>AddOrchestratorSkillIntent&lt;T&gt;()</c>:
+/// the wrapper owns the <see cref="IOrchestratorSkill.ExamplePrompts"/> that
+/// <c>SemanticIntentRouter</c> scores, and SKILL.md frontmatter declares only keyword
+/// triggers. The plugin used to register one generic <see cref="SkillMdDrivenSkill"/>
+/// per file; those were never routed (no <c>IIntent</c>, no examples) and duplicated
+/// the wrappers in <c>GET /api/chatbot/skills</c>.
+///
+/// Skills directory: see <see cref="ResolveSkillsPath"/>. Missing or empty directory
+/// → a Trace warning, because every wrapper reads its SKILL.md from the same path.
 /// </summary>
 [ChatPlugin]
 public sealed class SkillMdPlugin : IChatPlugin
@@ -28,14 +33,15 @@ public sealed class SkillMdPlugin : IChatPlugin
     /// requires a real directory tree on disk. A future <c>IHostedService</c>-based approach (see todo 040)
     /// would defer loading and allow full in-memory testing, but adds complexity not currently warranted.
     /// </remarks>
-    public void Register(IServiceCollection services) => Register(services, ResolveSkillsPath());
+    public void Register(IServiceCollection services) => CheckSkillsDirectory(ResolveSkillsPath());
 
     /// <summary>
-    /// Internal overload that takes an explicit skills path — used by unit
-    /// tests so they can register against an isolated temp directory rather
-    /// than mutating process env vars or the repo's real <c>skills/</c> tree.
+    /// Warns (via Trace) when <paramref name="path"/> holds no SKILL.md with
+    /// triggers. Takes an explicit path so unit tests can point it at an
+    /// isolated temp directory rather than mutating process env vars or the
+    /// repo's real <c>skills/</c> tree.
     /// </summary>
-    internal static void Register(IServiceCollection services, string path)
+    internal static void CheckSkillsDirectory(string path)
     {
         if (!Directory.Exists(path))
         {
@@ -45,7 +51,7 @@ public sealed class SkillMdPlugin : IChatPlugin
             // ILogger is not available during DI registration, so Trace is the
             // fallback. Test fixture asserts via a Trace.Listeners hook.
             System.Diagnostics.Trace.WriteLine(
-                $"[SkillMdPlugin] Skills directory not found: {path} — no SKILL.md skills registered.");
+                $"[SkillMdPlugin] Skills directory not found: {path} — SKILL.md-backed skills will fail to load their body.");
             return;
         }
 
@@ -65,8 +71,8 @@ public sealed class SkillMdPlugin : IChatPlugin
             {
                 System.Diagnostics.Trace.WriteLine(
                     $"[SkillMdPlugin] Canonical '{path}' is empty but legacy '{legacy}' " +
-                    $"still has {legacySkillCount} SKILL.md file(s). Production will register ZERO " +
-                    $"skills. Either port them into the canonical directory or remove the empty " +
+                    $"still has {legacySkillCount} SKILL.md file(s). Every SKILL.md-backed skill will fail " +
+                    $"to load its body. Either port them into the canonical directory or remove the empty " +
                     $"canonical directory to fall through to legacy.");
             }
             else
@@ -74,22 +80,10 @@ public sealed class SkillMdPlugin : IChatPlugin
                 System.Diagnostics.Trace.WriteLine(
                     $"[SkillMdPlugin] No SKILL.md files with triggers found in {path}.");
             }
-            return;
         }
 
-        // IMcpToolsProvider is registered as a singleton by ChatPluginHost after this plugin runs.
-        // IChatClientFactory is registered by AddGuitarAlchemistAi.
-        // Each SkillMdDrivenSkill resolves the chat client lazily on first ExecuteAsync call.
-        foreach (var skill in skills)
-        {
-            var captured = skill;
-            services.AddSingleton<IOrchestratorSkill>(sp =>
-                new SkillMdDrivenSkill(
-                    captured,
-                    sp.GetRequiredService<IMcpToolsProvider>(),
-                    sp.GetRequiredService<IChatClientFactory>(),
-                    sp.GetRequiredService<ILogger<SkillMdDrivenSkill>>()));
-        }
+        // Nothing to register: the routed C# wrappers construct their own
+        // SkillMdDrivenSkill from the same directory (see class remarks).
     }
 
     /// <summary>MCP tool types contributed by this plugin (none — uses shared <see cref="IMcpToolsProvider"/>).</summary>
