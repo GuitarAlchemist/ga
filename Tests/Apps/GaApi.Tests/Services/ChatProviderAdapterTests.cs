@@ -2,8 +2,8 @@ namespace GaApi.Tests.Services;
 
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
-using GaApi.Services;
 using GaApi.Extensions;
+using GaApi.Services;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,6 +46,31 @@ public class ChatProviderAdapterTests
 
         Assert.That(client.GetService<FunctionInvokingChatClient>(), Is.Not.Null,
             "tool-calling skills need the same function-invocation pipeline as the Anthropic client");
+        Assert.That(client.GetService<StreamingAggregationChatClient>(), Is.Not.Null,
+            "local providers stream so the transport timeout bounds only the wait for the first bytes");
+    }
+
+    [Test]
+    public async Task StreamingAggregation_AnswersFromTheInnerStream()
+    {
+        var inner = new Mock<IChatClient>(MockBehavior.Strict);
+        inner.Setup(value => value.GetStreamingResponseAsync(It.IsAny<IEnumerable<AiChatMessage>>(), It.IsAny<ChatOptions?>(), It.IsAny<CancellationToken>()))
+            .Returns(Stream("D F ", "A C"));
+        var client = new StreamingAggregationChatClient(inner.Object);
+
+        var response = await client.GetResponseAsync([new AiChatMessage(ChatRole.User, "Dm7")]);
+
+        Assert.That(response.Text, Is.EqualTo("D F A C"));
+        inner.Verify(value => value.GetResponseAsync(It.IsAny<IEnumerable<AiChatMessage>>(), It.IsAny<ChatOptions?>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        static async IAsyncEnumerable<ChatResponseUpdate> Stream(params string[] chunks)
+        {
+            foreach (var chunk in chunks)
+            {
+                await Task.Yield();
+                yield return new ChatResponseUpdate(ChatRole.Assistant, chunk);
+            }
+        }
     }
 
     [Test]

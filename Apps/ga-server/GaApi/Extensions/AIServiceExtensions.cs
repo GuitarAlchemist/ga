@@ -127,11 +127,16 @@ public static class AiServiceExtensions
             else if (string.Equals(chatProvider, "docker", StringComparison.OrdinalIgnoreCase))
             {
                 // Same function-invocation pipeline as the Anthropic client, so tool-calling
-                // skills behave the same on every provider.
+                // skills behave the same on every provider. Requests stream under the hood
+                // with the 60 s timeout of the former DockerModelRunnerChatService.
                 services.AddSingleton<IChatClient>(sp => DockerModelRunnerProvider
-                    .CreateChatClientFromConfig(configuration, sp.GetService<ILoggerFactory>()?.CreateLogger("GaApi.ChatClient"))
+                    .CreateChatClientFromConfig(
+                        configuration,
+                        sp.GetService<ILoggerFactory>()?.CreateLogger("GaApi.ChatClient"),
+                        TimeSpan.FromSeconds(60))
                     .AsBuilder()
                     .UseFunctionInvocation()
+                    .Use(inner => new StreamingAggregationChatClient(inner))
                     .Build(sp));
             }
             else
@@ -140,7 +145,8 @@ public static class AiServiceExtensions
                 {
                     var chatbotOptions = sp.GetRequiredService<IOptionsMonitor<ChatbotOptions>>().CurrentValue;
                     // The named "Ollama" client carries the base address and the Cloudflare
-                    // Access headers; the timeout follows Chatbot:StreamTimeoutSeconds.
+                    // Access headers; the timeout follows Chatbot:StreamTimeoutSeconds and,
+                    // because requests stream, bounds the wait for the first bytes only.
                     var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Ollama");
                     httpClient.Timeout = TimeSpan.FromSeconds(Math.Max(5, chatbotOptions.StreamTimeoutSeconds));
                     return OllamaProvider
@@ -151,6 +157,7 @@ public static class AiServiceExtensions
                             httpClient)
                         .AsBuilder()
                         .UseFunctionInvocation()
+                        .Use(inner => new StreamingAggregationChatClient(inner))
                         .Build(sp);
                 });
             }

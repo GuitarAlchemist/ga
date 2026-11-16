@@ -152,7 +152,7 @@ GaApi has one generation channel: `Microsoft.Extensions.AI.IChatClient`, registe
 | `docker` | `DockerModelRunnerProvider.CreateChatClientFromConfig` (OpenAI-compatible `/v1/chat/completions` on port 12434) | `DockerModelRunner:ChatModel`, default `docker.io/ai/llama3.2:latest` |
 | anything else (default `ollama`) | `OllamaProvider.CreateChatClient` over the named `Ollama` HttpClient (base address, Cloudflare Access headers, `Chatbot:StreamTimeoutSeconds`) | `Chatbot:Model`, then `Ollama:ChatModel`, then `llama3.2:3b` |
 
-Every binding runs the same `UseFunctionInvocation()` pipeline, so tool-calling skills behave the same on each provider.
+Every binding runs the same `UseFunctionInvocation()` pipeline, so tool-calling skills behave the same on each provider. Ollama and Docker answer non-streaming calls by aggregating their stream (`StreamingAggregationChatClient`), so their transport timeout (`Chatbot:StreamTimeoutSeconds`, 60 s for Docker) bounds only the wait for the first bytes.
 
 Reachability is separate and never runs inference: `IChatProviderAvailability` (`Apps/ga-server/GaApi/Services/ChatProviderAvailability.cs`) backs `ChatbotController.GetStatus` and, when `Chatbot:Readiness:ProviderCheck` is on, `GaApiChatReadinessProbe`. The Nebula pipeline bypasses both and talks to providers directly via its own `HttpClient`.
 

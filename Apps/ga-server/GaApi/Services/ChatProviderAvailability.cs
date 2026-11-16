@@ -16,9 +16,16 @@ public sealed class ChatProviderAvailability(
     IConfiguration configuration,
     IOptionsMonitor<ChatbotOptions> chatbotOptions) : IChatProviderAvailability
 {
+    // Read once, like the singleton IChatClient: status must describe the provider and model
+    // that requests actually use, even if configuration reloads later.
+    private readonly string _provider = configuration["AI:ChatProvider"] ?? "ollama";
+    private readonly string _ollamaModel = OllamaChatModel(chatbotOptions.CurrentValue, configuration);
+    private readonly string _dockerModel = configuration["DockerModelRunner:ChatModel"] ?? "docker.io/ai/llama3.2:latest";
+    private readonly string _dockerBaseUrl = (configuration["DockerModelRunner:BaseUrl"] ?? "http://localhost:12434/v1").TrimEnd('/');
+
     public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
     {
-        var provider = configuration["AI:ChatProvider"] ?? "ollama";
+        var provider = _provider;
         if (string.Equals(provider, "claude", StringComparison.OrdinalIgnoreCase))
             return true;
 
@@ -37,7 +44,7 @@ public sealed class ChatProviderAvailability(
 
     private async Task<bool> IsOllamaAvailableAsync(CancellationToken cancellationToken)
     {
-        var model = OllamaChatModel(chatbotOptions.CurrentValue, configuration);
+        var model = _ollamaModel;
         using var response = await httpClientFactory.CreateClient("Ollama").GetAsync("/api/tags", cancellationToken);
         if (!response.IsSuccessStatusCode)
             return false;
@@ -48,10 +55,9 @@ public sealed class ChatProviderAvailability(
 
     private async Task<bool> IsDockerModelRunnerAvailableAsync(CancellationToken cancellationToken)
     {
-        var model = configuration["DockerModelRunner:ChatModel"] ?? "docker.io/ai/llama3.2:latest";
+        var model = _dockerModel;
         // Absolute URL: a leading-slash relative path would drop the /v1 segment of the base address.
-        var baseUrl = (configuration["DockerModelRunner:BaseUrl"] ?? "http://localhost:12434/v1").TrimEnd('/');
-        using var response = await httpClientFactory.CreateClient("DockerModelRunner").GetAsync($"{baseUrl}/models", cancellationToken);
+        using var response = await httpClientFactory.CreateClient("DockerModelRunner").GetAsync($"{_dockerBaseUrl}/models", cancellationToken);
         if (!response.IsSuccessStatusCode)
             return false;
 

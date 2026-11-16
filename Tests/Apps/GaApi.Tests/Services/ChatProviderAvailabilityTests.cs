@@ -59,12 +59,31 @@ public class ChatProviderAvailabilityTests
         Assert.That(handler.RequestedPaths, Is.Empty);
     }
 
-    private static ChatProviderAvailability Create(string provider, StubHandler handler)
+    [Test]
+    public async Task ProviderIsFixedAtStartup_LikeTheSingletonChatClient()
     {
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        var handler = new StubHandler(HttpStatusCode.ServiceUnavailable, "");
+        var configuration = Configuration("ollama");
+        var availability = Create(configuration, handler);
+
+        configuration["AI:ChatProvider"] = "claude";
+
+        Assert.That(await availability.IsAvailableAsync(), Is.False,
+            "a configuration reload must not make status describe a provider requests never use");
+        Assert.That(handler.RequestedPaths, Is.EqualTo(new[] { "/api/tags" }));
+    }
+
+    private static IConfigurationRoot Configuration(string provider) =>
+        new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["AI:ChatProvider"] = provider
         }).Build();
+
+    private static ChatProviderAvailability Create(string provider, StubHandler handler) =>
+        Create(Configuration(provider), handler);
+
+    private static ChatProviderAvailability Create(IConfiguration configuration, StubHandler handler)
+    {
         var factory = new Mock<IHttpClientFactory>();
         factory.Setup(f => f.CreateClient("Ollama"))
             .Returns(() => new HttpClient(handler, disposeHandler: false) { BaseAddress = new Uri("http://localhost:11434") });
