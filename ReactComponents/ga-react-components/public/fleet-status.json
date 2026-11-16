@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "0f6ed54c9224e35476bb3e56db3bd5e78905b680",
-    "generatedAt": "2026-11-16T04:07:16.894147+00:00",
+    "commitSha": "e0546815f6c0b8d2e200306ed4de1435f12ac6c1",
+    "generatedAt": "2026-11-16T04:18:33.759718+00:00",
     "repoCount": 5,
-    "totalPRs": 39
+    "totalPRs": 38
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 13,
+      "prCount": 12,
       "prs": [
         {
           "ageDays": 0,
@@ -138,18 +138,6 @@
           "number": 878,
           "title": "refactor(gaapi)!: retire the chord vector-search stack and api/search/hybrid",
           "url": "https://github.com/GuitarAlchemist/ga/pull/878"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T03:22:19Z",
-          "failingChecks": 0,
-          "headRef": "refactor/chord-quality-single-reader",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 877,
-          "title": "refactor(chat): read chord qualities through the compositional parser",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/877"
         },
         {
           "ageDays": 0,
