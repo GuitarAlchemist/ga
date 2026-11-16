@@ -31,6 +31,8 @@ public class ChordSymbolPitchClassesTests
     [TestCase("Ebdim", new[] { 3, 6, 9 })]
     [TestCase("B♭9", new[] { 10, 2, 5, 8, 0 })]
     [TestCase("gsus4", new[] { 7, 0, 2 })]
+    [TestCase("CΔ7", new[] { 0, 4, 7, 11 })]
+    [TestCase("CΔ", new[] { 0, 4, 7, 11 })]
     public void TryGetPitchClasses_ReadsRootAndQuality(string symbol, int[] expected)
     {
         var ok = ChordVocabulary.TryGetPitchClasses(symbol, out var pitchClasses);
@@ -54,6 +56,8 @@ public class ChordSymbolPitchClassesTests
     [TestCase("Cmaj", new[] { 0, 4, 7 })]
     [TestCase("Cm9", new[] { 0, 3, 7, 10, 2 })]
     [TestCase("C13", new[] { 0, 4, 7, 10, 2, 5, 9 })]
+    [TestCase("CΔ7", new[] { 0, 4, 7, 11 })]
+    [TestCase("CΔ", new[] { 0, 4, 7, 11 })]
     public void TryGetPitchClassesStrict_ReadsKnownQualities(string symbol, int[] expected)
     {
         var ok = ChordVocabulary.TryGetPitchClassesStrict(symbol, out var pitchClasses);
