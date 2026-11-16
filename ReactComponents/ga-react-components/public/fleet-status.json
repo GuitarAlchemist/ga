@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "4c0f124094cba3c94db860776dd20aaa4a0ec028",
-    "generatedAt": "2026-11-16T01:58:32.698938+00:00",
+    "commitSha": "832c6656e7cee8585b3577cba44c067ef6348273",
+    "generatedAt": "2026-11-16T03:05:05.987579+00:00",
     "repoCount": 5,
-    "totalPRs": 38
+    "totalPRs": 39
   },
   "repos": [
     {
@@ -113,8 +113,32 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 12,
+      "prCount": 13,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-16T02:03:00Z",
+          "failingChecks": 0,
+          "headRef": "fix/orchestrator-single-cascade",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 875,
+          "title": "refactor(chat): run one routing cascade behind both orchestrator entry points",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/875"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-16T01:59:10Z",
+          "failingChecks": 0,
+          "headRef": "fix/skill-registration-routable",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 874,
+          "title": "fix(chat): make every registered orchestrator skill routable",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/874"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -126,18 +150,6 @@
           "number": 873,
           "title": "build(domain-services): drop unused OnnxRuntime; document Domain.Core -> Config leak",
           "url": "https://github.com/GuitarAlchemist/ga/pull/873"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T00:35:00Z",
-          "failingChecks": 0,
-          "headRef": "refactor/gaapi-dead-vector-search",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 867,
-          "title": "refactor(gaapi): delete dead ILGPU and strategy-manager vector search code",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/867"
         },
         {
           "ageDays": 0,
@@ -472,7 +484,7 @@
       "prCount": 5,
       "prs": [
         {
-          "ageDays": 33,
+          "ageDays": 34,
           "author": "spareilleux",
           "createdAt": "2026-10-13T02:09:29Z",
           "failingChecks": 0,
@@ -562,7 +574,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
         },
         {
-          "ageDays": 55,
+          "ageDays": 56,
           "author": "spareilleux",
           "createdAt": "2026-09-21T03:02:23Z",
           "failingChecks": 1,
