@@ -30,6 +30,5 @@ Each layer may only depend on layers below it.
 ## Parked Projects
 
 These projects contain parked/excluded code preserved for future reference:
-- `GA.Business.Configuration` — configuration watcher service
 - `GA.Business.Analytics` — musical analytics services
 - `GA.Business.Personalization` — user personalization services

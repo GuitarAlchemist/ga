@@ -1,6 +1,6 @@
 namespace GaApi.Plugins;
 
-using GA.Business.ML.Agents;
+using GA.Business.Core.Orchestration.Intents;
 using GA.Business.ML.Agents.Plugins;
 using GaApi.Services;
 using GaApi.Skills;
@@ -25,6 +25,8 @@ public sealed class GaApiPlugin : IChatPlugin
         services.TryAddScoped<VoicingComfortService>();
 
         // VoicingComfortSkill — Scoped to be safe with transitive Scoped dependencies.
-        services.AddScoped<IOrchestratorSkill, VoicingComfortSkill>();
+        // Registered with its IIntent so SemanticIntentRouter can reach it: a bare
+        // IOrchestratorSkill registration is listed but never dispatched.
+        services.AddOrchestratorSkillIntent<VoicingComfortSkill>(ServiceLifetime.Scoped);
     }
 }

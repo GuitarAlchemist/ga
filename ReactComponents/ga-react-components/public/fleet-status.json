@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "832c6656e7cee8585b3577cba44c067ef6348273",
-    "generatedAt": "2026-11-16T03:05:05.987579+00:00",
+    "commitSha": "e0546815f6c0b8d2e200306ed4de1435f12ac6c1",
+    "generatedAt": "2026-11-16T04:18:33.759718+00:00",
     "repoCount": 5,
-    "totalPRs": 39
+    "totalPRs": 38
   },
   "repos": [
     {
@@ -113,43 +113,31 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 13,
+      "prCount": 12,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-11-16T02:03:00Z",
-          "failingChecks": 0,
-          "headRef": "fix/orchestrator-single-cascade",
+          "createdAt": "2026-11-16T04:04:03Z",
+          "failingChecks": 1,
+          "headRef": "refactor/cand4-move-chatbot-corpus-parity-tests",
           "isDraft": false,
           "mergeable": "UNKNOWN",
-          "number": 875,
-          "title": "refactor(chat): run one routing cascade behind both orchestrator entry points",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/875"
+          "number": 879,
+          "title": "refactor(tests): move chat corpus and orchestrator cascade tests to GaApi.Tests",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/879"
         },
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-11-16T01:59:10Z",
+          "createdAt": "2026-11-16T03:24:36Z",
           "failingChecks": 0,
-          "headRef": "fix/skill-registration-routable",
+          "headRef": "refactor/retire-gaapi-chord-vector-search",
           "isDraft": false,
           "mergeable": "UNKNOWN",
-          "number": 874,
-          "title": "fix(chat): make every registered orchestrator skill routable",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/874"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T01:48:57Z",
-          "failingChecks": 0,
-          "headRef": "refactor/domain-layer-leaks",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 873,
-          "title": "build(domain-services): drop unused OnnxRuntime; document Domain.Core -> Config leak",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/873"
+          "number": 878,
+          "title": "refactor(gaapi)!: retire the chord vector-search stack and api/search/hybrid",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/878"
         },
         {
           "ageDays": 0,
@@ -176,7 +164,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/858"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "app/claude",
           "createdAt": "2026-11-14T03:15:28Z",
           "failingChecks": 0,
@@ -188,7 +176,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/854"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "app/claude",
           "createdAt": "2026-11-14T03:06:25Z",
           "failingChecks": 0,
@@ -224,7 +212,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/840"
         },
         {
-          "ageDays": 26,
+          "ageDays": 27,
           "author": "spareilleux",
           "createdAt": "2026-10-20T03:36:58Z",
           "failingChecks": 1,
@@ -236,7 +224,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/839"
         },
         {
-          "ageDays": 42,
+          "ageDays": 43,
           "author": "spareilleux",
           "createdAt": "2026-10-04T03:41:20Z",
           "failingChecks": 0,
@@ -508,7 +496,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/381"
         },
         {
-          "ageDays": 47,
+          "ageDays": 48,
           "author": "spareilleux",
           "createdAt": "2026-09-29T03:17:50Z",
           "failingChecks": 0,
