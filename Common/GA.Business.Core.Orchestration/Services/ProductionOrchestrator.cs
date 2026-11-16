@@ -26,7 +26,6 @@ public class ProductionOrchestrator(
     QueryUnderstandingService queryUnderstandingService,
     IAlgebraPromptClassifier algebraPromptClassifier,
     IIxAlgebraService ixAlgebraService,
-    IEnumerable<IOrchestratorSkill> orchestratorSkills,
     IEnumerable<IChatHook> chatHooks,
     ConversationHistoryStore historyStore,
     RoutingContextEnricher routingContextEnricher,
@@ -36,8 +35,7 @@ public class ProductionOrchestrator(
     IAgenticTraceCapture traceCapture,
     IServiceProvider services) : IHarmonicChatOrchestrator
 {
-    private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
-    private readonly IReadOnlyList<IChatHook>          _hooks  = chatHooks.ToList();
+    private readonly IReadOnlyList<IChatHook> _hooks = chatHooks.ToList();
 
     /// <summary>
     /// Cheap pre-check: does the message actually contain tab notation?
@@ -153,185 +151,22 @@ public class ProductionOrchestrator(
     ];
 
     /// <summary>
-    /// Streams the LLM response token-by-token, calling <paramref name="onToken"/> for each token,
-    /// then returns the full <see cref="ChatResponse"/> with routing and filter metadata when done.
+    /// Streams the answer through <paramref name="onToken"/>, then returns the full
+    /// <see cref="ChatResponse"/> with routing and filter metadata. Runs the same routing
+    /// cascade as <see cref="AnswerAsync"/>: the LLM agent branch streams its tokens as they
+    /// arrive, every other branch emits its finished answer word by word.
     /// </summary>
     /// <param name="req">The chat request.</param>
-    /// <param name="onToken">Callback invoked for each token as it arrives from the LLM.</param>
+    /// <param name="onToken">Callback invoked for each token of the answer.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The complete <see cref="ChatResponse"/> once the stream is finished.</returns>
-    public async Task<ChatResponse> AnswerStreamingAsync(
+    public Task<ChatResponse> AnswerStreamingAsync(
         ChatRequest req,
         Func<string, Task> onToken,
         CancellationToken ct = default)
     {
-        // ── Session management ───────────────────────────────────────────────
-        var sessionId = req.SessionId ?? Guid.NewGuid().ToString("N");
-        var history = req.History ?? historyStore.GetHistory(sessionId);
-        var agentHistory = history
-            .Select(t => new ChatHistoryTurn(t.Role, t.Content))
-            .ToList();
-        historyStore.AddTurn(sessionId, "user", req.Message);
-
-        // ── OnRequestReceived hooks (sanitization, rate-limiting, auth) ───────
-        var correlationId = Guid.NewGuid();
-        var hookCtx = new ChatHookContext
-        {
-            CorrelationId   = correlationId,
-            SessionId       = sessionId,   // PR #157 Phase B — plumb session
-            OriginalMessage = req.Message,
-            CurrentMessage  = req.Message,
-            Services        = services,
-        };
-
-        foreach (var hook in _hooks)
-        {
-            var hookResult = await hook.OnRequestReceived(hookCtx, ct);
-            if (hookResult.MutatedMessage is not null)
-                hookCtx.CurrentMessage = hookResult.MutatedMessage;
-            if (!hookResult.Cancel) continue;
-
-            return new ChatResponse(
-                NaturalLanguageAnswer: hookResult.BlockedResponse?.Result ?? "Request blocked.",
-                Candidates: [],
-                Routing: new AgentRoutingMetadata("hook", 1f, "hook-blocked"));
-        }
-
-        var message = hookCtx.CurrentMessage;
-
-        // ── Deterministic algebra fast-path (parity with AnswerAsync) ─────────
-        // Algebra prompts are pure finite math: answer them without embeddings or
-        // the LLM, exactly as the non-streaming path does, so the AG-UI stream
-        // does not depend on an embedding endpoint for them.
-        var algebraFastPath = await TryAnswerWithAlgebraFastPathAsync(
-            req, message, sessionId, correlationId, activity: null, Stopwatch.StartNew(), ct);
-        if (algebraFastPath is not null)
-        {
-            foreach (var word in algebraFastPath.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                await onToken(word + " ");
-
-            return algebraFastPath;
-        }
-
-        // ── Follow-up context enrichment for the routing pass ────────────────
-        // Same enrichment as the non-streaming AnswerAsync path (see task #168).
-        // The streaming path is the one the React demo uses, so without this
-        // line the headline "Show me a practical example" follow-up fix would
-        // not actually fire on the live surface — caught by code-review 2026-05-14.
-        var routingMessage = routingContextEnricher.EnrichIfFollowUp(message, sessionId, req.History);
-
-        // ── Unified semantic intent dispatch (replaces the legacy algebra check
-        //    and the per-skill CanHandle foreach). One embedding similarity pass
-        //    over IIntent registrations covers algebra, deterministic skills,
-        //    and tab-handling intents. See
-        //    docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
-        //    §"Routing classifiers".
-        var semanticResp = await TryDispatchViaIntentAsync(routingMessage, message, ct);
-        if (semanticResp is not null)
-        {
-            foreach (var word in semanticResp.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                await onToken(word + " ");
-
-            historyStore.AddTurn(sessionId, "assistant", semanticResp.NaturalLanguageAnswer);
-            return semanticResp;
-        }
-
-        if (TrySelectDeterministicAgent(message, out var deterministicAgent, out var deterministicRouting))
-        {
-            var agentResponse = await deterministicAgent.ProcessAsync(new AgentRequest
-            {
-                Query = message,
-                ConversationHistory = agentHistory
-            }, ct);
-
-            foreach (var word in agentResponse.Result.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                await onToken(word + " ");
-
-            historyStore.AddTurn(sessionId, "assistant", agentResponse.Result);
-            return new ChatResponse(
-                NaturalLanguageAnswer: agentResponse.Result,
-                Candidates: [],
-                Routing: deterministicRouting with { Confidence = Math.Max(deterministicRouting.Confidence, agentResponse.Confidence) },
-                DebugParams: new { Mode = "DeterministicAgent", Agent = deterministicAgent.AgentId });
-        }
-
-        // Invalid chord names only (ga#745): decline before the LLM agent path.
-        if (DeclineInvalidChordNames(message) is { } invalidChordResp)
-        {
-            foreach (var word in invalidChordResp.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                await onToken(word + " ");
-
-            historyStore.AddTurn(sessionId, "assistant", invalidChordResp.NaturalLanguageAnswer);
-            return invalidChordResp;
-        }
-
-        // Route the request and extract filters in parallel (same as AnswerAsync)
-        var filtersTask = queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
-        var routingTask = router.RouteAsync(req.Message, ct);
-        await Task.WhenAll(filtersTask, routingTask);
-        var filters = filtersTask.Result;
-        var routing = routingTask.Result;
-
-        var routingMetadata = new AgentRoutingMetadata(
-            routing.SelectedAgent.AgentId,
-            routing.Confidence,
-            routing.RoutingMethod);
-
-        // For tab/path-optimization intents fall back to non-streaming path.
-        // Dispatch by the LLM-extracted filter intent (no string-match keywords).
-        // Guarded by HasTabContent: filter extractor sometimes mis-tags
-        // theory prose ("Explain voice leading in jazz") as AnalyzeTab.
-        // Never enter the tab branch when there is literally no tab
-        // notation in the message — falls through to the agent path.
-        if ((routing.SelectedAgent.AgentId == AgentIds.Tab ||
-             filters?.Intent is "OptimizePath" or "AnalyzeTab")
-            && HasTabContent(req.Message))
-        {
-            ChatResponse fallback;
-            if (filters?.Intent == "OptimizePath")
-                fallback = await tabAnalysisService.OptimizePathAsync(req.Message, ct);
-            else
-                fallback = await tabAnalysisService.AnalyzeTabAsync(req.Message, ct);
-
-            fallback = fallback with { Routing = routingMetadata, QueryFilters = filters };
-
-            // Emit the full answer as word-level simulated tokens
-            foreach (var word in fallback.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                await onToken(word + " ");
-
-            historyStore.AddTurn(sessionId, "assistant", fallback.NaturalLanguageAnswer);
-            return fallback;
-        }
-
-        // For all other agents: stream token-by-token if the selected agent supports it
-        if (routing.SelectedAgent is GuitarAlchemistAgentBase streamingAgent)
-        {
-            var fullText = new StringBuilder();
-            await foreach (var token in streamingAgent.ProcessStreamingAsync(
-                req.Message, conversationHistory: agentHistory, cancellationToken: ct))
-            {
-                await onToken(token);
-                fullText.Append(token);
-            }
-
-            var answer = fullText.ToString();
-            historyStore.AddTurn(sessionId, "assistant", answer);
-
-            // Build a minimal ChatResponse with the streamed text
-            return new ChatResponse(
-                answer,
-                [],
-                Routing: routingMetadata,
-                QueryFilters: filters);
-        }
-
-        // Fallback: non-streaming path with word-level simulation
-        var response = await tabOrchestrator.AnswerAsync(req, ct);
-        response = response with { Routing = routingMetadata, QueryFilters = filters };
-        foreach (var word in response.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-            await onToken(word + " ");
-        historyStore.AddTurn(sessionId, "assistant", response.NaturalLanguageAnswer);
-        return response;
+        ArgumentNullException.ThrowIfNull(onToken);
+        return RunCascadeAsync(req, onToken, ct);
     }
 
     /// <remarks>
@@ -343,13 +178,46 @@ public class ProductionOrchestrator(
     /// independent review closed by re-inlining the original defect with the
     /// whole suite still green. See <c>ProductionChatOrchestratorClientTests</c>.
     /// </remarks>
-    public virtual async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
+    public virtual Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default) =>
+        RunCascadeAsync(req, onToken: null, ct);
+
+    /// <summary>
+    /// One request's pass through the cascade: the hook-processed message, the identifiers
+    /// every hook context carries, the agent history, and how the answer is emitted
+    /// (<see cref="OnToken"/> is null on the non-streaming path).
+    /// </summary>
+    private sealed record CascadeTurn(
+        ChatRequest Request,
+        string Message,
+        string SessionId,
+        Guid CorrelationId,
+        IReadOnlyList<ChatHistoryTurn> AgentHistory,
+        Func<string, Task>? OnToken,
+        Activity? Activity,
+        Stopwatch Stopwatch);
+
+    /// <summary>
+    /// The single routing cascade behind both entry points. Order: request hooks →
+    /// deterministic voicing guard → algebra fast path → semantic intent dispatch (with the
+    /// skill hook lifecycle) → invalid-chord decline → LLM agent router (tab analysis, agent,
+    /// or RAG). Each branch ends in <see cref="DeliverAsync"/>, so every answer is emitted,
+    /// recorded in the session history, and passed to the response hooks the same way.
+    /// </summary>
+    private async Task<ChatResponse> RunCascadeAsync(
+        ChatRequest req,
+        Func<string, Task>? onToken,
+        CancellationToken ct)
     {
         using var activity = ChatbotActivitySource.StartActivity(ChatbotActivitySource.OrchestratorAnswer, req.Message);
         var sw = Stopwatch.StartNew();
 
         // ── Session management ───────────────────────────────────────────────
+        // Agents get the caller's turns, else the session's stored turns, read
+        // before the current message is added.
         var sessionId = req.SessionId ?? Guid.NewGuid().ToString("N");
+        var agentHistory = (req.History ?? historyStore.GetHistory(sessionId))
+            .Select(t => new ChatHistoryTurn(t.Role, t.Content))
+            .ToList();
         historyStore.AddTurn(sessionId, "user", req.Message);
 
         // One correlation ID for all ChatHookContext instances in this request chain.
@@ -364,6 +232,7 @@ public class ProductionOrchestrator(
             CurrentMessage  = req.Message,
             CorrelationId   = correlationId,
             SessionId       = sessionId,   // PR #157 Phase B — plumb session
+            Services        = services,
         };
 
         foreach (var hook in _hooks)
@@ -374,13 +243,16 @@ public class ProductionOrchestrator(
             if (!hookResult.Cancel) continue;
 
             sw.Stop();
-            return new ChatResponse(
+            var blocked = new ChatResponse(
                 NaturalLanguageAnswer: hookResult.BlockedResponse?.Result ?? "Request blocked.",
                 Candidates: [],
                 Routing: new AgentRoutingMetadata("hook", 1f, "hook-blocked"));
+            await EmitWordsAsync(onToken, blocked.NaturalLanguageAnswer);
+            return blocked;
         }
 
-        var message = hookCtx.CurrentMessage;
+        var turn = new CascadeTurn(
+            req, hookCtx.CurrentMessage, sessionId, correlationId, agentHistory, onToken, activity, sw);
 
         // ── Deterministic voicing guard runs BEFORE semantic intent routing ──
         // The semantic embedding router can mis-rank an explicit voicing query
@@ -389,13 +261,11 @@ public class ProductionOrchestrator(
         // matches on high-precision surface tokens (chord literal + voicing
         // keyword), so when it fires there is no ambiguity worth routing
         // semantically. Diagnosed 2026-05-07 by codex CLI second-opinion;
-        // roadmap P1 #6 (#81). The "formalize VoicingIntent" follow-up is
-        // separate — this just stops the misroute.
-        if (TrySelectDeterministicAgent(message, out var preIntentAgent, out var preIntentRouting))
+        // roadmap P1 #6 (#81). The guard is a pure function of the message, so
+        // it is not retried after semantic dispatch.
+        if (TrySelectDeterministicAgent(turn.Message, out var deterministicAgent, out var deterministicRouting))
         {
-            return await DispatchDeterministicAgentAsync(
-                req, message, sessionId, correlationId, preIntentAgent, preIntentRouting,
-                activity, sw, ct);
+            return await DispatchDeterministicAgentAsync(turn, deterministicAgent, deterministicRouting, ct);
         }
 
         // ── Deterministic algebra fast-path runs BEFORE semantic intent routing ──
@@ -408,10 +278,9 @@ public class ProductionOrchestrator(
         // bracketed/compact pitch-class set pattern. When it fires we already know
         // the prompt is algebra-shaped, so there is no value in paying the
         // embedding round-trip. Mirrors the deterministic voicing guard above.
-        var algebraFastPath = await TryAnswerWithAlgebraFastPathAsync(req, message, sessionId, correlationId, activity, sw, ct);
-        if (algebraFastPath is not null)
+        if (await TryAnswerWithAlgebraFastPathAsync(turn, ct) is { } algebraResponse)
         {
-            return algebraFastPath;
+            return algebraResponse;
         }
 
         // ── Follow-up context enrichment for the routing pass ────────────────
@@ -422,8 +291,8 @@ public class ProductionOrchestrator(
         // centroid). For follow-up-shaped messages, prepend the most recent
         // prior user turn to the routing query so the embedding represents
         // the conversation thread, not just the snippet. The downstream
-        // `message` variable stays clean (the LLM gets the real message
-        // plus full history separately).
+        // message stays clean (the LLM gets the real message plus full
+        // history separately).
         //
         // The history lookup checks BOTH (a) the in-memory historyStore
         // (session-scoped, populated by the just-added user turn plus any
@@ -435,145 +304,132 @@ public class ProductionOrchestrator(
         //
         // Live found 2026-05-14 via demos.guitaralchemist.com/chatbot — see
         // task #168.
-        var routingMessage = routingContextEnricher.EnrichIfFollowUp(message, sessionId, req.History);
+        var routingMessage = routingContextEnricher.EnrichIfFollowUp(turn.Message, sessionId, req.History);
 
         // ── Unified semantic intent dispatch with the hook lifecycle ─────────
         // One embedding similarity pass over IIntent registrations covers
-        // algebra, deterministic skills, and tab-handling intents. Replaces
-        // the legacy TryAnswerWithAlgebraAsync branch and the per-skill
-        // CanHandle foreach. See migration recommendation §"Routing classifiers".
-        var intentMatch = await intentRouter.RouteAsync(routingMessage, services, ct);
-        EmitRoutingTrace(intentMatch);
-        // Suppress a tab intent picked for a tabless message (e.g. "give me a ii-V-I
-        // progression in Bb") so it falls through to the LLM agent path below.
-        if (intentMatch is { } pick && !IsTabIntentWithoutTab(pick.Intent.Id, message))
+        // algebra, deterministic skills, and tab-handling intents. See
+        // docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
+        // §"Routing classifiers".
+        if (await TryDispatchViaIntentAsync(turn, routingMessage, ct) is { } intentResponse)
         {
-            // OnBeforeSkill hooks (intent.Id replaces the legacy MatchedSkillName).
-            var beforeCtx = new ChatHookContext
-            {
-                OriginalMessage  = req.Message,
-                CurrentMessage   = message,
-                MatchedSkillName = pick.Intent.Id,
-                CorrelationId    = correlationId,
-                SessionId        = sessionId,   // PR #157 Phase B
-            };
-            foreach (var hook in _hooks)
-            {
-                var r = await hook.OnBeforeSkill(beforeCtx, ct);
-                if (r.Cancel)
-                {
-                    sw.Stop();
-                    return new ChatResponse(
-                        NaturalLanguageAnswer: r.BlockedResponse?.Result ?? "Intent blocked.",
-                        Candidates: [],
-                        Routing: new AgentRoutingMetadata($"hook.{pick.Intent.Id}", 1f, "hook-blocked"));
-                }
-            }
-
-            var intentResult = await pick.Intent.ExecuteAsync(message, ct);
-
-            // A declined intent saw no input it handles; continue to the agent path with history.
-            if (!intentResult.Declined)
-            {
-                // Map IntentResult back to AgentResponse for hook compatibility.
-                // PR #185 (2026-05-12): forward Data so structured payloads
-                // (e.g. RememberThisSkill's MemoryWriteRequest) reach
-                // OnResponseSent hooks. Without this line — and the matching
-                // Data field on IntentResult + the forward in
-                // OrchestratorSkillIntent — durable-memory writes from the
-                // semantic-routing path silently fail because MemoryWriteHook
-                // pattern-matches on ctx.Response?.Data.
-                var skillRespForHooks = new AgentResponse
-                {
-                    AgentId    = pick.Intent.Id,
-                    Result     = intentResult.Answer,
-                    Confidence = intentResult.Confidence,
-                    Evidence   = intentResult.Evidence ?? [],
-                    Assumptions = [],
-                    Data       = intentResult.Data,
-                };
-
-                // OnAfterSkill hooks
-                var afterCtx = new ChatHookContext
-                {
-                    OriginalMessage  = req.Message,
-                    CurrentMessage   = message,
-                    MatchedSkillName = pick.Intent.Id,
-                    Response         = skillRespForHooks,
-                    CorrelationId    = correlationId,
-                    SessionId        = sessionId,   // PR #157 Phase B
-                };
-                foreach (var hook in _hooks)
-                    await hook.OnAfterSkill(afterCtx, ct);
-
-                sw.Stop();
-                activity?.SetTag("orchestration.branch", pick.Intent.Id);
-                activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
-
-                var chatResp = new ChatResponse(
-                    NaturalLanguageAnswer: intentResult.Answer,
-                    Candidates: [],
-                    Routing: new AgentRoutingMetadata(
-                        pick.Intent.Id,
-                        Math.Min(intentResult.Confidence, pick.Confidence),
-                        intentResult.RoutingMethodOverride ?? "semantic-intent"),
-                    Grounding: BuildGrounding(intentResult));
-
-                // OnResponseSent hooks (memory writing, analytics)
-                var sentCtx = new ChatHookContext
-                {
-                    OriginalMessage  = req.Message,
-                    CurrentMessage   = message,
-                    MatchedSkillName = pick.Intent.Id,
-                    Response         = skillRespForHooks,
-                    CorrelationId    = correlationId,
-                    SessionId        = sessionId,   // PR #157 Phase B — load-bearing for MemoryHook session scope
-                };
-                foreach (var hook in _hooks)
-                    await hook.OnResponseSent(sentCtx, ct);
-
-                historyStore.AddTurn(sessionId, "assistant", chatResp.NaturalLanguageAnswer);
-                return chatResp;
-            }
-
-            EmitDeclinedTrace(pick.Intent.Id);
-        }
-
-        if (TrySelectDeterministicAgent(message, out var deterministicAgent, out var deterministicRouting))
-        {
-            return await DispatchDeterministicAgentAsync(
-                req, message, sessionId, correlationId, deterministicAgent, deterministicRouting,
-                activity, sw, ct);
+            return intentResponse;
         }
 
         // Invalid chord names only (ga#745): decline before the LLM agent path.
-        if (DeclineInvalidChordNames(message) is { } invalidChordResp)
+        if (DeclineInvalidChordNames(turn.Message) is { } invalidChordResp)
         {
-            sw.Stop();
             activity?.SetTag("orchestration.branch", InvalidChordNames.RoutingMethod);
-            activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
-
-            historyStore.AddTurn(sessionId, "assistant", invalidChordResp.NaturalLanguageAnswer);
-
-            // OnResponseSent for parity with every other dispatch path (MemoryHook, analytics).
-            var declineSentCtx = new ChatHookContext
-            {
-                OriginalMessage = req.Message,
-                CurrentMessage  = message,
-                CorrelationId   = correlationId,
-                SessionId       = sessionId,
-                Response        = new AgentResponse
+            return await DeliverAsync(
+                turn,
+                invalidChordResp,
+                new AgentResponse
                 {
                     AgentId    = invalidChordResp.Routing!.AgentId,
                     Result     = invalidChordResp.NaturalLanguageAnswer,
                     Confidence = InvalidChordNames.DeclineConfidence,
                 },
-            };
-            foreach (var hook in _hooks)
-                await hook.OnResponseSent(declineSentCtx, ct);
-
-            return invalidChordResp;
+                matchedSkillName: null,
+                ct);
         }
+
+        return await AnswerWithAgentRouterAsync(turn, ct);
+    }
+
+    /// <summary>
+    /// Semantic intent dispatch with the skill hook lifecycle: <c>OnBeforeSkill</c> (which
+    /// may veto), the intent, then <c>OnAfterSkill</c>. Returns null when no intent scored
+    /// above threshold, when a tab intent was picked for a message without a tab, or when
+    /// the intent declined — the caller then continues to the LLM agent path.
+    /// </summary>
+    /// <param name="routingMessage">Message used ONLY for the embedding-router
+    /// score. May be enriched with prior conversation context. The intent's
+    /// <c>ExecuteAsync</c> receives <see cref="CascadeTurn.Message"/> so its
+    /// internal regex parsers see the raw text without the enrichment prefix.</param>
+    private async Task<ChatResponse?> TryDispatchViaIntentAsync(
+        CascadeTurn turn,
+        string routingMessage,
+        CancellationToken ct)
+    {
+        var match = await intentRouter.RouteAsync(routingMessage, services, ct);
+        EmitRoutingTrace(match);
+        if (match is not { } pick) return null;
+
+        // A tab intent picked for a tabless message (e.g. "give me a ii-V-I progression
+        // in Bb") cannot act — fall through to a real handler.
+        if (IsTabIntentWithoutTab(pick.Intent.Id, turn.Message)) return null;
+
+        // OnBeforeSkill hooks (intent.Id replaces the legacy MatchedSkillName).
+        var beforeCtx = NewHookContext(turn, pick.Intent.Id, response: null);
+        foreach (var hook in _hooks)
+        {
+            var r = await hook.OnBeforeSkill(beforeCtx, ct);
+            if (!r.Cancel) continue;
+
+            turn.Stopwatch.Stop();
+            var blocked = new ChatResponse(
+                NaturalLanguageAnswer: r.BlockedResponse?.Result ?? "Intent blocked.",
+                Candidates: [],
+                Routing: new AgentRoutingMetadata($"hook.{pick.Intent.Id}", 1f, "hook-blocked"));
+            await EmitWordsAsync(turn.OnToken, blocked.NaturalLanguageAnswer);
+            return blocked;
+        }
+
+        var intentResult = await pick.Intent.ExecuteAsync(turn.Message, ct);
+
+        // Map IntentResult back to AgentResponse for hook compatibility.
+        // PR #185 (2026-05-12): forward Data so structured payloads
+        // (e.g. RememberThisSkill's MemoryWriteRequest) reach
+        // OnResponseSent hooks. Without this line — and the matching
+        // Data field on IntentResult + the forward in
+        // OrchestratorSkillIntent — durable-memory writes from the
+        // semantic-routing path silently fail because MemoryWriteHook
+        // pattern-matches on ctx.Response?.Data.
+        var skillRespForHooks = new AgentResponse
+        {
+            AgentId     = pick.Intent.Id,
+            Result      = intentResult.Answer,
+            Confidence  = intentResult.Confidence,
+            Evidence    = intentResult.Evidence ?? [],
+            Assumptions = [],
+            Data        = intentResult.Data,
+        };
+
+        // OnAfterSkill pairs every OnBeforeSkill, a declined intent included, so hooks that
+        // open per-request state on OnBeforeSkill (ObservabilityHook's span) close it.
+        var afterCtx = NewHookContext(turn, pick.Intent.Id, skillRespForHooks);
+        foreach (var hook in _hooks)
+            await hook.OnAfterSkill(afterCtx, ct);
+
+        // A declined intent saw no input it handles; continue to the agent path with history.
+        if (intentResult.Declined)
+        {
+            EmitDeclinedTrace(pick.Intent.Id);
+            return null;
+        }
+
+        turn.Activity?.SetTag("orchestration.branch", pick.Intent.Id);
+
+        var chatResp = new ChatResponse(
+            NaturalLanguageAnswer: intentResult.Answer,
+            Candidates: [],
+            Routing: new AgentRoutingMetadata(
+                pick.Intent.Id,
+                Math.Min(intentResult.Confidence, pick.Confidence),
+                intentResult.RoutingMethodOverride ?? "semantic-intent"),
+            Grounding: BuildGrounding(intentResult));
+
+        return await DeliverAsync(turn, chatResp, skillRespForHooks, pick.Intent.Id, ct);
+    }
+
+    /// <summary>
+    /// The last stage of the cascade: the LLM agent router picks an agent while the filter
+    /// extractor reads the message, then the request goes to tab analysis, the selected
+    /// agent, or RAG. On the streaming path the agent streams its tokens as they arrive.
+    /// </summary>
+    private async Task<ChatResponse> AnswerWithAgentRouterAsync(CascadeTurn turn, CancellationToken ct)
+    {
+        var req = turn.Request;
 
         // Parallelise — both calls consume req.Message with no mutual dependency
         var filtersTask = queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
@@ -587,126 +443,115 @@ public class ProductionOrchestrator(
             routing.Confidence,
             routing.RoutingMethod);
 
-        activity?.SetTag(ChatbotActivitySource.TagAgentId, routing.SelectedAgent.AgentId);
-        activity?.SetTag(ChatbotActivitySource.TagAgentName, routing.SelectedAgent.Name);
-        activity?.SetTag(ChatbotActivitySource.TagRoutingMethod, routing.RoutingMethod);
-        activity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, routing.Confidence);
+        turn.Activity?.SetTag(ChatbotActivitySource.TagAgentId, routing.SelectedAgent.AgentId);
+        turn.Activity?.SetTag(ChatbotActivitySource.TagAgentName, routing.SelectedAgent.Name);
+        turn.Activity?.SetTag(ChatbotActivitySource.TagRoutingMethod, routing.RoutingMethod);
+        turn.Activity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, routing.Confidence);
 
         ChatResponse result;
+        var streamed = false;
         // LLM-extracted filter intent drives tab branch — no string keyword check.
         // (The semantic intent router upstream handles "make this smoother" /
         // "analyse this tab" via TabOptimizeIntent / TabAnalyzeIntent before we
         // reach this fallback, so this code only fires when the filter extractor
         // tagged the intent OR the agent router routed to AgentIds.Tab.)
-        // Guarded by HasTabContent: prevents mis-classification dispatching
-        // pure theory prose into the empty-tab fallback path. See comment
-        // on the streaming dispatch above for rationale.
+        // Guarded by HasTabContent: the filter extractor sometimes mis-tags
+        // theory prose ("Explain voice leading in jazz") as AnalyzeTab. Never
+        // enter the tab branch when there is literally no tab notation in the
+        // message — falls through to the agent path.
         var hasTabContent      = HasTabContent(req.Message);
         var shouldOptimizePath = filters?.Intent == "OptimizePath" && hasTabContent;
         var shouldAnalyzeTab   = (routing.SelectedAgent.AgentId == AgentIds.Tab ||
                                   filters?.Intent == "AnalyzeTab")
                                  && hasTabContent;
 
-        if (shouldAnalyzeTab || shouldOptimizePath)
+        if (shouldOptimizePath)
         {
-            if (shouldOptimizePath)
+            turn.Activity?.SetTag("orchestration.branch", "tab.path_optimization");
+            var optimized = await tabAnalysisService.OptimizePathAsync(req.Message, ct);
+            result = optimized with { Routing = routingMetadata, QueryFilters = filters };
+        }
+        else if (shouldAnalyzeTab)
+        {
+            turn.Activity?.SetTag("orchestration.branch", "tab.analysis");
+            var analyzed = await tabAnalysisService.AnalyzeTabAsync(req.Message, ct);
+            result = analyzed with { Routing = routingMetadata, QueryFilters = filters };
+        }
+        else if (routing.SelectedAgent is GuitarAlchemistAgentBase selectedAgent)
+        {
+            turn.Activity?.SetTag("orchestration.branch", $"agent.{selectedAgent.AgentId}");
+
+            string answer;
+            if (turn.OnToken is { } onToken)
             {
-                activity?.SetTag("orchestration.branch", "tab.path_optimization");
-                var optimized = await tabAnalysisService.OptimizePathAsync(req.Message, ct);
-                result = optimized with { Routing = routingMetadata, QueryFilters = filters };
+                var fullText = new StringBuilder();
+                await foreach (var token in selectedAgent.ProcessStreamingAsync(
+                    turn.Message, conversationHistory: turn.AgentHistory, cancellationToken: ct))
+                {
+                    await onToken(token);
+                    fullText.Append(token);
+                }
+
+                answer = fullText.ToString();
+                streamed = true;
             }
             else
             {
-                activity?.SetTag("orchestration.branch", "tab.analysis");
-                var analyzed = await tabAnalysisService.AnalyzeTabAsync(req.Message, ct);
-                result = analyzed with { Routing = routingMetadata, QueryFilters = filters };
+                var agentResponse = await selectedAgent.ProcessAsync(new AgentRequest
+                {
+                    Query = turn.Message,
+                    ConversationHistory = turn.AgentHistory,
+                }, ct);
+                answer = agentResponse.Result;
             }
+
+            result = new ChatResponse(
+                NaturalLanguageAnswer: answer,
+                Candidates: [],
+                Routing: routingMetadata,
+                QueryFilters: filters,
+                DebugParams: new { Mode = "Agent", Agent = selectedAgent.AgentId });
         }
         else
         {
-            if (routing.SelectedAgent is GuitarAlchemistAgentBase selectedAgent)
-            {
-                activity?.SetTag("orchestration.branch", $"agent.{selectedAgent.AgentId}");
-
-                var agentResponse = await selectedAgent.ProcessAsync(new AgentRequest
-                {
-                    Query = message,
-                    ConversationHistory = req.History?
-                        .Select(t => new ChatHistoryTurn(t.Role, t.Content))
-                        .ToList()
-                }, ct);
-
-                result = new ChatResponse(
-                    NaturalLanguageAnswer: agentResponse.Result,
-                    Candidates: [],
-                    Routing: routingMetadata,
-                    QueryFilters: filters,
-                    DebugParams: new { Mode = "Agent", Agent = selectedAgent.AgentId });
-            }
-            else
-            {
-                activity?.SetTag("orchestration.branch", "rag");
-                var response = await tabOrchestrator.AnswerAsync(req, ct);
-                result = response with { Routing = routingMetadata, QueryFilters = filters };
-            }
+            turn.Activity?.SetTag("orchestration.branch", "rag");
+            var response = await tabOrchestrator.AnswerAsync(req, ct);
+            result = response with { Routing = routingMetadata, QueryFilters = filters };
         }
 
-        sw.Stop();
-        activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
-
-        historyStore.AddTurn(sessionId, "assistant", result.NaturalLanguageAnswer);
-
-        // OnResponseSent fires for ALL paths — skill path above, and here for RAG/tab.
-        var ragSentCtx = new ChatHookContext
-        {
-            OriginalMessage = req.Message,
-            CurrentMessage  = message,
-            CorrelationId   = correlationId,
-            SessionId       = sessionId,   // PR #157 Phase B
-            Response        = new AgentResponse
+        return await DeliverAsync(
+            turn,
+            result,
+            new AgentResponse
             {
                 AgentId    = routing.SelectedAgent.AgentId,
                 Result     = result.NaturalLanguageAnswer ?? string.Empty,
                 Confidence = routing.Confidence,
             },
-        };
-        foreach (var hook in _hooks)
-            await hook.OnResponseSent(ragSentCtx, ct);
-
-        return result;
+            matchedSkillName: null,
+            ct,
+            alreadyEmitted: streamed);
     }
 
     /// <summary>
     /// Shared dispatch path for deterministic agents (e.g. VoicingAgent for
-    /// explicit voicing requests). Called from two positions in
-    /// <see cref="AnswerAsync"/>: a pre-semantic-routing guard that catches
-    /// high-precision voicing prompts before SemanticIntentRouter can mis-rank
-    /// them, and a post-semantic-routing fallback that catches any
-    /// deterministic case the intent router didn't.
+    /// explicit voicing requests). The cascade calls it before semantic intent
+    /// routing, so high-precision voicing prompts never reach
+    /// SemanticIntentRouter, which can mis-rank them.
     /// </summary>
     private async Task<ChatResponse> DispatchDeterministicAgentAsync(
-        ChatRequest req,
-        string message,
-        string sessionId,
-        Guid correlationId,
+        CascadeTurn turn,
         GuitarAlchemistAgentBase agent,
         AgentRoutingMetadata routing,
-        Activity? activity,
-        Stopwatch sw,
         CancellationToken ct)
     {
-        activity?.SetTag("orchestration.branch", $"deterministic.{agent.AgentId}");
+        turn.Activity?.SetTag("orchestration.branch", $"deterministic.{agent.AgentId}");
 
         var agentResponse = await agent.ProcessAsync(new AgentRequest
         {
-            Query = message,
-            ConversationHistory = req.History?
-                .Select(t => new ChatHistoryTurn(t.Role, t.Content))
-                .ToList()
+            Query = turn.Message,
+            ConversationHistory = turn.AgentHistory,
         }, ct);
-
-        sw.Stop();
-        activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
 
         var deterministicResponse = new ChatResponse(
             NaturalLanguageAnswer: agentResponse.Result,
@@ -714,20 +559,7 @@ public class ProductionOrchestrator(
             Routing: routing with { Confidence = Math.Max(routing.Confidence, agentResponse.Confidence) },
             DebugParams: new { Mode = "DeterministicAgent", Agent = agent.AgentId });
 
-        historyStore.AddTurn(sessionId, "assistant", deterministicResponse.NaturalLanguageAnswer);
-
-        var sentCtx = new ChatHookContext
-        {
-            OriginalMessage = req.Message,
-            CurrentMessage  = message,
-            CorrelationId   = correlationId,
-            SessionId       = sessionId,   // PR #157 Phase B — load-bearing for MemoryHook
-            Response        = agentResponse,
-        };
-        foreach (var hook in _hooks)
-            await hook.OnResponseSent(sentCtx, ct);
-
-        return deterministicResponse;
+        return await DeliverAsync(turn, deterministicResponse, agentResponse, matchedSkillName: null, ct);
     }
 
     /// <summary>
@@ -753,21 +585,14 @@ public class ProductionOrchestrator(
     /// protection, trace dashboards) can't tell whether the fast-path or the
     /// semantic-routed AlgebraIntent answered.
     /// </remarks>
-    private async Task<ChatResponse?> TryAnswerWithAlgebraFastPathAsync(
-        ChatRequest req,
-        string message,
-        string sessionId,
-        Guid correlationId,
-        Activity? activity,
-        Stopwatch sw,
-        CancellationToken ct)
+    private async Task<ChatResponse?> TryAnswerWithAlgebraFastPathAsync(CascadeTurn turn, CancellationToken ct)
     {
-        if (!algebraPromptClassifier.IsAlgebraPrompt(message))
+        if (!algebraPromptClassifier.IsAlgebraPrompt(turn.Message))
         {
             return null;
         }
 
-        var answer = await ixAlgebraService.TryAnswerAsync(message, ct);
+        var answer = await ixAlgebraService.TryAnswerAsync(turn.Message, ct);
         if (answer is null)
         {
             // Classifier said algebra-shaped but service couldn't extract a set.
@@ -778,9 +603,7 @@ public class ProductionOrchestrator(
             return null;
         }
 
-        sw.Stop();
-        activity?.SetTag("orchestration.branch", "algebra.fast_path");
-        activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+        turn.Activity?.SetTag("orchestration.branch", "algebra.fast_path");
 
         var algebraResponse = new ChatResponse(
             NaturalLanguageAnswer: answer.NaturalLanguageAnswer,
@@ -791,31 +614,80 @@ public class ProductionOrchestrator(
                 RoutingMethod: "ix-algebra"),
             Grounding: answer.Grounding);
 
-        historyStore.AddTurn(sessionId, "assistant", algebraResponse.NaturalLanguageAnswer);
-
-        // OnResponseSent for parity with every other dispatch path. Wrap the
-        // facts dictionary as evidence strings so MemoryHook / analytics see a
-        // shape consistent with skill responses.
-        var sentCtx = new ChatHookContext
-        {
-            OriginalMessage = req.Message,
-            CurrentMessage  = message,
-            CorrelationId   = correlationId,
-            SessionId       = sessionId,
-            Response        = new AgentResponse
+        // Wrap the facts dictionary as evidence strings so MemoryHook / analytics
+        // see a shape consistent with skill responses.
+        return await DeliverAsync(
+            turn,
+            algebraResponse,
+            new AgentResponse
             {
-                AgentId    = "algebra",
-                Result     = answer.NaturalLanguageAnswer,
-                Confidence = 1.0f,
-                Evidence   = answer.Facts.Select(kv => $"{kv.Key}: {kv.Value}").ToList(),
+                AgentId     = "algebra",
+                Result      = answer.NaturalLanguageAnswer,
+                Confidence  = 1.0f,
+                Evidence    = answer.Facts.Select(kv => $"{kv.Key}: {kv.Value}").ToList(),
                 Assumptions = [],
             },
-        };
+            matchedSkillName: null,
+            ct);
+    }
+
+    /// <summary>
+    /// Ends every answering branch of the cascade: emits the answer (unless the branch
+    /// already streamed it), records it in the session history, then runs the
+    /// <c>OnResponseSent</c> hooks (memory writing, analytics). The answer enters the
+    /// history only after it was emitted, so a stream the client never received is not
+    /// recorded.
+    /// </summary>
+    private async Task<ChatResponse> DeliverAsync(
+        CascadeTurn turn,
+        ChatResponse response,
+        AgentResponse hookResponse,
+        string? matchedSkillName,
+        CancellationToken ct,
+        bool alreadyEmitted = false)
+    {
+        turn.Stopwatch.Stop();
+        turn.Activity?.SetTag("orchestration.elapsed_ms", turn.Stopwatch.ElapsedMilliseconds);
+
+        if (!alreadyEmitted)
+            await EmitWordsAsync(turn.OnToken, response.NaturalLanguageAnswer);
+
+        historyStore.AddTurn(turn.SessionId, "assistant", response.NaturalLanguageAnswer);
+
+        var sentCtx = NewHookContext(turn, matchedSkillName, hookResponse);
         foreach (var hook in _hooks)
             await hook.OnResponseSent(sentCtx, ct);
 
-        return algebraResponse;
+        return response;
     }
+
+    /// <summary>
+    /// Emits a finished answer word by word on the streaming path; a no-op on the
+    /// non-streaming path.
+    /// </summary>
+    private static async Task EmitWordsAsync(Func<string, Task>? onToken, string text)
+    {
+        if (onToken is null) return;
+        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            await onToken(word + " ");
+    }
+
+    /// <summary>
+    /// A hook context for a lifecycle point after <c>OnRequestReceived</c>. Every context
+    /// carries the request's correlation and session ids (PR #157 Phase B: the session id is
+    /// load-bearing for MemoryHook's session scope).
+    /// </summary>
+    private ChatHookContext NewHookContext(CascadeTurn turn, string? matchedSkillName, AgentResponse? response) =>
+        new ChatHookContext
+        {
+            OriginalMessage  = turn.Request.Message,
+            CurrentMessage   = turn.Message,
+            MatchedSkillName = matchedSkillName,
+            Response         = response,
+            CorrelationId    = turn.CorrelationId,
+            SessionId        = turn.SessionId,
+            Services         = services,
+        };
 
     /// <summary>
     /// Declines an improvisation request that names only invalid chords ("which
@@ -893,46 +765,6 @@ public class ProductionOrchestrator(
                    message,
                    @"\b[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|dom)?\d*(?:[#b]\d+)?(?:/[A-G](?:#|b)?)?\s+(?:voicing|voicings|shape|shapes|fingering|fingerings)\b",
                    RegexOptions.IgnoreCase);
-    }
-
-    /// <summary>
-    /// Streaming-path entry to the unified semantic intent dispatch — used by
-    /// <see cref="AnswerStreamingAsync"/>. Returns the intent's response or
-    /// null when no intent scored above threshold (caller falls through to
-    /// the LLM agent path).
-    /// </summary>
-    /// <param name="routingMessage">Message used ONLY for the embedding-router
-    /// score. May be enriched with prior conversation context.</param>
-    /// <param name="executeMessage">Original user message — the intent's
-    /// <c>ExecuteAsync</c> receives this so its internal regex parsers see
-    /// the raw text without the enrichment prefix.</param>
-    private async Task<ChatResponse?> TryDispatchViaIntentAsync(
-        string routingMessage,
-        string executeMessage,
-        CancellationToken ct)
-    {
-        var match = await intentRouter.RouteAsync(routingMessage, services, ct);
-        EmitRoutingTrace(match);
-        if (match is not { } pick) return null;
-
-        // Tab intents cannot act without a tab present — fall through to a real handler.
-        if (IsTabIntentWithoutTab(pick.Intent.Id, executeMessage)) return null;
-
-        var result = await pick.Intent.ExecuteAsync(executeMessage, ct);
-        if (result.Declined)
-        {
-            EmitDeclinedTrace(pick.Intent.Id);
-            return null;
-        }
-
-        return new ChatResponse(
-            NaturalLanguageAnswer: result.Answer,
-            Candidates: [],
-            Routing: new AgentRoutingMetadata(
-                pick.Intent.Id,
-                Math.Min(result.Confidence, pick.Confidence),
-                result.RoutingMethodOverride ?? "semantic-intent"),
-            Grounding: BuildGrounding(result));
     }
 
     /// <summary>

@@ -40,10 +40,14 @@ public class ProductionOrchestratorHookPlumbingTests
 {
     /// <summary>
     /// Lower bound on the count of <c>new ChatHookContext</c> sites in
-    /// <c>ProductionOrchestrator.cs</c>. Set at the post-PR-#160 count.
+    /// <c>ProductionOrchestrator.cs</c>. Was 7 after PR #160; the single routing
+    /// cascade builds every context in two places (the request context and
+    /// <c>NewHookContext</c> for every later lifecycle point), and
+    /// <c>OrchestratorCascadeParityTests</c> checks the session id each hook
+    /// receives on both entry points at runtime.
     /// If you legitimately remove a site, lower this number deliberately.
     /// </summary>
-    private const int MinimumExpectedSites = 7;
+    private const int MinimumExpectedSites = 2;
 
     private const string SourceRelativePath =
         "Common/GA.Business.Core.Orchestration/Services/ProductionOrchestrator.cs";
