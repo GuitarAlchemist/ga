@@ -65,6 +65,35 @@ public class DefaultEmbeddingGeneratorFactoryTests
         });
     }
 
+    [TestCase("https://ollama.example.com", true)]
+    [TestCase("http://localhost:11434", false)]
+    public void Create_Override_KeepsTheOllamaAccessHeaders_LikeTheDefaultEmbedder(string baseUrl, bool expectHeaders)
+    {
+        // The default embedder (OllamaProvider.CreateEmbeddingGeneratorFromConfig) sends the
+        // Cloudflare Access service token to an HTTPS Ollama; a purpose override must reach
+        // the same gated endpoint, so it must carry the same headers (and never over HTTP).
+        var factory = new DefaultEmbeddingGeneratorFactory(
+            Config(
+                ("AI:Embedding:routing:Model", "bge-large"),
+                ("Ollama:BaseUrl", baseUrl),
+                ("Ollama:AccessClientId", "id.access"),
+                ("Ollama:AccessClientSecret", "secret")),
+            StubDefault());
+
+        var headers = HttpClientOf(factory.Create("routing")!)?.DefaultRequestHeaders;
+
+        Assert.That(headers?.Contains("CF-Access-Client-Id") == true, Is.EqualTo(expectHeaders));
+        Assert.That(headers?.Contains("CF-Access-Client-Secret") == true, Is.EqualTo(expectHeaders));
+    }
+
+    // The Ollama generator keeps its HttpClient private; read whichever field holds it.
+    private static HttpClient? HttpClientOf(object generator) =>
+        generator.GetType()
+            .GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            .Where(field => typeof(HttpClient).IsAssignableFrom(field.FieldType))
+            .Select(field => field.GetValue(generator) as HttpClient)
+            .FirstOrDefault(client => client is not null);
+
     [Test]
     public void Create_NullDefault_NoOverride_ReturnsNull()
     {
