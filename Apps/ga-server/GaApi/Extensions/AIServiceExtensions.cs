@@ -63,7 +63,7 @@ public static class AiServiceExtensions
         private void AddLlmServices(IConfiguration configuration)
         {
             // Configure the "Ollama" named HttpClient with BaseAddress and timeout here
-            // so that OllamaChatService (singleton) does not mutate BaseAddress after construction.
+            // so that consumers (the Ollama IChatClient, ChatProviderAvailability) never mutate BaseAddress.
             var ollamaBaseUrl = configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
             services.AddHttpClient("Ollama", client =>
             {
