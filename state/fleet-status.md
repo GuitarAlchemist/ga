@@ -18,7 +18,7 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#872](https://github.com/GuitarAlchemist/ga/pull/872) | refactor(config): route C# config loaders through ConfigFileLocator | 0d | UNKNOWN | 0 | spareilleux |
+| [#873](https://github.com/GuitarAlchemist/ga/pull/873) | build(domain-services): drop unused OnnxRuntime; document Domain.Core  | 0d | UNKNOWN | 0 | spareilleux |
 | [#867](https://github.com/GuitarAlchemist/ga/pull/867) | refactor(gaapi): delete dead ILGPU and strategy-manager vector search  | 0d | UNKNOWN | 0 | spareilleux |
 | [#859](https://github.com/GuitarAlchemist/ga/pull/859) | feat(agent-tree-r1): minimal GitHub comment sender for live dispatch ( (draft) | 0d | MERGEABLE | 0 | spareilleux |
 | [#858](https://github.com/GuitarAlchemist/ga/pull/858) | feat(scripts): agent-tree-r1 bounded supervision slice (draft, #855) (draft) | 1d | UNKNOWN | 1 | spareilleux |
@@ -104,6 +104,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-11-16T01:41:58.103982+00:00 UTC_
+_Generated: 2026-11-16T01:58:32.698938+00:00 UTC_
 
-_Commit: `a6cf2e1e89ef`_
+_Commit: `4c0f124094cb`_
