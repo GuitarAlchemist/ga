@@ -3,9 +3,9 @@ namespace GA.Domain.Services.Tonal.Cadences;
 using System.IO;
 using System.Linq;
 using GA.Business.Config;
+using GA.Domain.Core.Theory.Tonal.Cadences;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using GA.Domain.Core.Theory.Tonal.Cadences;
 
 public static class CadenceCatalog
 {
