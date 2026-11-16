@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "832c6656e7cee8585b3577cba44c067ef6348273",
-    "generatedAt": "2026-11-16T03:05:05.987579+00:00",
+    "commitSha": "2341b9a47e4819aef79e822b75f0362f38e5443b",
+    "generatedAt": "2026-11-16T03:12:47.929802+00:00",
     "repoCount": 5,
-    "totalPRs": 39
+    "totalPRs": 38
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 13,
+      "prCount": 12,
       "prs": [
         {
           "ageDays": 0,
@@ -138,18 +138,6 @@
           "number": 874,
           "title": "fix(chat): make every registered orchestrator skill routable",
           "url": "https://github.com/GuitarAlchemist/ga/pull/874"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T01:48:57Z",
-          "failingChecks": 0,
-          "headRef": "refactor/domain-layer-leaks",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 873,
-          "title": "build(domain-services): drop unused OnnxRuntime; document Domain.Core -> Config leak",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/873"
         },
         {
           "ageDays": 0,
@@ -188,7 +176,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/854"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "app/claude",
           "createdAt": "2026-11-14T03:06:25Z",
           "failingChecks": 0,
