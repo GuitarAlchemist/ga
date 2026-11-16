@@ -11,7 +11,7 @@ using GA.Business.ML.Agents.Skills;
 [TestFixture]
 public class InvalidChordNamesTests
 {
-    private const string CorpusRelativePath = "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml";
+    private const string CorpusRelativePath = "Tests/Apps/GaApi.Tests/Corpus/prompts.yaml";
 
     [TestCase("which arpeggio fits Hm Q7", new[] { "Hm", "Q7" })]
     [TestCase("what scale over X7alt", new[] { "X7alt" })]

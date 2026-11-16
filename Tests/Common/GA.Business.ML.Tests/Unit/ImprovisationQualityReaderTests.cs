@@ -18,8 +18,6 @@ using GA.Business.ML.Agents.Skills;
 public class ImprovisationQualityReaderTests
 {
     [TestCase("C", "Major")]
-    [TestCase("CM9", "Minor7")]
-    [TestCase("CM13", "Minor7")]
     [TestCase("CΔ", "Major7")]
     [TestCase("CΔ7", "Major7")]
     [TestCase("Cmaj7", "Major7")]
@@ -95,14 +93,30 @@ public class ImprovisationQualityReaderTests
     [TestCase("CmMaj7", "MinorMajor7")]
     [TestCase("Cminmaj7", "MinorMajor7")]
     [TestCase("Cm(maj7)", "MinorMajor7")]
-    [TestCase("CmM7", "Minor")]
     [TestCase("Cm7#5", "Augmented")]
     [TestCase("Cxyz", "Unknown")]
+    [TestCase("CDIM7", "Diminished7")]
+    [TestCase("CDOM7", "Dominant7")]
+    [TestCase("CMAJ7", "Major7")]
+    [TestCase("CMIN7", "Minor7")]
     public void InferQuality_KeepsClassification(string chord, string expectedKind) =>
         Assert.That(ImprovisationSkill.InferQuality(chord).Kind.ToString(), Is.EqualTo(expectedKind));
 
     [TestCase("CM", "Major")] // was Minor
     [TestCase("CM7", "Major7")] // was Minor7
+    [TestCase("CM6", "Major")] // was MinorMajor7
+    [TestCase("CM9", "Major7")] // was Minor7
+    [TestCase("CM11", "Major7")] // was Minor7
+    [TestCase("CM13", "Major7")] // was Minor7
+    [TestCase("CmM7", "MinorMajor7")] // was Minor
+    [TestCase("CmM9", "MinorMajor7")] // was Minor
+    [TestCase("CM7#11", "LydianMaj7")] // was Minor7
+    [TestCase("CM9#11", "Major7")] // was Minor7
+    [TestCase("CM7b5", "Major7")] // was HalfDiminished
+    [TestCase("CM7#5", "Major7")] // was Augmented
+    [TestCase("CM7sus4", "Major7")] // was SuspendedDominant
+    [TestCase("CM69", "Major")] // was MinorMajor7
+    [TestCase("CM6/9", "Major")] // was MinorMajor7
     [TestCase("Cmaj", "Major")] // was Minor
     [TestCase("CMaj", "Major")] // was Minor
     [TestCase("Cmajor", "Major")] // was Minor

@@ -5,7 +5,7 @@ date: 2026-05-13
 related:
   - docs/plans/2026-05-07-chatbot-roadmap.md
   - docs/plans/2026-05-13-skills-domain-backed-refactor-plan.md
-  - Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml
+  - Tests/Apps/GaApi.Tests/Corpus/prompts.yaml
   - Scripts/run-prompt-corpus.ps1
 ---
 
@@ -17,7 +17,7 @@ How to run a long-running autonomous iteration on the GA chatbot using the promp
 
 | Piece | Role | Where |
 |---|---|---|
-| Oracle | YAML corpus + invariants | `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml` |
+| Oracle | YAML corpus + invariants | `Tests/Apps/GaApi.Tests/Corpus/prompts.yaml` |
 | Runner | NUnit test exec + failure aggregation | `Tests/Apps/GaChatbot.Api.Tests/Corpus/PromptCorpusTests.cs` |
 | Loop-friendly wrapper | Picks worst failures, emits JSON | `Scripts/run-prompt-corpus.ps1` |
 | Target hosts | The actual chatbot under test | `GaChatbot.Api` (5252) + `GaApi` (5232 for hubs) |

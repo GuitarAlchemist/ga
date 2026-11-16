@@ -22,8 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Corpus\prompts.yaml" CopyToOutputDirectory="PreserveNewest" />
-    <None Update="Corpus\sessions.yaml" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The corpus lives with the canonical chat host's tests (ADR-0005). The HTTP runners
+         here still replay it against GaChatbot.Api while that host serves the public demo. -->
+    <None Include="..\GaApi.Tests\Corpus\prompts.yaml" Link="Corpus\prompts.yaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\GaApi.Tests\Corpus\sessions.yaml" Link="Corpus\sessions.yaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -39,7 +39,7 @@ function Test-GaLoopPolicy {
         '.github/workflows/**', 'governance/demerzel/**', 'mcp-servers/**',
         'Common/GA.Business.ML/Embeddings/**', 'Common/GA.Business.Core/**',
         'docs/runbooks/chatbot-improvement-loop.md',
-        'Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml', 'docs/contracts/**',
+        'Tests/Apps/GaApi.Tests/Corpus/prompts.yaml', 'docs/contracts/**',
         'AllProjects.slnx', 'global.json', 'Directory.Packages.props',
         'Directory.Build.props', 'Directory.Build.targets',
         'ga.loop-policy.json', 'agent-blackbox.policy.json'
