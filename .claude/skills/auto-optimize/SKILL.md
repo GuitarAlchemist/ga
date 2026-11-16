@@ -171,7 +171,7 @@ which are protected. Honor both.
       "Common/GA.Domain.Services/**/*.cs"
     ],
     "protected": [
-      "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml",
+      "Tests/Apps/GaApi.Tests/Corpus/prompts.yaml",
       "docs/runbooks/chatbot-improvement-loop.md",
       "Scripts/run-prompt-corpus.ps1",
       ".github/workflows/*"

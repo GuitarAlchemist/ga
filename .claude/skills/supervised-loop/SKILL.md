@@ -77,7 +77,7 @@ an operator-reviewed change to the protected policy file.
   and `Common/GA.Business.ML/Agents/Mcp/**`
 - editing tests outside the two filename families explicitly listed in
   `allow_edit`
-- editing `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml` (golden corpus)
+- editing `Tests/Apps/GaApi.Tests/Corpus/prompts.yaml` (golden corpus)
 - editing `AllProjects.slnx`, `global.json`, `Directory.Build.*`,
   `Directory.Packages.props` (build-critical)
 - rotating secrets, touching billing/legal/customer commitments
@@ -156,7 +156,7 @@ Do **not** pick anything that touches `Common/GA.Business.Core/**`,
 `Common/GA.Business.ML/Embeddings/**` (OPTIC-K), `docs/contracts/**`,
 `governance/demerzel/**`, `mcp-servers/**`, `.github/workflows/**`,
 `AllProjects.slnx`, `Directory.Build.*`, `global.json`, or
-`Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml`.
+`Tests/Apps/GaApi.Tests/Corpus/prompts.yaml`.
 
 ### Step 4: Plan the slice
 

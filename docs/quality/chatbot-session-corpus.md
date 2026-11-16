@@ -12,7 +12,7 @@ they have a conversation. This corpus measures that.
 
 ## What
 
-`Tests/Apps/GaChatbot.Api.Tests/Corpus/sessions.yaml` defines full multi-turn
+`Tests/Apps/GaApi.Tests/Corpus/sessions.yaml` defines full multi-turn
 conversations across six journeys. Two target **GA's differentiated domain** —
 **pitch-class set theory** (the SetClass engine: interval-class vector,
 Z-relation, T/I equivalence, symmetric families) and the **OPTIC-K voicing

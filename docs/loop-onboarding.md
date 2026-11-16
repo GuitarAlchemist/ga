@@ -125,7 +125,7 @@ The supervised loop never bypasses any of these:
 - Production deploys or secret rotation.
 - Editing the chatbot improvement runbook
   (`docs/runbooks/chatbot-improvement-loop.md`) or the golden prompt
-  corpus (`Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml`).
+  corpus (`Tests/Apps/GaApi.Tests/Corpus/prompts.yaml`).
 - Applying any review-bypass label.
 - Any file matching `protected_paths` in
   [ga.loop-policy.json](../ga.loop-policy.json).

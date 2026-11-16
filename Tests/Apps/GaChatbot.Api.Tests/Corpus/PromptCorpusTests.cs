@@ -89,13 +89,8 @@ public class PromptCorpusTests
         if (!File.Exists(yamlPath))
         {
             // Fall back to the source-tree location so the corpus stays
-            // editable without rebuilding (the csproj will be updated to
-            // CopyToOutputDirectory=PreserveNewest in the same change).
-            yamlPath = Path.Combine(
-                AppContext.BaseDirectory,
-                "..", "..", "..",
-                "Corpus",
-                "prompts.yaml");
+            // editable without rebuilding.
+            yamlPath = TestPaths.RepositoryPath("Tests", "Apps", "GaApi.Tests", "Corpus", "prompts.yaml");
         }
 
         var yaml = File.ReadAllText(yamlPath);
