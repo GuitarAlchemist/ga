@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "dc44f5fc55767e1928a48e016eec49d5ce83cd0b",
-    "generatedAt": "2026-11-16T23:08:44.165099+00:00",
+    "commitSha": "0701d67204b6d805d1194cdfbda8974b771b9aa1",
+    "generatedAt": "2026-11-16T23:25:26.292909+00:00",
     "repoCount": 5,
-    "totalPRs": 31
+    "totalPRs": 27
   },
   "repos": [
     {
@@ -113,20 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 11,
+      "prCount": 10,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T14:05:00Z",
-          "failingChecks": 0,
-          "headRef": "feat/deploy-gaapi-5262",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 883,
-          "title": "feat(deploy): production GaApi deploy on :5262",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/883"
-        },
         {
           "ageDays": 1,
           "author": "spareilleux",
@@ -261,7 +249,7 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 9,
+      "prCount": 6,
       "prs": [
         {
           "ageDays": 0,
@@ -274,42 +262,6 @@
           "number": 560,
           "title": "refactor(ixctl): one way to make a cursor exact, and ask it where it is",
           "url": "https://github.com/GuitarAlchemist/ix/pull/560"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T05:50:43Z",
-          "failingChecks": 0,
-          "headRef": "refactor/ixctl-host-stop-record",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 559,
-          "title": "refactor(ixctl): one definition of the host.stop line for its writer and reader",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/559"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T05:50:11Z",
-          "failingChecks": 0,
-          "headRef": "refactor/ixctl-one-boot",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 558,
-          "title": "refactor(ixctl): bootInstance is the one way to start an instance",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/558"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T05:23:31Z",
-          "failingChecks": 0,
-          "headRef": "refactor/ixctl-replace-ops",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 557,
-          "title": "refactor(ixctl): replace takes its file operations as a value",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/557"
         },
         {
           "ageDays": 1,
