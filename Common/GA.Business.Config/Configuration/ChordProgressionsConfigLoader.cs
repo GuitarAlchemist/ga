@@ -1,5 +1,6 @@
 namespace GA.Domain.Services;
 
+using GA.Business.Config;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -72,27 +73,15 @@ public static class ChordProgressionsConfigLoader
         }
     }
 
-    private static ChordProgressionsConfiguration LoadConfiguration()
+    private static ChordProgressionsConfiguration LoadConfiguration() =>
+        LoadConfiguration(ConfigFileLocator.findFile("ChordProgressions.yaml")?.Value);
+
+    /// <summary>Loads from <paramref name="yamlPath"/>, or returns the built-in fallback when it is null, missing or empty.</summary>
+    internal static ChordProgressionsConfiguration LoadConfiguration(string? yamlPath)
     {
         try
         {
-            var yamlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ChordProgressions.yaml");
-            if (!File.Exists(yamlPath))
-            {
-                // Try alternative paths
-                var alternativePaths = new[]
-                {
-                    Path.Combine(Directory.GetCurrentDirectory(), "ChordProgressions.yaml"),
-                    Path.Combine(Directory.GetCurrentDirectory(), "Common", "GA.Business.Config",
-                        "ChordProgressions.yaml"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Common",
-                        "GA.Business.Config", "ChordProgressions.yaml")
-                };
-
-                yamlPath = alternativePaths.FirstOrDefault(File.Exists) ?? yamlPath;
-            }
-
-            if (File.Exists(yamlPath))
+            if (yamlPath is not null && File.Exists(yamlPath))
             {
                 var yaml = File.ReadAllText(yamlPath);
                 var deserializer = new DeserializerBuilder()

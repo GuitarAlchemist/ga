@@ -1,5 +1,6 @@
 namespace GA.Business.ML.Musical.Enrichment;
 
+using GA.Business.Config;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -13,26 +14,22 @@ public class ModalSchemaService
     private readonly Dictionary<int, ModalEntry> _modesByIndex = [];
     private readonly Dictionary<string, ModalEntry> _modesByName = new(StringComparer.OrdinalIgnoreCase);
 
-    private ModalSchemaService() => LoadSchema();
+    private ModalSchemaService() : this(ConfigFileLocator.findFile("ModalEmbedding.yaml")?.Value)
+    {
+    }
+
+    /// <summary>Loads from <paramref name="yamlPath"/>; a null or missing path leaves the schema empty.</summary>
+    internal ModalSchemaService(string? yamlPath) => LoadSchema(yamlPath);
 
     public static ModalSchemaService Instance => _instance ??= new();
 
     public int TotalModes { get; private set; }
 
-    private void LoadSchema()
+    private void LoadSchema(string? path)
     {
         try
         {
-            var possiblePaths = new[]
-            {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModalEmbedding.yaml"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "Common",
-                    "GA.Business.Config", "ModalEmbedding.yaml"),
-                "ModalEmbedding.yaml"
-            };
-
-            var path = possiblePaths.FirstOrDefault(File.Exists);
-            if (path == null)
+            if (path == null || !File.Exists(path))
             {
                 Console.WriteLine("[ModalSchemaService] Warning: ModalEmbedding.yaml not found.");
                 return;

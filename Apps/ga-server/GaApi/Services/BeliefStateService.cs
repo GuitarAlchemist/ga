@@ -177,22 +177,11 @@ public sealed class BeliefStateService(
     private string? GetBeliefsDirectory()
     {
         var demerzelRoot = configuration["Governance:DemerzelRoot"]
-            ?? FindDemerzelRoot();
+            ?? DemerzelRootLocator.Find();
 
         return demerzelRoot != null
             ? Path.Combine(demerzelRoot, "state", "beliefs")
             : null;
-    }
-
-    private static string? FindDemerzelRoot()
-    {
-        var candidates = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "governance", "demerzel"),
-            Path.Combine(Directory.GetCurrentDirectory(), "governance", "demerzel"),
-            @"C:\Users\spare\source\repos\ga\governance\demerzel",
-        };
-        return candidates.FirstOrDefault(Directory.Exists);
     }
 }
 

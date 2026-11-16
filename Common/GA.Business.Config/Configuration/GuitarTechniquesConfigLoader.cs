@@ -1,5 +1,6 @@
 namespace GA.Domain.Services;
 
+using GA.Business.Config;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -109,27 +110,15 @@ public static class GuitarTechniquesConfigLoader
         }
     }
 
-    private static GuitarTechniquesConfiguration LoadConfiguration()
+    private static GuitarTechniquesConfiguration LoadConfiguration() =>
+        LoadConfiguration(ConfigFileLocator.findFile("GuitarTechniques.yaml")?.Value);
+
+    /// <summary>Loads from <paramref name="yamlPath"/>, or returns the built-in fallback when it is null, missing or empty.</summary>
+    internal static GuitarTechniquesConfiguration LoadConfiguration(string? yamlPath)
     {
         try
         {
-            var yamlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GuitarTechniques.yaml");
-            if (!File.Exists(yamlPath))
-            {
-                // Try alternative paths
-                var alternativePaths = new[]
-                {
-                    Path.Combine(Directory.GetCurrentDirectory(), "GuitarTechniques.yaml"),
-                    Path.Combine(Directory.GetCurrentDirectory(), "Common", "GA.Business.Config",
-                        "GuitarTechniques.yaml"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Common",
-                        "GA.Business.Config", "GuitarTechniques.yaml")
-                };
-
-                yamlPath = alternativePaths.FirstOrDefault(File.Exists) ?? yamlPath;
-            }
-
-            if (File.Exists(yamlPath))
+            if (yamlPath is not null && File.Exists(yamlPath))
             {
                 var yaml = File.ReadAllText(yamlPath);
                 var deserializer = new DeserializerBuilder()

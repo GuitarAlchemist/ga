@@ -1,5 +1,6 @@
 namespace GA.Domain.Services;
 
+using GA.Business.Config;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -12,20 +13,14 @@ public static class IconicChordsConfigLoader
 
     public static IconicChordsConfiguration Configuration => _configuration.Value;
 
-    private static IconicChordsConfiguration LoadConfiguration()
+    private static IconicChordsConfiguration LoadConfiguration() =>
+        LoadConfiguration(ConfigFileLocator.findFile("IconicChords.yaml")?.Value);
+
+    /// <summary>Loads from <paramref name="yamlPath"/>, or returns the built-in fallback when it is null, missing or empty.</summary>
+    internal static IconicChordsConfiguration LoadConfiguration(string? yamlPath)
     {
         try
         {
-            string? yamlPath = null;
-            try
-            {
-                yamlPath = FindYamlFile();
-            }
-            catch
-            {
-                // ignore, we'll provide defaults below
-            }
-
             if (!string.IsNullOrEmpty(yamlPath) && File.Exists(yamlPath))
             {
                 var yaml = File.ReadAllText(yamlPath);
@@ -85,22 +80,6 @@ public static class IconicChordsConfigLoader
                 ]
             };
         }
-    }
-
-    private static string FindYamlFile()
-    {
-        // Try multiple possible locations
-        var possiblePaths = new[]
-        {
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "IconicChords.yaml"),
-            Path.Combine(Directory.GetCurrentDirectory(), "IconicChords.yaml"),
-            Path.Combine(Directory.GetCurrentDirectory(), "Common", "GA.Business.Config", "IconicChords.yaml"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Common", "GA.Business.Config",
-                "IconicChords.yaml")
-        };
-
-        return possiblePaths.FirstOrDefault(File.Exists)
-               ?? throw new FileNotFoundException("IconicChords.yaml not found in any expected location");
     }
 
     public static void ReloadConfiguration() =>
