@@ -83,17 +83,12 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
         new(@"\bparallel\s+maj(?:or)?\s+of\s+(?<key>[A-Ga-g][b#♭♯]?)\s*(?<quality>maj(?:or)?|min(?:or)?)?",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    // Map pitch-letter spellings → semitone PC (0..11)
-    private static readonly Dictionary<string, int> RootPc = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["C"]  = 0,  ["C#"] = 1, ["Db"] = 1, ["C♯"] = 1, ["D♭"] = 1,
-        ["D"]  = 2,  ["D#"] = 3, ["Eb"] = 3, ["D♯"] = 3, ["E♭"] = 3,
-        ["E"]  = 4,
-        ["F"]  = 5,  ["F#"] = 6, ["Gb"] = 6, ["F♯"] = 6, ["G♭"] = 6,
-        ["G"]  = 7,  ["G#"] = 8, ["Ab"] = 8, ["G♯"] = 8, ["A♭"] = 8,
-        ["A"]  = 9,  ["A#"] = 10, ["Bb"] = 10, ["A♯"] = 10, ["B♭"] = 10,
-        ["B"]  = 11,
-    };
+    // The shared root table also reads B#, Cb, E# and Fb. The parallel-key answers quote key signatures, so those
+    // four spellings stay refused here, as they were before the table was shared (theoretical keys: see #779).
+    private static readonly HashSet<string> EdgeSpellings = new(StringComparer.OrdinalIgnoreCase) { "B#", "Cb", "E#", "Fb" };
+
+    private static bool IsParallelKeyRoot(string key) =>
+        !EdgeSpellings.Contains(key) && ChordVocabulary.TryGetPitchClass(key, out _);
 
     // Circle-of-fifths position → key letter for major keys (sharps positive, flats negative)
     private static readonly string[] MajorByFifth =
@@ -164,7 +159,7 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
 
     private AgentResponse AnswerParallelMinor(string majorKey)
     {
-        if (!RootPc.TryGetValue(majorKey, out _))
+        if (!IsParallelKeyRoot(majorKey))
             return CannotParse(majorKey);
         var sharpsMaj = MajorSharpsFlats(majorKey);
         var sharpsMin = sharpsMaj - 3;  // parallel minor sits 3 positions counter-clockwise on the circle of fifths
@@ -177,7 +172,7 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
 
     private AgentResponse AnswerParallelMajor(string minorKey)
     {
-        if (!RootPc.TryGetValue(minorKey, out _))
+        if (!IsParallelKeyRoot(minorKey))
             return CannotParse(minorKey);
         var sb = new StringBuilder();
         sb.AppendLine($"The parallel major of **{minorKey} minor** is **{minorKey} major**.");

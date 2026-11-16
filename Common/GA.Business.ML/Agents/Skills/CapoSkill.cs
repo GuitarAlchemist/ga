@@ -63,18 +63,6 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
             @"\bcapo\s+(?:on\s+|fret\s+|at\s+)?(?<n2>\d{1,2})\b[^.?!]*?\b(?:play(?:ing)?\s+(?:a\s+|an\s+)?)?(?<shape2>[A-Ga-g][b#♭♯]?m?)\s+shape\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    // Pitch-letter → semitone PC (0..11)
-    private static readonly Dictionary<string, int> RootPc = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["C"]  = 0,  ["C#"] = 1, ["Db"] = 1,
-        ["D"]  = 2,  ["D#"] = 3, ["Eb"] = 3,
-        ["E"]  = 4,
-        ["F"]  = 5,  ["F#"] = 6, ["Gb"] = 6,
-        ["G"]  = 7,  ["G#"] = 8, ["Ab"] = 8,
-        ["A"]  = 9,  ["A#"] = 10, ["Bb"] = 10,
-        ["B"]  = 11,
-    };
-
     private static readonly string[] SharpNames =
         ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
@@ -158,8 +146,9 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
 
     private static bool TryParseRoot(string raw, out int pc, out string normalized)
     {
+        // Shared root table: the edge spellings (B#, Cb, E#, Fb) read too — a capo is pure pitch-class arithmetic.
         normalized = NormalizeKey(raw);
-        return RootPc.TryGetValue(normalized, out pc);
+        return ChordVocabulary.TryGetPitchClass(normalized, out pc);
     }
 
     private static string NormalizeKey(string raw)

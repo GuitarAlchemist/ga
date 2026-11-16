@@ -237,21 +237,11 @@ public sealed class AlternateTuningsSkill(ILogger<AlternateTuningsSkill> logger)
         return arr;
     }
 
-    private static readonly Dictionary<string, int> PcLookup = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["C"] = 0, ["C#"] = 1, ["Db"] = 1,
-        ["D"] = 2, ["D#"] = 3, ["Eb"] = 3,
-        ["E"] = 4,
-        ["F"] = 5, ["F#"] = 6, ["Gb"] = 6,
-        ["G"] = 7, ["G#"] = 8, ["Ab"] = 8,
-        ["A"] = 9, ["A#"] = 10, ["Bb"] = 10,
-        ["B"] = 11,
-    };
-
     private static string DescribeDelta(string standard, string alt)
     {
-        if (!PcLookup.TryGetValue(standard, out var stdPc) ||
-            !PcLookup.TryGetValue(alt, out var altPc))
+        // Shared root table: the edge spellings (B#, Cb, E#, Fb) read too — a string delta is pure pitch-class arithmetic.
+        if (!ChordVocabulary.TryGetPitchClass(standard, out var stdPc) ||
+            !ChordVocabulary.TryGetPitchClass(alt, out var altPc))
             return alt == standard ? "—" : "(?)";
 
         var diff = ((altPc - stdPc) % 12 + 12) % 12;
