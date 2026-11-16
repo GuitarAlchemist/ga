@@ -2,6 +2,7 @@ namespace GA.Domain.Services.Tonal.Cadences;
 
 using System.IO;
 using System.Linq;
+using GA.Business.Config;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using GA.Domain.Core.Theory.Tonal.Cadences;
@@ -12,12 +13,15 @@ public static class CadenceCatalog
 
     public static IReadOnlyList<CadenceDefinition> Items => _cadences.Value;
 
-    private static List<CadenceDefinition> LoadCadences()
+    private static List<CadenceDefinition> LoadCadences() =>
+        LoadCadences(ConfigFileLocator.findFile("Cadences.yaml")?.Value);
+
+    /// <summary>Loads from <paramref name="path"/>, or returns an empty catalog when it is null or missing.</summary>
+    internal static List<CadenceDefinition> LoadCadences(string? path)
     {
         try
         {
-            var path = FindConfigFile("Cadences.yaml");
-            if (string.IsNullOrEmpty(path)) return [];
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return [];
 
             var yaml = File.ReadAllText(path);
             var deserializer = new DeserializerBuilder()
@@ -33,22 +37,6 @@ public static class CadenceCatalog
             Console.WriteLine($"[CadenceCatalog] Error loading cadences: {ex.Message}");
             return [];
         }
-    }
-
-    private static string? FindConfigFile(string fileName)
-    {
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-
-        var candidates = new[]
-        {
-            Path.Combine(baseDir, fileName),
-            Path.Combine(baseDir, "Configuration", fileName),
-            // Dev environment fallbacks
-            Path.Combine(baseDir, "..", "..", "..", "..", "..", "Common", "GA.Business.Config", fileName),
-            Path.Combine(baseDir, "..", "..", "..", "Common", "GA.Business.Config", fileName)
-        };
-
-        return candidates.FirstOrDefault(File.Exists);
     }
 
     private static CadenceDefinition MapToDomain(CadenceDefinitionYaml source) =>

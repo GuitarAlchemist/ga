@@ -2,6 +2,7 @@ namespace GaApi.Controllers;
 
 using System.Text.Json;
 using GaApi.Hubs;
+using GaApi.Services;
 using Microsoft.AspNetCore.SignalR;
 using Path = System.IO.Path;
 
@@ -39,7 +40,7 @@ public class GovernanceController(
                 return Ok(_cachedGraph);
 
             var demerzelRoot = configuration["Governance:DemerzelRoot"]
-                ?? FindDemerzelRoot();
+                ?? DemerzelRootLocator.Find();
 
             if (demerzelRoot == null || !Directory.Exists(demerzelRoot))
             {
@@ -77,7 +78,7 @@ public class GovernanceController(
     [HttpGet("predictions")]
     public ActionResult GetPredictions()
     {
-        var demerzelRoot = configuration["Governance:DemerzelRoot"] ?? FindDemerzelRoot();
+        var demerzelRoot = configuration["Governance:DemerzelRoot"] ?? DemerzelRootLocator.Find();
         if (demerzelRoot == null) return Ok(new { predictions = Array.Empty<object>() });
 
         var predictionsFile = Path.Combine(demerzelRoot, "state", "markov", "predictions.json");
@@ -98,7 +99,7 @@ public class GovernanceController(
         if (string.IsNullOrWhiteSpace(filePath))
             return BadRequest(new { error = "filePath query parameter is required" });
 
-        var demerzelRoot = configuration["Governance:DemerzelRoot"] ?? FindDemerzelRoot();
+        var demerzelRoot = configuration["Governance:DemerzelRoot"] ?? DemerzelRootLocator.Find();
         if (demerzelRoot == null || !Directory.Exists(demerzelRoot))
             return NotFound(new { error = "Governance root not found" });
 
@@ -363,7 +364,7 @@ public class GovernanceController(
     [ResponseCache(Duration = 600)]
     public ActionResult GetGrammarMetadata()
     {
-        var demerzelRoot = configuration["Governance:DemerzelRoot"] ?? FindDemerzelRoot();
+        var demerzelRoot = configuration["Governance:DemerzelRoot"] ?? DemerzelRootLocator.Find();
         if (demerzelRoot == null)
             return Ok(new { sections = Array.Empty<object>(), keywords = Array.Empty<string>() });
 
@@ -618,19 +619,6 @@ public class GovernanceController(
             @"C:\Users\spare\source\repos\ga",
         };
         return candidates.FirstOrDefault(d => System.IO.File.Exists(Path.Combine(d, "BACKLOG.md")));
-    }
-
-    // ─── Find Demerzel root relative to solution ───
-    private static string? FindDemerzelRoot()
-    {
-        // Try relative to the repo root
-        var candidates = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "governance", "demerzel"),
-            Path.Combine(Directory.GetCurrentDirectory(), "governance", "demerzel"),
-            @"C:\Users\spare\source\repos\ga\governance\demerzel",
-        };
-        return candidates.FirstOrDefault(Directory.Exists);
     }
 
     // ─── Build the graph from filesystem ───

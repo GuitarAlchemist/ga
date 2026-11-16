@@ -247,21 +247,10 @@ public sealed class AlgedonicSignalService(
     private string? GetSignalsDirectory()
     {
         var demerzelRoot = configuration["Governance:DemerzelRoot"]
-            ?? FindDemerzelRoot();
+            ?? DemerzelRootLocator.Find();
 
         return demerzelRoot is not null
             ? Path.Combine(demerzelRoot, "state", "signals")
             : null;
-    }
-
-    private static string? FindDemerzelRoot()
-    {
-        var candidates = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "governance", "demerzel"),
-            Path.Combine(Directory.GetCurrentDirectory(), "governance", "demerzel"),
-            @"C:\Users\spare\source\repos\ga\governance\demerzel",
-        };
-        return candidates.FirstOrDefault(Directory.Exists);
     }
 }

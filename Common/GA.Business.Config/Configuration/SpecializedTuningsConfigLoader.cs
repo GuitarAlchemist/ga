@@ -1,5 +1,6 @@
 namespace GA.Domain.Services;
 
+using GA.Business.Config;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -95,27 +96,15 @@ public static class SpecializedTuningsConfigLoader
         }
     }
 
-    private static SpecializedTuningsConfiguration LoadConfiguration()
+    private static SpecializedTuningsConfiguration LoadConfiguration() =>
+        LoadConfiguration(ConfigFileLocator.findFile("SpecializedTunings.yaml")?.Value);
+
+    /// <summary>Loads from <paramref name="yamlPath"/>, or returns the built-in fallback when it is null, missing or empty.</summary>
+    internal static SpecializedTuningsConfiguration LoadConfiguration(string? yamlPath)
     {
         try
         {
-            var yamlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SpecializedTunings.yaml");
-            if (!File.Exists(yamlPath))
-            {
-                // Try alternative paths
-                var alternativePaths = new[]
-                {
-                    Path.Combine(Directory.GetCurrentDirectory(), "SpecializedTunings.yaml"),
-                    Path.Combine(Directory.GetCurrentDirectory(), "Common", "GA.Business.Config",
-                        "SpecializedTunings.yaml"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Common",
-                        "GA.Business.Config", "SpecializedTunings.yaml")
-                };
-
-                yamlPath = alternativePaths.FirstOrDefault(File.Exists) ?? yamlPath;
-            }
-
-            if (File.Exists(yamlPath))
+            if (yamlPath is not null && File.Exists(yamlPath))
             {
                 var yaml = File.ReadAllText(yamlPath);
                 var deserializer = new DeserializerBuilder()

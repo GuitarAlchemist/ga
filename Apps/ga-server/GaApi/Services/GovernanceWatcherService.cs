@@ -22,7 +22,7 @@ public sealed class GovernanceWatcherService(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var demerzelRoot = configuration["Governance:DemerzelRoot"]
-            ?? FindDemerzelRoot();
+            ?? DemerzelRootLocator.Find();
 
         if (demerzelRoot == null || !Directory.Exists(demerzelRoot))
         {
@@ -118,17 +118,6 @@ public sealed class GovernanceWatcherService(
     {
         var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
         return ext is ".yaml" or ".md" or ".json" or ".ixql" or ".test.md";
-    }
-
-    private static string? FindDemerzelRoot()
-    {
-        var candidates = new[]
-        {
-            System.IO.Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "governance", "demerzel"),
-            System.IO.Path.Combine(Directory.GetCurrentDirectory(), "governance", "demerzel"),
-            @"C:\Users\spare\source\repos\ga\governance\demerzel",
-        };
-        return candidates.FirstOrDefault(Directory.Exists);
     }
 
     public override void Dispose()
