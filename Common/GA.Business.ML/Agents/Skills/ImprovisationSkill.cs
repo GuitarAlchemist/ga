@@ -349,6 +349,38 @@ public sealed partial class ImprovisationSkill(
         return chordSymbol[..1];
     }
 
+    // Canonical quality (ChordVocabulary.NormalizeQuality) → scale family. Each entry is what the heuristic
+    // gives the canonical spelling ("m6" → melodic-minor territory, "7#5" → augmented). Qualities absent here
+    // (power, sus2, sus4, add9) stay Unknown through the heuristic, as before.
+    private static readonly Dictionary<string, QualityClass> CanonicalQualityClasses = new(StringComparer.Ordinal)
+    {
+        ["major"]              = QualityClass.Major,
+        ["major 6"]            = QualityClass.Major,
+        ["minor"]              = QualityClass.Minor,
+        ["minor 6"]            = QualityClass.MinorMajor7,
+        ["diminished"]         = QualityClass.Diminished,
+        ["augmented"]          = QualityClass.Augmented,
+        ["dominant 7"]         = QualityClass.Dominant7,
+        ["dominant 9"]         = QualityClass.Dominant7,
+        ["dominant 11"]        = QualityClass.Dominant7,
+        ["dominant 13"]        = QualityClass.Dominant7,
+        ["dominant 7 flat 5"]  = QualityClass.AlteredDominant,
+        ["dominant 7 flat 9"]  = QualityClass.AlteredDominant,
+        ["dominant 7 sharp 9"] = QualityClass.AlteredDominant,
+        ["dominant 7 sharp 5"] = QualityClass.Augmented,
+        ["altered dominant"]   = QualityClass.Altered,
+        ["major 7"]            = QualityClass.Major7,
+        ["major 9"]            = QualityClass.Major7,
+        ["major 11"]           = QualityClass.Major7,
+        ["major 13"]           = QualityClass.Major7,
+        ["minor 7"]            = QualityClass.Minor7,
+        ["minor 9"]            = QualityClass.Minor7,
+        ["minor 11"]           = QualityClass.Minor7,
+        ["minor 13"]           = QualityClass.Minor7,
+        ["diminished 7"]       = QualityClass.Diminished7,
+        ["half-diminished"]    = QualityClass.HalfDiminished,
+    };
+
     internal static QualityClass InferQuality(string chordSymbol)
     {
         if (string.IsNullOrEmpty(chordSymbol)) return QualityClass.Unknown;
@@ -363,7 +395,15 @@ public sealed partial class ImprovisationSkill(
         // Strip parentheses so canonicalized forms like "7(b9)" / "m7(b5)" /
         // "(maj7)" still classify correctly. Without this, parenthesized
         // alterations fall through to less-specific buckets.
-        var s = suffix.ToLowerInvariant().Replace("(", "", StringComparison.Ordinal).Replace(")", "", StringComparison.Ordinal);
+        var unparenthesized = suffix.Replace("(", "", StringComparison.Ordinal).Replace(")", "", StringComparison.Ordinal);
+
+        // Shared vocabulary first, case-sensitive: every alias of a quality it knows ("M7", "maj", "min9",
+        // "dominant 7") classifies like its canonical spelling. The lowercase heuristic below used to read
+        // "CM7" as minor 7 and "Cmaj" as minor. Suffixes the vocabulary does not know fall through to it.
+        if (CanonicalQualityClasses.TryGetValue(ChordVocabulary.NormalizeQuality(unparenthesized), out var known))
+            return known;
+
+        var s = unparenthesized.ToLowerInvariant();
 
         // Most-specific first. Order matters: mMaj7 must be tested BEFORE the
         // maj7 family (the lowercased "mmaj7" contains "maj7" and would
