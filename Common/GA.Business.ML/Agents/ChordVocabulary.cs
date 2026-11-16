@@ -116,16 +116,19 @@ public static class ChordVocabulary
         ["dominant 13"] = "13", ["major 13"] = "maj13", ["minor 13"] = "m13",
     };
 
-    private static readonly Regex UpperMajorMarker = new("M(?=6|7|9|11|13)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    // A major marker opens the quality ("M9", "M7b5") or follows a minor "m" ("mM7", "m(M7)"). Inside an all-caps
+    // alias ("DIM7", "DOM7") the "M" is the alias's own letter and must stay.
+    private static readonly Regex UpperMajorMarker = new(@"(?<=^m?\(?)M(?=6|7|9|11|13)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     /// <summary>
     ///     Normalises a quality suffix to its canonical form (the key <see cref="GetFormula"/> switches on).
     /// </summary>
     /// <remarks>
     ///     The uppercase <c>"M"</c> is read <b>case-sensitively before</b> the lowercase fallback: it means major
-    ///     and must not fold through <c>ToLowerInvariant()</c> to <c>"m"</c> (minor). An <c>"M"</c> before
-    ///     6 / 7 / 9 / 11 / 13 becomes <c>"maj"</c> first, the rule <see cref="ChordPitchClasses"/> applies, so
-    ///     <c>"M9"</c>, <c>"M7b5"</c> and <c>"mM7"</c> keep their major seventh or sixth. This is the PR #80 fix; consolidating it here keeps the skill from
+    ///     and must not fold through <c>ToLowerInvariant()</c> to <c>"m"</c> (minor). An <c>"M"</c> that opens the
+    ///     quality (or follows a minor <c>"m"</c>) before 6 / 7 / 9 / 11 / 13 becomes <c>"maj"</c> first, so
+    ///     <c>"M9"</c>, <c>"M7b5"</c> and <c>"mM7"</c> keep their major seventh or sixth, while all-caps aliases
+    ///     such as <c>"DIM7"</c> and <c>"DOM7"</c> fold to lower case unchanged. This is the PR #80 fix; consolidating it here keeps the skill from
     ///     re-introducing the <c>"CM"</c> → C-minor regression. The <c>"Δ"</c> / <c>"Δ7"</c> arms sit up
     ///     there for the same reason: <c>ToLowerInvariant()</c> folds the capital delta to <c>"δ"</c>, so a
     ///     lowercase arm could never match them.

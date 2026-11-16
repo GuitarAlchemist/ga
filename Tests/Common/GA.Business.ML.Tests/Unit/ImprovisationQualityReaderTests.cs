@@ -95,6 +95,10 @@ public class ImprovisationQualityReaderTests
     [TestCase("Cm(maj7)", "MinorMajor7")]
     [TestCase("Cm7#5", "Augmented")]
     [TestCase("Cxyz", "Unknown")]
+    [TestCase("CDIM7", "Diminished7")]
+    [TestCase("CDOM7", "Dominant7")]
+    [TestCase("CMAJ7", "Major7")]
+    [TestCase("CMIN7", "Minor7")]
     public void InferQuality_KeepsClassification(string chord, string expectedKind) =>
         Assert.That(ImprovisationSkill.InferQuality(chord).Kind.ToString(), Is.EqualTo(expectedKind));
 
