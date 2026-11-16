@@ -42,7 +42,7 @@ public class ChatbotHistoryContractTests
         trace.Setup(value => value.Build()).Returns(new AgenticTrace("test-trace", "test-protocol", "test-run",
             [new AgenticTraceStep("orchestration.answer", "completed", 7, new Dictionary<string, object?>())]));
         builder.Services.AddSingleton(trace.Object);
-        builder.Services.AddSingleton(Mock.Of<IChatService>());
+        builder.Services.AddSingleton(Mock.Of<IChatProviderAvailability>());
         builder.Services.AddControllers().AddApplicationPart(typeof(ChatbotController).Assembly);
         await using var app = builder.Build();
         app.MapControllers();

@@ -9,6 +9,7 @@ using GA.Business.ML.Providers;
 using GA.Domain.Repositories;
 using GA.Infrastructure.Persistence.Repositories;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 using Services;
 
 /// <summary>
@@ -39,7 +40,7 @@ public static class AiServiceExtensions
             var embeddingProvider = configuration["AI:EmbeddingProvider"] ?? "ollama";
             services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
                 string.Equals(embeddingProvider, "docker", StringComparison.OrdinalIgnoreCase)
-                    ? DockerModelRunnerProvider.CreateEmbeddingGeneratorFromConfig(configuration, sp.GetService<ILogger<DockerModelRunnerChatService>>())
+                    ? DockerModelRunnerProvider.CreateEmbeddingGeneratorFromConfig(configuration, sp.GetService<ILoggerFactory>()?.CreateLogger(nameof(DockerModelRunnerProvider)))
                     : OllamaProvider.CreateEmbeddingGeneratorFromConfig(configuration, sp.GetService<ILogger<OllamaEmbeddingGenerator>>()));
 
             // 4. Register Repository
@@ -96,25 +97,20 @@ public static class AiServiceExtensions
             if (configuration.GetValue<bool>("Chatbot:Readiness:ProviderCheck"))
                 services.AddSingleton<IChatReadinessProbe, GaApiChatReadinessProbe>();
             services.AddSingleton<IFallbackChatHandler, GaApiFallbackChatHandler>();
+            services.AddSingleton<IChatProviderAvailability, ChatProviderAvailability>();
 
             var chatProvider = configuration["AI:ChatProvider"] ?? "ollama";
 
-            if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))
-                services.AddSingleton<IChatService, ClaudeChatService>();
-            else if (string.Equals(chatProvider, "docker", StringComparison.OrdinalIgnoreCase))
-                services.AddSingleton<IChatService, DockerModelRunnerChatService>();
-            else
-                services.AddSingleton<IChatService, OllamaChatService>();
-
-            // Register Adapter for IChatClient (used by Agents). Provider-aware
-            // so AI:ChatProvider=claude routes the chatbot's main loop through
+            // Register the IChatClient every chat path uses (agents, skills, the
+            // direct-chat fallback). Provider-aware so AI:ChatProvider=claude
+            // routes the chatbot's main loop through
             // Anthropic (model from Anthropic:Model — defaults to Haiku 4.5 in
             // appsettings.Development.json). Anthropic costs ~$0.10–0.20 per
             // soak run vs Ollama's hosting requirements; for the public demo
             // and Phase 3 measurement Haiku 4.5 wins on tool-use reliability.
             // Falls back to Ollama for offline / cost-sensitive setups.
             //
-            // EAGER: build the client now, not via a Singleton lambda. The
+            // EAGER (claude): build the client now, not via a Singleton lambda. The
             // lambda variant deferred CreateChatClient until first request,
             // which meant a missing ANTHROPIC_API_KEY booted cleanly,
             // /api/health passed, and the failure only surfaced as an opaque
@@ -128,9 +124,35 @@ public static class AiServiceExtensions
                     configuration["Anthropic:Model"]);
                 services.AddSingleton<IChatClient>(anthropicClient);
             }
+            else if (string.Equals(chatProvider, "docker", StringComparison.OrdinalIgnoreCase))
+            {
+                // Same function-invocation pipeline as the Anthropic client, so tool-calling
+                // skills behave the same on every provider.
+                services.AddSingleton<IChatClient>(sp => DockerModelRunnerProvider
+                    .CreateChatClientFromConfig(configuration, sp.GetService<ILoggerFactory>()?.CreateLogger("GaApi.ChatClient"))
+                    .AsBuilder()
+                    .UseFunctionInvocation()
+                    .Build(sp));
+            }
             else
             {
-                services.AddSingleton<IChatClient, OllamaChatClientAdapter>();
+                services.AddSingleton<IChatClient>(sp =>
+                {
+                    var chatbotOptions = sp.GetRequiredService<IOptionsMonitor<ChatbotOptions>>().CurrentValue;
+                    // The named "Ollama" client carries the base address and the Cloudflare
+                    // Access headers; the timeout follows Chatbot:StreamTimeoutSeconds.
+                    var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Ollama");
+                    httpClient.Timeout = TimeSpan.FromSeconds(Math.Max(5, chatbotOptions.StreamTimeoutSeconds));
+                    return OllamaProvider
+                        .CreateChatClient(
+                            ollamaBaseUrl,
+                            ChatProviderAvailability.OllamaChatModel(chatbotOptions, configuration),
+                            sp.GetService<ILoggerFactory>()?.CreateLogger("GaApi.ChatClient"),
+                            httpClient)
+                        .AsBuilder()
+                        .UseFunctionInvocation()
+                        .Build(sp);
+                });
             }
         }
         /// <summary>
