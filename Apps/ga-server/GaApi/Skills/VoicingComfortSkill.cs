@@ -20,6 +20,20 @@ public sealed class VoicingComfortSkill(VoicingComfortService comfortService) : 
     public string Name        => "VoicingComfort";
     public string Description => "Suggests low-stretch voicings when the user mentions hand pain or barre chord difficulty";
 
+    /// <summary>Phrasings <c>SemanticIntentRouter</c> scores this skill against. They
+    /// all carry pain or difficulty, so a plain voicing request ("barre voicings for Bb")
+    /// stays with <c>ChordVoicingsSkill</c> and a fret-diagram stretch question stays
+    /// with <c>FretSpanSkill</c>.</summary>
+    public IReadOnlyList<string> ExamplePrompts =>
+    [
+        "My hand hurts when I play the F barre chord",
+        "Barre chords are too hard for me, is there an easier way to play F?",
+        "Is there a less painful way to play B minor?",
+        "My wrist aches on the Bm chord, what can I play instead?",
+        "I can't manage the stretch on this G chord, what's more comfortable?",
+        "Which voicing of C is easiest on my hand? Barre shapes strain it",
+    ];
+
     // ── Triggers ──────────────────────────────────────────────────────────────
 
     private static readonly Regex PainTrigger =
