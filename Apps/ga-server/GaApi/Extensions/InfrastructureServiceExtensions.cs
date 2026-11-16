@@ -1,7 +1,6 @@
 namespace GaApi.Extensions;
 
 using GA.Infrastructure.Documentation;
-using ILGPU.Runtime;
 using Models;
 using Services;
 
@@ -11,7 +10,7 @@ using Services;
 public static class InfrastructureServiceExtensions
 {
     /// <summary>
-    ///     Adds core infrastructure services (MongoDB, GPU Acceleration, etc.)
+    ///     Adds core infrastructure services (MongoDB, schema discovery)
     /// </summary>
     public static IServiceCollection AddGaInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
@@ -32,20 +31,6 @@ public static class InfrastructureServiceExtensions
 
         // 3. Domain Schema Discovery
         services.AddSingleton<SchemaDiscoveryService>();
-
-        // 4. GPU Acceleration (ILGPU)
-        services.AddSingleton<IIlgpuContextManager, IlgpuContextManager>();
-        services.AddSingleton<Accelerator>(sp =>
-        {
-            var contextManager = sp.GetRequiredService<IIlgpuContextManager>();
-            var accelerator = contextManager.PrimaryAccelerator;
-            if (accelerator == null)
-            {
-                throw new InvalidOperationException("Failed to initialize primary GPU accelerator.");
-            }
-
-            return accelerator;
-        });
 
         return services;
     }

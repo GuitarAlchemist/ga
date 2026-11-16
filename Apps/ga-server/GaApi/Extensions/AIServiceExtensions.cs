@@ -144,7 +144,7 @@ public static class AiServiceExtensions
             // Register standard vector search service
             services.AddSingleton<VectorSearchService>();
 
-            // Register all vector search strategies and manager (from VectorSearchServiceExtensions)
+            // Register all vector search strategies (from VectorSearchServiceExtensions)
             services.AddVectorSearchServices();
 
             // Register voicing-specific search services (from VoicingSearchServiceExtensions)
