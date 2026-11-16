@@ -1,7 +1,5 @@
 # GPU Acceleration Guide - Guitar Alchemist
 
-> **Retired (2026-11):** GaApi's chord vector-search stack described here (`VectorSearchService`, the `IVectorSearchStrategy` family, `POST /api/search/hybrid`, `GET /api/stats`, `GET /stats`, the `VectorSearchBenchmark` demo) has been removed. Voicing search lives in layer 4 (`GA.Business.ML/Search/IVoicingSearchStrategy`, OPTIC-K) and is served by `POST /api/voicings/retrieve`. This document is kept as history.
-
 ## 🚀 **MAXIMUM PERFORMANCE WITH GPU ACCELERATION**
 
 This guide shows how to leverage GPU power for best possible performance in the Guitar Alchemist application.
