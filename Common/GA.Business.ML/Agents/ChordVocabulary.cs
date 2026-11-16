@@ -95,7 +95,9 @@ public static class ChordVocabulary
     ///     The uppercase <c>"M"</c> / <c>"M7"</c> arms are matched <b>case-sensitively before</b> the
     ///     lowercase fallback: <c>"M"</c> means major and must not fold through <c>ToLowerInvariant()</c>
     ///     to <c>"m"</c> (minor). This is the PR #80 fix; consolidating it here keeps the skill from
-    ///     re-introducing the <c>"CM"</c> → C-minor regression.
+    ///     re-introducing the <c>"CM"</c> → C-minor regression. The <c>"Δ"</c> / <c>"Δ7"</c> arms sit up
+    ///     there for the same reason: <c>ToLowerInvariant()</c> folds the capital delta to <c>"δ"</c>, so a
+    ///     lowercase arm could never match them.
     /// </remarks>
     public static string NormalizeQuality(string raw)
     {
@@ -103,7 +105,7 @@ public static class ChordVocabulary
         return trimmed switch
         {
             "M"  => "major",
-            "M7" => "major 7",
+            "M7" or "Δ" or "Δ7" => "major 7",
             _    => trimmed.ToLowerInvariant() switch
             {
                 "" => "major",
@@ -120,7 +122,7 @@ public static class ChordVocabulary
                 "m6" or "min6" or "minor 6" => "minor 6",
                 // 7th family
                 "7" or "dominant" or "dom7" or "dominant 7" => "dominant 7",
-                "maj7" or "major 7" or "ma7" or "Δ7" => "major 7",
+                "maj7" or "major 7" or "ma7" => "major 7",
                 "m7" or "min7" or "minor 7" or "-7" => "minor 7",
                 "dim7" or "diminished 7" or "diminished7" or "°7" => "diminished 7",
                 "m7b5" or "min7b5" or "ø" or "ø7" or "half-diminished" or "half diminished" or "minor 7 flat 5" => "half-diminished",
