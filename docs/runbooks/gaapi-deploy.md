@@ -42,9 +42,9 @@ The scheduled task `GA-GaApi-5262` runs `conhost.exe --headless cmd.exe /c <Depl
 1. `GET /api/chatbot/status` reports `isAvailable` (GaApi's status only checks the chat provider; it has no embedding round-trip probe yet).
 2. `POST /api/chatbot/chat` with `which arpeggio fits Am F C G` is answered by `skill.improvisation` with a non-empty answer.
 3. Only when the build contains `wwwroot/chatbot/index.html` (the public page, PR #881): `GET /chatbot/` returns 200 `text/html`, and the page's own status call `GET /chatbot/api/chatbot/status` succeeds **without** an API key.
-4. With `-PublicProbe`: `https://demos.guitaralchemist.com/chatbot/` and `/api/chatbot/status` return 200.
+4. With `-PublicProbe`: the same GET probes as 1 and 3, through `https://demos.guitaralchemist.com`.
 
-Steps 1 and 2 send `X-Api-Key: deploy-gaapi-smoke`. Outside Development, `Program.cs` answers 401 on `/api/chatbot/*` when that header is absent; it checks presence only.
+The status probe and the chat send `X-Api-Key: deploy-gaapi-smoke`. Outside Development, `Program.cs` answers 401 on `/api/chatbot/*` when that header is absent (it checks presence only), and only builds that ship the page exempt the page's own calls. With the key, the status probe passes on either kind of build. The probes come from `Get-GaApiProbes` in the script; `Tests/Apps/GaApi.Tests/Deploy/DeployGaApiProbeTests.cs` runs that function and replays its probes against GaApi in Production, so a probe the gate would reject (and the rollback it would cause) fails CI instead.
 
 ## Configuration
 

@@ -130,14 +130,35 @@ function Start-GaApi {
     throw "GaApi did not answer $localBase/api/chatbot/status within $StartupTimeoutSeconds s. See $logDir."
 }
 
-function Test-Page([string]$Uri, [hashtable]$Headers = @{}) {
+function Get-GaApiProbes {
+    # The GET requests that prove a release at $BaseUrl healthy, each with the headers it
+    # needs. Outside Development, GaApi answers 401 on /api/chatbot/* without an X-Api-Key
+    # header, and only builds that ship the public page exempt that page's own calls. So
+    # the status probe always carries the key and passes on either kind of build; the page
+    # and the anonymous status call it makes are probed only when the build ships the page,
+    # exactly as a browser on /chatbot/ sends them. Html marks a probe that must be a page.
+    # Tests/Apps/GaApi.Tests/Deploy/DeployGaApiProbeTests.cs runs this function and replays
+    # its probes against GaApi in Production; keep it self-contained at column 0.
+    param([string]$BaseUrl, [bool]$HasChatbotPage, [hashtable]$KeyHeaders)
+    $probes = @([pscustomobject]@{ Uri = "$BaseUrl/api/chatbot/status"; Headers = $KeyHeaders; Html = $false })
+    if ($HasChatbotPage) {
+        $probes += [pscustomobject]@{ Uri = "$BaseUrl/chatbot/"; Headers = @{}; Html = $true }
+        $probes += [pscustomobject]@{ Uri = "$BaseUrl/chatbot/api/chatbot/status"; Headers = @{}; Html = $false }
+    }
+    return $probes
+}
+
+function Test-Probe($Probe) {
     try {
-        $response = Invoke-WebRequest -Uri $Uri -Headers $Headers -UseBasicParsing -TimeoutSec 60
-        if ($response.StatusCode -ne 200) { return "${Uri}: HTTP $($response.StatusCode)" }
+        $response = Invoke-WebRequest -Uri $Probe.Uri -Headers $Probe.Headers -UseBasicParsing -TimeoutSec 60
+        if ($response.StatusCode -ne 200) { return "$($Probe.Uri): HTTP $($response.StatusCode)" }
+        if ($Probe.Html -and $response.Headers['Content-Type'] -notmatch 'text/html') {
+            return "$($Probe.Uri): Content-Type $($response.Headers['Content-Type'])"
+        }
         return $null
     }
     catch {
-        return "${Uri}: $($_.Exception.Message)"
+        return "$($Probe.Uri): $($_.Exception.Message)"
     }
 }
 
@@ -158,29 +179,16 @@ function Test-Release($Status, [string]$ReleaseDir) {
     }
 
     # The public chatbot page ships with GaApi from the commit that adds
-    # wwwroot/chatbot/index.html. When this build has it, check the page and the anonymous
-    # status call it makes, exactly as a browser on /chatbot/ would (no X-Api-Key).
-    if (Test-Path -LiteralPath (Join-Path $ReleaseDir 'wwwroot\chatbot\index.html')) {
-        try {
-            $page = Invoke-WebRequest -Uri "$localBase/chatbot/" -UseBasicParsing -TimeoutSec 60
-            if ($page.StatusCode -ne 200) { $failures += "page /chatbot/: HTTP $($page.StatusCode)" }
-            elseif ($page.Headers['Content-Type'] -notmatch 'text/html') { $failures += "page /chatbot/: Content-Type $($page.Headers['Content-Type'])" }
-            else { Write-Host '  Page: /chatbot/ 200 text/html' }
-        }
-        catch {
-            $failures += "page /chatbot/: $($_.Exception.Message)"
-        }
-        $anonymous = Test-Page "$localBase/chatbot/api/chatbot/status"
-        if ($anonymous) { $failures += "page status call (anonymous): $anonymous" }
-    }
-    else {
-        Write-Host '  Page: this build has no wwwroot/chatbot/index.html; skipping the /chatbot/ check.'
-    }
+    # wwwroot/chatbot/index.html.
+    $hasPage = Test-Path -LiteralPath (Join-Path $ReleaseDir 'wwwroot\chatbot\index.html')
+    if (-not $hasPage) { Write-Host '  Page: this build has no wwwroot/chatbot/index.html; skipping the /chatbot/ checks.' }
 
-    if ($PublicProbe) {
-        foreach ($path in '/chatbot/', '/api/chatbot/status') {
-            $failure = Test-Page "https://$PublicHost$path"
-            if ($failure) { $failures += "public $failure" }
+    $bases = @($localBase)
+    if ($PublicProbe) { $bases += "https://$PublicHost" }
+    foreach ($base in $bases) {
+        foreach ($probe in Get-GaApiProbes -BaseUrl $base -HasChatbotPage $hasPage -KeyHeaders $smokeHeaders) {
+            $failure = Test-Probe $probe
+            if ($failure) { $failures += $failure } else { Write-Host "  Probe: $($probe.Uri) 200" }
         }
     }
     return $failures
