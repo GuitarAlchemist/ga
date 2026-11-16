@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "46823d213584daf8b88a989fb8cc18a60ddc34b0",
-    "generatedAt": "2026-11-16T05:29:47.904618+00:00",
+    "commitSha": "e862f9b508239bdd3e8c0ad388178b35b371cb38",
+    "generatedAt": "2026-11-16T05:31:35.085792+00:00",
     "repoCount": 5,
-    "totalPRs": 31
+    "totalPRs": 30
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 14,
+      "prCount": 13,
       "prs": [
         {
           "ageDays": 0,
@@ -150,18 +150,6 @@
           "number": 880,
           "title": "fix(chat): read uppercase-M major extensions as major",
           "url": "https://github.com/GuitarAlchemist/ga/pull/880"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T04:04:03Z",
-          "failingChecks": 0,
-          "headRef": "refactor/cand4-move-chatbot-corpus-parity-tests",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 879,
-          "title": "refactor(tests): move chat corpus and orchestrator cascade tests to GaApi.Tests",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/879"
         },
         {
           "ageDays": 0,
@@ -318,7 +306,7 @@
           "failingChecks": 3,
           "headRef": "feat/ixforge-mobile-catalog",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 546,
           "title": "feat(ixforge): mobile catalog, tool states, pinning, optional names and widget traits (stacked on #544)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/546"
@@ -342,7 +330,7 @@
           "failingChecks": 0,
           "headRef": "codex/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 543,
           "title": "Document authorized remote path for IX Forge shared counter creation (no code/data mutation)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/543"
@@ -354,7 +342,7 @@
           "failingChecks": 0,
           "headRef": "claude/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 542,
           "title": "IXFORGE-COUNTER-ACCESS-R1: investigation \u2014 no authorized non-Desktop path to create the shared \u00ab Lectures \u00bb counter",
           "url": "https://github.com/GuitarAlchemist/ix/pull/542"
@@ -366,7 +354,7 @@
           "failingChecks": 0,
           "headRef": "docs/learnings-wasi-validator",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 538,
           "title": "docs(solutions): two learnings from the IXQL WASI validator prototype",
           "url": "https://github.com/GuitarAlchemist/ix/pull/538"
