@@ -7,6 +7,7 @@ using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Core.Functional;
 using GaApi.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -183,4 +184,87 @@ public class ChatbotPageMountTests
                 Data: lines.Where(line => line.StartsWith("data: ", StringComparison.Ordinal)).Select(line => line[6..]).ToList()))
             .Where(e => e.Data.Count > 0)
             .Select(e => new SseEvent(e.Name, string.Join('\n', e.Data)))];
+}
+
+/// <summary>
+///     Outside Development, Program.cs requires X-Api-Key on /api/chatbot/*. The public page
+///     sends no key, so its own calls must pass anonymously, as they did on GaChatbot.Api,
+///     while the rest of /api/chatbot stays behind the key.
+/// </summary>
+[TestFixture]
+[Category("Integration")]
+public class ChatbotPageMountProductionTests
+{
+    private WebApplicationFactory<Program>? _factory;
+    private HttpClient? _client;
+
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
+    {
+        var intake = new Mock<IChatIntake>();
+        intake.Setup(service => service.IntakeAsync(It.IsAny<ChatIntakeRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<ChatResponse, ChatIntakeError>.Success(new ChatResponse("A major triad.", [])));
+        var provider = new Mock<IChatService>();
+        provider.Setup(service => service.IsAvailableAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _factory = new TestWebApplicationFactory().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Production");
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<IChatIntake>();
+                services.AddSingleton(intake.Object);
+                services.RemoveAll<IChatService>();
+                services.AddSingleton(provider.Object);
+            });
+        });
+        _client = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = false });
+    }
+
+    [OneTimeTearDown]
+    public void OneTimeTearDown()
+    {
+        _client?.Dispose();
+        _factory?.Dispose();
+    }
+
+    [TestCase("/chatbot/")]
+    [TestCase("/chatbot/vendor/vexflow/vexflow.js")]
+    [TestCase("/chatbot/api/chatbot/status")]
+    [TestCase("/chatbot/api/chatbot/examples")]
+    [TestCase("/chatbot/api/chatbot/demo")]
+    [TestCase("/chatbot/api/chatbot/qa-summary")]
+    public async Task ThePagesGets_PassWithoutAKey(string path)
+    {
+        using var response = await _client!.GetAsync(path);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
+    [Test]
+    public async Task ThePagesChatStream_PassesWithoutAKey()
+    {
+        using var response = await _client!.PostAsJsonAsync("/chatbot/api/chatbot/chat/stream", new { message = "What is a major triad?" });
+        var body = await response.Content.ReadAsStringAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(body, Does.Contain("data: A major triad.").And.Contain("data: [DONE]"));
+        });
+    }
+
+    [TestCase("POST", "/chatbot/api/chatbot/chat")]
+    [TestCase("POST", "/api/chatbot/chat")]
+    [TestCase("POST", "/chatbot/api/chatbot/agui/json")]
+    [TestCase("GET", "/api/chatbot/skills")]
+    public async Task OtherChatbotRoutes_StillRequireAKey(string method, string path)
+    {
+        using var request = new HttpRequestMessage(new HttpMethod(method), path)
+        {
+            Content = method == "POST" ? JsonContent.Create(new { message = "What is a major triad?" }) : null,
+        };
+        using var response = await _client!.SendAsync(request);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
 }
