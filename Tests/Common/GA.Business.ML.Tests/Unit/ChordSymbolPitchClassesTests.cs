@@ -1,6 +1,7 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents;
+using GA.Business.ML.Agents.Mcp;
 using GA.Business.ML.Agents.Skills;
 using GA.Domain.Services.Atonal.Grothendieck;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -46,6 +47,38 @@ public class ChordSymbolPitchClassesTests
     [TestCase("7")]
     public void TryGetPitchClasses_RejectsUnknownRoot(string symbol) =>
         Assert.That(ChordVocabulary.TryGetPitchClasses(symbol, out _), Is.False);
+
+    [TestCase("C", new[] { 0, 4, 7 })]
+    [TestCase("CM", new[] { 0, 4, 7 })]
+    [TestCase("CM7", new[] { 0, 4, 7, 11 })]
+    [TestCase("Cmaj", new[] { 0, 4, 7 })]
+    [TestCase("Cm9", new[] { 0, 3, 7, 10, 2 })]
+    [TestCase("C13", new[] { 0, 4, 7, 10, 2, 5, 9 })]
+    public void TryGetPitchClassesStrict_ReadsKnownQualities(string symbol, int[] expected)
+    {
+        var ok = ChordVocabulary.TryGetPitchClassesStrict(symbol, out var pitchClasses);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ok, Is.True);
+            Assert.That(pitchClasses, Is.EqualTo(expected));
+        });
+    }
+
+    [TestCase("Cadd11")]
+    [TestCase("C7sus4")]
+    [TestCase("Cxyz")]
+    [TestCase("H7")]
+    public void TryGetPitchClassesStrict_RefusesUnknownQualityOrRoot(string symbol)
+    {
+        var ok = ChordVocabulary.TryGetPitchClassesStrict(symbol, out var pitchClasses);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ok, Is.False);
+            Assert.That(pitchClasses, Is.Empty);
+        });
+    }
 
     private static readonly IGrothendieckService Grothendieck = new GrothendieckService();
 
@@ -97,4 +130,92 @@ public class ChordSymbolPitchClassesTests
 
         Assert.That(upper.Result.Replace("CM7", "Cmaj7"), Is.EqualTo(spelled.Result));
     }
+
+    [Test]
+    public async Task VoiceLeadingSkill_ReadsCM7AsMajorSeventh()
+    {
+        var skill = new VoiceLeadingSkill(NullLogger<VoiceLeadingSkill>.Instance);
+
+        var upper = await skill.ExecuteAsync("voice leading from CM7 to F");
+        var spelled = await skill.ExecuteAsync("voice leading from Cmaj7 to F");
+
+        Assert.That(upper.Result.Replace("CM7", "Cmaj7"), Is.EqualTo(spelled.Result));
+    }
+
+    [Test]
+    public async Task VoiceLeadingSkill_ReadsCMAsMajorTriad()
+    {
+        var skill = new VoiceLeadingSkill(NullLogger<VoiceLeadingSkill>.Instance);
+
+        var upper = await skill.ExecuteAsync("voice leading from CM to F");
+        var plain = await skill.ExecuteAsync("voice leading from C to F");
+
+        Assert.That(upper.Result.Replace("CM →", "C →"), Is.EqualTo(plain.Result));
+    }
+
+    [Test]
+    public async Task VoiceLeadingSkill_RefusesUnknownQuality()
+    {
+        // An unknown quality stays a refusal: the skill must not voice-lead "Cadd11" as a C major triad.
+        var skill = new VoiceLeadingSkill(NullLogger<VoiceLeadingSkill>.Instance);
+
+        var response = await skill.ExecuteAsync("voice leading from Cadd11 to F");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Result, Does.Contain("couldn't parse 'Cadd11'"));
+            Assert.That(response.Confidence, Is.LessThan(1.0f));
+        });
+    }
+
+    [Test]
+    public async Task ChordSubstitutionSkill_ReadsCM7AsMajorSeventh()
+    {
+        var skill = new ChordSubstitutionSkill(Grothendieck, NullLogger<ChordSubstitutionSkill>.Instance);
+
+        var upper = await skill.ExecuteAsync("What can I substitute for CM7?");
+        var spelled = await skill.ExecuteAsync("What can I substitute for Cmaj7?");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(spelled.Result, Does.StartWith("Harmonic substitutions for **Cmaj7**"));
+            Assert.That(upper.Result, Is.EqualTo(spelled.Result));
+        });
+    }
+
+    [Test]
+    public void ChordSubstitutionMcpTools_ReadsCM7AsMajorSeventh()
+    {
+        var tool = new ChordSubstitutionMcpTools(Grothendieck);
+
+        var upper = tool.GetSubstitutions("CM7");
+        var spelled = tool.GetSubstitutions("Cmaj7");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(upper.Error, Is.Null);
+            Assert.That(upper.SourceChord, Is.EqualTo(spelled.SourceChord));
+            Assert.That(upper.Substitutions.Select(s => s.Name), Is.EqualTo(spelled.Substitutions.Select(s => s.Name)));
+        });
+    }
+
+    [Test]
+    public void ChordSubstitutionMcpTools_ReadsCMAsMajorTriad()
+    {
+        var tool = new ChordSubstitutionMcpTools(Grothendieck);
+
+        var upper = tool.CompareChords("GM", "CM");
+        var plain = tool.CompareChords("G", "C");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(upper.Error, Is.Null);
+            Assert.That((upper.ChordA, upper.ChordB), Is.EqualTo(("G", "C")));
+            Assert.That(upper.Relationships.Select(r => r.Type), Is.EqualTo(plain.Relationships.Select(r => r.Type)));
+        });
+    }
+
+    [Test]
+    public void ChordSubstitutionMcpTools_RefusesUnknownQuality() =>
+        Assert.That(new ChordSubstitutionMcpTools(Grothendieck).GetSubstitutions("C7sus4").Error, Is.Not.Null);
 }

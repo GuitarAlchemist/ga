@@ -15,8 +15,8 @@ using System.Text.RegularExpressions;
 /// <item><b>"Best voicing from G7 to Cmaj7"</b></item>
 /// <item><b>"How do I voice lead Dm7 to G7"</b></item>
 /// </list>
-/// Zero LLM calls — exhaustive search over permutations (chord size ≤ 5 so
-/// 5! = 120 permutations max). Confidence = 1.0.
+/// Zero LLM calls — exhaustive search over permutations (chord size ≤ 7, a
+/// 13th chord, so 7! = 5040 permutations max). Confidence = 1.0.
 /// </summary>
 /// <remarks>
 /// Built 2026-05-14 to close BACKLOG dealbreaker #4. Tier-1 deterministic per
@@ -55,17 +55,6 @@ public sealed class VoiceLeadingSkill(ILogger<VoiceLeadingSkill> logger) : IOrch
     private static readonly Regex TwoChordPattern =
         new(@"\b(?<a>[A-Ga-g][b#♭♯]?(?:maj|min|m|dim|aug|sus|add|dom)?\d*(?:[b#♭♯]\d+)*°?)\s+(?:to|→|->|>)\s+(?<b>[A-Ga-g][b#♭♯]?(?:maj|min|m|dim|aug|sus|add|dom)?\d*(?:[b#♭♯]\d+)*°?)\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Dictionary<string, int> RootPc = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["C"]  = 0,  ["C#"] = 1, ["Db"] = 1,
-        ["D"]  = 2,  ["D#"] = 3, ["Eb"] = 3,
-        ["E"]  = 4,
-        ["F"]  = 5,  ["F#"] = 6, ["Gb"] = 6,
-        ["G"]  = 7,  ["G#"] = 8, ["Ab"] = 8,
-        ["A"]  = 9,  ["A#"] = 10, ["Bb"] = 10,
-        ["B"]  = 11,
-    };
 
     private static readonly string[] SharpNames =
         ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -195,68 +184,16 @@ public sealed class VoiceLeadingSkill(ILogger<VoiceLeadingSkill> logger) : IOrch
 
     /// <summary>
     /// Parse a chord token like "C", "Am", "G7", "Cmaj7", "Dm7", "B°", "F#m7b5"
-    /// into pitch classes. Returns null if unparseable.
+    /// into pitch classes through the shared reader. Returns <c>null</c> for an
+    /// unknown root or quality so callers surface a parse error instead of
+    /// silently producing wrong PCs — the 2026-05-14 correctness review flagged
+    /// that a fall-through-to-major-triad silently mis-voice-led
+    /// <c>'7sus4'</c> / <c>'add11'</c> as triads.
     /// </summary>
-    private static int[]? TryParseChord(string token)
-    {
-        if (string.IsNullOrWhiteSpace(token)) return null;
-        var t = token.Replace("♯", "#").Replace("♭", "b").Trim();
-
-        // Extract root: 1-2 letters at start
-        var rootLen = 1;
-        if (t.Length >= 2 && (t[1] == '#' || t[1] == 'b')) rootLen = 2;
-        if (rootLen > t.Length) return null;
-        var rootStr = char.ToUpperInvariant(t[0]) + (rootLen == 2 ? t[1].ToString().ToLowerInvariant() : "");
-        if (!RootPc.TryGetValue(rootStr, out var root)) return null;
-
-        var quality = t.Length > rootLen ? t[rootLen..] : string.Empty;
-        return BuildChord(root, quality);
-    }
-
-    /// <summary>
-    /// Build the pitch-class set for a chord given a root PC and a quality
-    /// suffix string. Returns <c>null</c> for unknown qualities so callers
-    /// surface a parse error instead of silently producing wrong PCs — the
-    /// 2026-05-14 correctness review flagged that the old fall-through-to-
-    /// major-triad behaviour silently mis-voice-led <c>'C13'</c> /
-    /// <c>'7sus4'</c> / <c>'add11'</c> / <c>'m11'</c> as triads.
-    /// </summary>
-    private static int[]? BuildChord(int root, string quality)
-    {
-        var q = quality.ToLowerInvariant().Trim();
-
-        // Tone choices: 1, b3, 3, 4, b5, 5, #5, 6, b7, 7, b9, 9, #9, 11, #11, 13
-        int[]? intervals = q switch
-        {
-            "" or "maj" or "major"           => [0, 4, 7],                     // major triad
-            "m" or "min" or "minor" or "-"   => [0, 3, 7],                     // minor triad
-            "dim" or "°" or "o"              => [0, 3, 6],                     // dim triad
-            "aug" or "+"                     => [0, 4, 8],                     // aug triad
-            "7"                              => [0, 4, 7, 10],                 // dom 7
-            "m7" or "min7" or "-7"           => [0, 3, 7, 10],                 // min 7
-            "maj7" or "major7" or "M7" or "Δ7" or "Δ"
-                                             => [0, 4, 7, 11],                 // maj 7
-            "m7b5" or "ø" or "ø7" or "half-dim" or "min7b5"
-                                             => [0, 3, 6, 10],                 // half-dim
-            "dim7" or "°7" or "o7"           => [0, 3, 6, 9],                  // dim 7
-            "sus2"                           => [0, 2, 7],
-            "sus4" or "sus"                  => [0, 5, 7],
-            "6"                              => [0, 4, 7, 9],                  // maj 6
-            "m6" or "min6"                   => [0, 3, 7, 9],                  // min 6
-            "9"                              => [0, 4, 7, 10, 2],              // dom 9
-            "maj9"                           => [0, 4, 7, 11, 2],
-            "m9" or "min9"                   => [0, 3, 7, 10, 2],
-            // Unknown quality — return null so the caller emits CannotParse
-            // instead of pretending the chord is a major triad.
-            _                                => null,
-        };
-
-        if (intervals is null) return null;
-
-        var pcs = new int[intervals.Length];
-        for (var i = 0; i < intervals.Length; i++) pcs[i] = (root + intervals[i]) % 12;
-        return pcs;
-    }
+    private static int[]? TryParseChord(string token) =>
+        !string.IsNullOrWhiteSpace(token) && ChordVocabulary.TryGetPitchClassesStrict(token, out var pcs)
+            ? [.. pcs]
+            : null;
 
     private static bool TokenHasFlats(string token) =>
         token.IndexOf('b', StringComparison.OrdinalIgnoreCase) > 0  // 'b' at position 0 is the note B, not a flat

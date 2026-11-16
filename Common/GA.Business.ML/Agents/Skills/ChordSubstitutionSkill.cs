@@ -65,9 +65,11 @@ public sealed class ChordSubstitutionSkill(
         new(@"\b(?:same|related|equivalent|tritone)\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    // Extended chord symbol pattern — matches triads AND 7th chords (longer alternations first)
+    // Extended chord symbol pattern — matches triads AND 7th chords (longer alternations first).
+    // Case-sensitive: "M7" is major 7, "m7" minor 7. A bare "M" is left out so prose such as
+    // "I AM" does not read as an A major chord.
     private static readonly Regex ExtendedChordSymbol =
-        new(@"\b(?<root>[A-G])(?<acc>[b#]?)(?<qual>m7b5|dim7|maj7|m7|7|min|m|dim|aug|\+)?(?!\w)",
+        new(@"\b(?<root>[A-G])(?<acc>[b#]?)(?<qual>m7b5|dim7|maj7|M7|m7|7|min|m|dim|aug|\+)?(?!\w)",
             RegexOptions.Compiled);
 
     public bool CanHandle(string message) =>
@@ -76,34 +78,9 @@ public sealed class ChordSubstitutionSkill(
 
     // ── Domain data ───────────────────────────────────────────────────────────
 
-    private static readonly FrozenDictionary<string, int> RootPcMap =
-        new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["C"] = 0, ["C#"] = 1, ["Db"] = 1, ["D"] = 2, ["D#"] = 3, ["Eb"] = 3,
-            ["E"] = 4, ["F"] = 5, ["F#"] = 6, ["Gb"] = 6, ["G"] = 7, ["G#"] = 8,
-            ["Ab"] = 8, ["A"] = 9, ["A#"] = 10, ["Bb"] = 10, ["B"] = 11
-        }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
-
     // Canonical root names (prefer flats except F# and C#)
     private static readonly string[] RootNames =
         ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
-
-    // quality string → semitone offsets from root (triads and 7th chords)
-    private static readonly FrozenDictionary<string, int[]> QualityIntervals =
-        new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase)
-        {
-            [""]     = [0, 4, 7],       // major triad
-            ["m"]    = [0, 3, 7],       // minor triad
-            ["min"]  = [0, 3, 7],
-            ["dim"]  = [0, 3, 6],       // diminished triad
-            ["aug"]  = [0, 4, 8],       // augmented triad
-            ["+"]    = [0, 4, 8],
-            ["7"]    = [0, 4, 7, 10],   // dominant 7th
-            ["maj7"] = [0, 4, 7, 11],   // major 7th
-            ["m7"]   = [0, 3, 7, 10],   // minor 7th
-            ["m7b5"] = [0, 3, 6, 10],   // half-diminished
-            ["dim7"] = [0, 3, 6, 9],    // diminished 7th
-        }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     // Dominant 7th intervals used in tritone/backdoor checks
     private static readonly int[] Dom7 = [0, 4, 7, 10];
@@ -305,23 +282,23 @@ public sealed class ChordSubstitutionSkill(
     private static (string Name, int Root, int[] Intervals)? TryParseChordMatch(Match m)
     {
         var rootStr = m.Groups["root"].Value + m.Groups["acc"].Value;
-        if (!RootPcMap.TryGetValue(rootStr, out var rootPc)) return null;
-
         var qualStr = m.Groups["qual"].Value;
-        if (!QualityIntervals.TryGetValue(qualStr, out var intervals))
-            intervals = QualityIntervals[""];   // default to major
+        if (!ChordVocabulary.TryGetPitchClassesStrict(rootStr + qualStr, out var pcs)) return null;
+
+        var rootPc = pcs[0];
+        int[] intervals = [.. pcs.Select(pc => (pc - rootPc + 12) % 12)];
 
         var suffix = qualStr switch
         {
-            "m" or "min" => "m",
-            "dim"        => "dim",
-            "aug" or "+" => "aug",
-            "7"          => "7",
-            "maj7"       => "maj7",
-            "m7"         => "m7",
-            "m7b5"       => "m7b5",
-            "dim7"       => "dim7",
-            _            => ""
+            "m" or "min"   => "m",
+            "dim"          => "dim",
+            "aug" or "+"   => "aug",
+            "7"            => "7",
+            "maj7" or "M7" => "maj7",
+            "m7"           => "m7",
+            "m7b5"         => "m7b5",
+            "dim7"         => "dim7",
+            _              => ""
         };
 
         return ($"{rootStr}{suffix}", rootPc, intervals);

@@ -173,36 +173,12 @@ public sealed partial class ChordSubstitutionMcpTools(IGrothendieckService groth
         };
     }
 
-    // ── Parsing / lookup helpers (mirror ChordSubstitutionSkill) ──────────────────
+    // ── Parsing / lookup helpers (chord reading goes through ChordVocabulary) ─────
 
     private static readonly int[] Dom7 = [0, 4, 7, 10];
 
-    private static readonly FrozenDictionary<string, int> RootPcMap =
-        new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["C"] = 0, ["C#"] = 1, ["Db"] = 1, ["D"] = 2, ["D#"] = 3, ["Eb"] = 3,
-            ["E"] = 4, ["F"] = 5, ["F#"] = 6, ["Gb"] = 6, ["G"] = 7, ["G#"] = 8,
-            ["Ab"] = 8, ["A"] = 9, ["A#"] = 10, ["Bb"] = 10, ["B"] = 11,
-        }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
-
     private static readonly string[] RootNames =
         ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
-
-    private static readonly FrozenDictionary<string, int[]> QualityIntervals =
-        new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase)
-        {
-            [""]     = [0, 4, 7],
-            ["m"]    = [0, 3, 7],
-            ["min"]  = [0, 3, 7],
-            ["dim"]  = [0, 3, 6],
-            ["aug"]  = [0, 4, 8],
-            ["+"]    = [0, 4, 8],
-            ["7"]    = [0, 4, 7, 10],
-            ["maj7"] = [0, 4, 7, 11],
-            ["m7"]   = [0, 3, 7, 10],
-            ["m7b5"] = [0, 3, 6, 10],
-            ["dim7"] = [0, 3, 6, 9],
-        }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     private static readonly (int[] Intervals, string Suffix)[] ChordTemplates =
     [
@@ -227,7 +203,9 @@ public sealed partial class ChordSubstitutionMcpTools(IGrothendieckService groth
         return map.ToFrozenDictionary();
     }
 
-    [GeneratedRegex(@"^(?<root>[A-Ga-g])(?<acc>[b#]?)(?<qual>m7b5|dim7|maj7|m7|7|min|m|dim|aug|\+)?$",
+    // Gates the supported vocabulary (triads and 7th chords); the shared reader does the reading.
+    // Case-sensitive: "M" / "M7" are major, "m" / "m7" minor.
+    [GeneratedRegex(@"^(?<root>[A-Ga-g])(?<acc>[b#]?)(?<qual>m7b5|dim7|maj7|M7|m7|7|min|M|m|dim|aug|\+)?$",
         RegexOptions.CultureInvariant)]
     private static partial Regex FullChordRegex();
 
@@ -237,23 +215,23 @@ public sealed partial class ChordSubstitutionMcpTools(IGrothendieckService groth
         if (!match.Success) return null;
 
         var rootStr = match.Groups["root"].Value.ToUpperInvariant() + match.Groups["acc"].Value;
-        if (!RootPcMap.TryGetValue(rootStr, out var rootPc)) return null;
+        var qualStr = match.Groups["qual"].Value;
+        if (!ChordVocabulary.TryGetPitchClassesStrict(rootStr + qualStr, out var pcs)) return null;
 
-        var qualStr = match.Groups["qual"].Value.ToLowerInvariant();
-        if (!QualityIntervals.TryGetValue(qualStr, out var intervals))
-            intervals = QualityIntervals[""];
+        var rootPc = pcs[0];
+        int[] intervals = [.. pcs.Select(pc => (pc - rootPc + 12) % 12)];
 
         var suffix = qualStr switch
         {
-            "m" or "min" => "m",
-            "dim"        => "dim",
-            "aug" or "+" => "aug",
-            "7"          => "7",
-            "maj7"       => "maj7",
-            "m7"         => "m7",
-            "m7b5"       => "m7b5",
-            "dim7"       => "dim7",
-            _            => "",
+            "m" or "min"   => "m",
+            "dim"          => "dim",
+            "aug" or "+"   => "aug",
+            "7"            => "7",
+            "maj7" or "M7" => "maj7",
+            "m7"           => "m7",
+            "m7b5"         => "m7b5",
+            "dim7"         => "dim7",
+            _              => "",
         };
 
         return ($"{rootStr}{suffix}", rootPc, intervals);
