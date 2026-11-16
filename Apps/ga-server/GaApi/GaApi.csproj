@@ -75,5 +75,15 @@
     <ProjectReference Include="..\..\..\Common\GA.Business.AI\GA.Business.AI.csproj" />
   </ItemGroup>
 
+  <!-- GA.Fretboard.Service is a web project referenced for its types only. Its own
+       appsettings.json flows into GaApi's publish output, where it collides with GaApi's
+       (NETSDK1152), so `dotnet publish` fails. Keep only GaApi's own appsettings files. -->
+  <Target Name="ExcludeReferencedAppSettingsFromPublish" BeforeTargets="_HandleFileConflictsForPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+                             Condition="$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').StartsWith('appsettings')) And !$([System.String]::Copy('%(ResolvedFileToPublish.FullPath)').StartsWith('$(MSBuildProjectDirectory)'))" />
+    </ItemGroup>
+  </Target>
+
 </Project>
 
