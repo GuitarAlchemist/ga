@@ -43,7 +43,7 @@ if (!string.IsNullOrWhiteSpace(redisConn))
 
 // Add services to the container.
 
-// Register core infrastructure (MongoDB, ILGPU, Redis)
+// Register core infrastructure (MongoDB, Redis)
 builder.Services.AddGaInfrastructure(builder.Configuration);
 
 // Register AI services (Ollama, Embeddings, Vector Search, Chatbot)
