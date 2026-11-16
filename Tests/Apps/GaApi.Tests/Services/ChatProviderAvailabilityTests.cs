@@ -1,10 +1,10 @@
 namespace GaApi.Tests.Services;
 
 using System.Net;
-using GaApi.Configuration;
+using GaApi.Extensions;
 using GaApi.Services;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
 /// <summary>
@@ -60,37 +60,64 @@ public class ChatProviderAvailabilityTests
     }
 
     [Test]
-    public async Task ProviderIsFixedAtStartup_LikeTheSingletonChatClient()
+    public async Task Ollama_UsesTheChatbotStreamTimeout()
     {
-        var handler = new StubHandler(HttpStatusCode.ServiceUnavailable, "");
-        var configuration = Configuration("ollama");
-        var availability = Create(configuration, handler);
+        var handler = new StubHandler(HttpStatusCode.OK, """{"models":[]}""");
+        var created = new List<HttpClient>();
 
-        configuration["AI:ChatProvider"] = "claude";
+        await Create("ollama", handler, created, streamTimeoutSeconds: 7).IsAvailableAsync();
 
-        Assert.That(await availability.IsAvailableAsync(), Is.False,
-            "a configuration reload must not make status describe a provider requests never use");
-        Assert.That(handler.RequestedPaths, Is.EqualTo(new[] { "/api/tags" }));
+        Assert.That(created.Select(client => client.Timeout), Is.EqualTo(new[] { TimeSpan.FromSeconds(7) }),
+            "/api/chatbot/status must stay bounded by Chatbot:StreamTimeoutSeconds, not the 100 s HttpClient default");
     }
 
-    private static IConfigurationRoot Configuration(string provider) =>
-        new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            ["AI:ChatProvider"] = provider
-        }).Build();
-
-    private static ChatProviderAvailability Create(string provider, StubHandler handler) =>
-        Create(Configuration(provider), handler);
-
-    private static ChatProviderAvailability Create(IConfiguration configuration, StubHandler handler)
+    [Test]
+    public async Task Registration_SnapshotsTheProviderForStatusAndChatClient()
     {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["AI:ChatProvider"] = "ollama",
+            ["Ollama:BaseUrl"] = "http://127.0.0.1:9"
+        }).Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddAiServices(configuration);
+
+        // A reload after registration must not switch status to a provider the
+        // singleton IChatClient (built from the same snapshot) does not use.
+        configuration["AI:ChatProvider"] = "claude";
+        using var container = services.BuildServiceProvider();
+
+        Assert.That(container.GetRequiredService<ChatProviderSelection>().Provider, Is.EqualTo("ollama"));
+        Assert.That(await container.GetRequiredService<IChatProviderAvailability>().IsAvailableAsync(), Is.False,
+            "the unreachable Ollama primary is reported, not an always-available claude");
+    }
+
+    private static ChatProviderAvailability Create(
+        string provider,
+        StubHandler handler,
+        List<HttpClient>? created = null,
+        int streamTimeoutSeconds = 60)
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["AI:ChatProvider"] = provider,
+            ["Chatbot:Model"] = "llama3.2:3b",
+            ["Chatbot:StreamTimeoutSeconds"] = streamTimeoutSeconds.ToString()
+        }).Build();
         var factory = new Mock<IHttpClientFactory>();
         factory.Setup(f => f.CreateClient("Ollama"))
-            .Returns(() => new HttpClient(handler, disposeHandler: false) { BaseAddress = new Uri("http://localhost:11434") });
+            .Returns(() => Track(new HttpClient(handler, disposeHandler: false) { BaseAddress = new Uri("http://localhost:11434") }));
         factory.Setup(f => f.CreateClient("DockerModelRunner"))
-            .Returns(() => new HttpClient(handler, disposeHandler: false) { BaseAddress = new Uri("http://localhost:12434/v1") });
-        var options = Mock.Of<IOptionsMonitor<ChatbotOptions>>(o => o.CurrentValue == new ChatbotOptions { Model = "llama3.2:3b" });
-        return new ChatProviderAvailability(factory.Object, configuration, options);
+            .Returns(() => Track(new HttpClient(handler, disposeHandler: false) { BaseAddress = new Uri("http://localhost:12434/v1") }));
+        return new ChatProviderAvailability(factory.Object, ChatProviderSelection.FromConfiguration(configuration));
+
+        HttpClient Track(HttpClient client)
+        {
+            created?.Add(client);
+            return client;
+        }
     }
 
     private sealed class StubHandler : HttpMessageHandler

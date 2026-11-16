@@ -154,7 +154,9 @@ GaApi has one generation channel: `Microsoft.Extensions.AI.IChatClient`, registe
 
 Every binding runs the same `UseFunctionInvocation()` pipeline, so tool-calling skills behave the same on each provider. Ollama and Docker answer non-streaming calls by aggregating their stream (`StreamingAggregationChatClient`), so their transport timeout (`Chatbot:StreamTimeoutSeconds`, 60 s for Docker) bounds only the wait for the first bytes.
 
-Reachability is separate and never runs inference: `IChatProviderAvailability` (`Apps/ga-server/GaApi/Services/ChatProviderAvailability.cs`) backs `ChatbotController.GetStatus` and, when `Chatbot:Readiness:ProviderCheck` is on, `GaApiChatReadinessProbe`. The Nebula pipeline bypasses both and talks to providers directly via its own `HttpClient`.
+`AI:CascadeProvider` (mistral, ollama, docker or github) wraps the primary in the same `CascadingChatClient` as GaChatbot.Api, through the shared `GA.Business.ML.Extensions.AiServiceExtensions.WithCascadeFallback`. The embedding generator and the purpose-aware `IEmbeddingGeneratorFactory` come from the shared `AddTextEmbeddings`, so `AI:Embedding:Routing:Model` (e.g. `bge-large`) reaches the semantic intent router together with `AI:Routing:MinConfidence`.
+
+Reachability is separate and never runs inference: `IChatProviderAvailability` (`Apps/ga-server/GaApi/Services/ChatProviderAvailability.cs`) backs `ChatbotController.GetStatus` and, when `Chatbot:Readiness:ProviderCheck` is on, `GaApiChatReadinessProbe`. It reports the primary provider and shares the registration-time `ChatProviderSelection` snapshot with the `IChatClient`. The Nebula pipeline bypasses both and talks to providers directly via its own `HttpClient`.
 
 ---
 

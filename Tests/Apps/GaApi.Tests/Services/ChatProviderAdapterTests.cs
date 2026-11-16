@@ -4,12 +4,16 @@ using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GaApi.Extensions;
 using GaApi.Services;
+using GA.Business.ML.Extensions;
+using GA.Business.ML.Providers;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using AiChatMessage = Microsoft.Extensions.AI.ChatMessage;
 using AiChatResponse = Microsoft.Extensions.AI.ChatResponse;
+
+#pragma warning disable SKEXP0001 // GA.Business.ML is an [Experimental] assembly; GaApi suppresses it the same way
 
 [TestFixture]
 public class ChatProviderAdapterTests
@@ -84,14 +88,47 @@ public class ChatProviderAdapterTests
             "Chatbot:Model selects the Ollama chat model, as OllamaChatService did");
     }
 
-    private static ServiceProvider BuildAiContainer(string chatProvider, string chatbotModel = "llama3.2:3b")
+    [TestCase(null, false)]
+    [TestCase("ollama", true)]
+    public void Registration_CascadeProvider_WrapsThePrimaryLikeGaChatbotApi(string? cascadeProvider, bool cascades)
     {
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        using var container = BuildAiContainer("docker", extra: new() { ["AI:CascadeProvider"] = cascadeProvider });
+
+        var client = container.GetRequiredService<IChatClient>();
+
+        Assert.That(client.GetService<CascadingChatClient>() is not null, Is.EqualTo(cascades),
+            "AI:CascadeProvider must take effect on GaApi as it does on GaChatbot.Api");
+        Assert.That(client.GetService<FunctionInvokingChatClient>(), Is.Not.Null);
+    }
+
+    [Test]
+    public void Registration_RoutingEmbeddingOverride_TakesEffect()
+    {
+        using var container = BuildAiContainer("ollama", extra: new() { ["AI:Embedding:Routing:Model"] = "bge-large" });
+
+        var factory = container.GetRequiredService<IEmbeddingGeneratorFactory>();
+        var routing = factory.Create("routing");
+
+        Assert.That(routing?.GetService<EmbeddingGeneratorMetadata>()?.DefaultModelId, Is.EqualTo("bge-large"),
+            "AI:Embedding:Routing:Model must reach the semantic intent router on GaApi");
+        Assert.That(factory.Create("memory"), Is.SameAs(container.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>()),
+            "purposes without an override keep the default embedder");
+    }
+
+    private static ServiceProvider BuildAiContainer(
+        string chatProvider,
+        string chatbotModel = "llama3.2:3b",
+        Dictionary<string, string?>? extra = null)
+    {
+        var settings = new Dictionary<string, string?>
         {
             ["AI:ChatProvider"] = chatProvider,
             ["Chatbot:Model"] = chatbotModel,
             ["Ollama:ChatModel"] = "ignored-when-chatbot-model-is-set"
-        }).Build();
+        };
+        foreach (var (key, value) in extra ?? [])
+            settings[key] = value;
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
