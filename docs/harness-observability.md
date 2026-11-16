@@ -119,7 +119,7 @@ The observability chain never bypasses the supervised-loop hard
 gates (`docs/loop-onboarding.md`):
 
 - No service restarts.
-- No edits to `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml`
+- No edits to `Tests/Apps/GaApi.Tests/Corpus/prompts.yaml`
   or `docs/runbooks/chatbot-improvement-loop.md`.
 - No `.github/workflows/**` edits without explicit human approval —
   even if it would close an install-audit deduction.

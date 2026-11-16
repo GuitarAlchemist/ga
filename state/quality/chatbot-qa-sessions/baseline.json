@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "domain": "chatbot-qa-sessions",
-  "purpose": "Setpoint contract for the MULTI-TURN session axis of the chatbot improvement loop. Mirrors state/quality/chatbot-qa/baseline.json (the single-turn axis) so /auto-optimize can target session_pass_pct the same way it targets pass_pct. Replayed by SessionCorpusTests.EverySession_SatisfiesItsInvariants over Tests/Apps/GaChatbot.Api.Tests/Corpus/sessions.yaml; snapshot emitted by Scripts/run-session-corpus.ps1 -Snapshot.",
+  "purpose": "Setpoint contract for the MULTI-TURN session axis of the chatbot improvement loop. Mirrors state/quality/chatbot-qa/baseline.json (the single-turn axis) so /auto-optimize can target session_pass_pct the same way it targets pass_pct. Replayed by SessionCorpusTests.EverySession_SatisfiesItsInvariants over Tests/Apps/GaApi.Tests/Corpus/sessions.yaml; snapshot emitted by Scripts/run-session-corpus.ps1 -Snapshot.",
   "established_at": "2026-06-16",
   "established_by": "session-corpus seed refocused on GA's differentiated domain — pitch-class set theory (SetClass: ICV, Z-relation, T/I equivalence, symmetric families) and the OPTIC-K voicing index (search, easier voicings, neighbors, voice leading) — alongside the music-theory journeys (beginner, songwriting, improv, jazz). Generic guitar-teacher journeys (gear/tuning, practice/metronome) deliberately excluded: not GA's value.",
   "metric": "session_pass_pct",
@@ -30,7 +30,7 @@
     ],
     "allow_edit_rationale": "The loop fixes the chatbot's behaviour — skills, agents, orchestration, narration — to make failing session turns pass.",
     "protected": [
-      "Tests/Apps/GaChatbot.Api.Tests/Corpus/sessions.yaml",
+      "Tests/Apps/GaApi.Tests/Corpus/sessions.yaml",
       "Tests/Apps/GaChatbot.Api.Tests/Corpus/SessionCorpusTests.cs",
       "state/quality/chatbot-qa-sessions/baseline.json"
     ],

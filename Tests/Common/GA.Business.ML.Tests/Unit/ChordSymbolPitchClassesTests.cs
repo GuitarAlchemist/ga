@@ -33,6 +33,21 @@ public class ChordSymbolPitchClassesTests
     [TestCase("gsus4", new[] { 7, 0, 2 })]
     [TestCase("CΔ7", new[] { 0, 4, 7, 11 })]
     [TestCase("CΔ", new[] { 0, 4, 7, 11 })]
+    [TestCase("CM6", new[] { 0, 4, 7, 9 })]
+    [TestCase("CM9", new[] { 0, 4, 7, 11, 2 })]
+    [TestCase("CM11", new[] { 0, 4, 7, 11, 2, 5 })]
+    [TestCase("CM13", new[] { 0, 4, 7, 11, 2, 5, 9 })]
+    [TestCase("CM7b5", new[] { 0, 4, 6, 11 })]
+    [TestCase("CmM7", new[] { 0, 3, 7, 11 })]
+    [TestCase("CDIM7", new[] { 0, 3, 6, 9 })]
+    [TestCase("CDOM7", new[] { 0, 4, 7, 10 })]
+    [TestCase("CMAJ7", new[] { 0, 4, 7, 11 })]
+    [TestCase("CMIN7", new[] { 0, 3, 7, 10 })]
+    [TestCase("CDIM", new[] { 0, 3, 6 })]
+    [TestCase("Cm6", new[] { 0, 3, 7, 9 })]
+    [TestCase("Cm9", new[] { 0, 3, 7, 10, 2 })]
+    [TestCase("Cm11", new[] { 0, 3, 7, 10, 2, 5 })]
+    [TestCase("Cm13", new[] { 0, 3, 7, 10, 2, 5, 9 })]
     public void TryGetPitchClasses_ReadsRootAndQuality(string symbol, int[] expected)
     {
         var ok = ChordVocabulary.TryGetPitchClasses(symbol, out var pitchClasses);
@@ -152,6 +167,17 @@ public class ChordSymbolPitchClassesTests
     }
 
     private static IEnumerable<string> CanonicalQualities() => ChordVocabulary.ParserSuffixes.Keys;
+
+    // An "M" before a digit is a major marker only at the start of the quality (or after a minor "m"); inside an
+    // all-caps alias such as "DIM7" or "DOM7" it is the alias's own last letter.
+    [TestCase("DIM7", "diminished 7")]
+    [TestCase("DOM7", "dominant 7")]
+    [TestCase("MAJ7", "major 7")]
+    [TestCase("MIN7", "minor 7")]
+    [TestCase("M9", "major 9")]
+    [TestCase("m9", "minor 9")]
+    public void NormalizeQuality_ReadsUppercaseMOnlyAsAMajorMarker(string raw, string expected) =>
+        Assert.That(ChordVocabulary.NormalizeQuality(raw), Is.EqualTo(expected));
 
     private static readonly IGrothendieckService Grothendieck = new GrothendieckService();
 

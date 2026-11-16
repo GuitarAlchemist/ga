@@ -17,7 +17,8 @@ export const meta = {
 // limit : cap the number of (non-skipped) prompts evaluated — for smoke runs.
 const HOST = (args && args.host) || 'http://localhost:5252'
 const LIMIT = args && Number.isFinite(args.limit) ? args.limit : null
-const CORPUS = 'Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml'
+const CORPUS = 'Tests/Apps/GaApi.Tests/Corpus/prompts.yaml'
+const CORPUS_RUNNER = 'Tests/Apps/GaChatbot.Api.Tests/Corpus/PromptCorpusTests.cs'
 const SNAPSHOT_DIR = 'state/quality/chatbot-qa-semantic'
 
 // The judge panel: each lens is an INDEPENDENT reviewer with a distinct failure
@@ -168,7 +169,7 @@ const [probe, corpus] = await parallel([
   () =>
     agent(
       `Confirm the GA chatbot backend is live and discover its exact request/response shape.\n` +
-      `1. Read ${CORPUS.replace('prompts.yaml', 'PromptCorpusTests.cs')} around the POST call (~line 185) to find the exact ` +
+      `1. Read ${CORPUS_RUNNER} around the POST call (~line 185) to find the exact ` +
       `chat route, the request JSON body shape, and the response field that holds the natural-language answer.\n` +
       `2. The known facts: host base is ${HOST}, route is /api/chatbot/chat, answer field is "naturalLanguageAnswer", ` +
       `agent id is "agentId". Confirm these against the source.\n` +

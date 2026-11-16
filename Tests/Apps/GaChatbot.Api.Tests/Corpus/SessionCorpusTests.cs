@@ -56,8 +56,7 @@ public class SessionCorpusTests
             TestContext.CurrentContext.TestDirectory, "Corpus", "sessions.yaml");
         if (!File.Exists(yamlPath))
         {
-            yamlPath = Path.Combine(
-                AppContext.BaseDirectory, "..", "..", "..", "Corpus", "sessions.yaml");
+            yamlPath = TestPaths.RepositoryPath("Tests", "Apps", "GaApi.Tests", "Corpus", "sessions.yaml");
         }
 
         var yaml = File.ReadAllText(yamlPath);

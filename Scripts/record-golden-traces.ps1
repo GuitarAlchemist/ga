@@ -26,7 +26,7 @@ param(
     [int]$RunsPerPrompt     = 1,
     [int]$TimeoutSeconds    = 60,
     [string]$Filter         = "",
-    [string]$CorpusPath     = "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml",
+    [string]$CorpusPath     = "Tests/Apps/GaApi.Tests/Corpus/prompts.yaml",
     [string]$OutputDir      = "state/quality/chatbot-qa/golden-traces",
     [switch]$DryRun
 )

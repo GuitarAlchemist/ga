@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-11-15T15:29:09Z_
+_Generated: 2026-11-16T18:08:46Z_
 
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/*`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/agui/stream`
@@ -15,7 +15,7 @@ _Generated: 2026-11-15T15:29:09Z_
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Chatbot__PathBase=/chatbot`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Scripts/start-dev.ps1`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `ServiceCollectionExtensions.cs`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Tests/Apps/GaApi.Tests/Corpus/prompts.yaml`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `[ApiController] [Route("api/chatbot/<verb>")]`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `api/chatbot/...`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `demos.guitaralchemist.com`
@@ -73,7 +73,7 @@ _Generated: 2026-11-15T15:29:09Z_
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `ServiceLifetime.Scoped`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `SkillMdDrivenWrapperBase.cs`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `Skills/<Name>Skill.cs`
-- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `Tests/Apps/GaApi.Tests/Corpus/prompts.yaml`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `Tests/Common/GA.Business.ML.Tests/Unit/<Name>SkillTests.cs`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `docs/architecture/layers.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`

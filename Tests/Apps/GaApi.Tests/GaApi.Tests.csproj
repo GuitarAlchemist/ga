@@ -6,6 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <!-- The orchestrator cascade tests construct IIntent / IntentResult / IChatHook types,
+         tagged [Experimental("SKEXP0001")] in GA.Business.ML. -->
+    <NoWarn>$(NoWarn);SKEXP0001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +20,11 @@
     <PackageReference Include="NUnit.Analyzers" Version="4.4.0"/>
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0"/>
     <PackageReference Include="xunit.extensibility.core" Version="2.9.2"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Corpus\prompts.yaml" CopyToOutputDirectory="PreserveNewest"/>
+    <None Update="Corpus\sessions.yaml" CopyToOutputDirectory="PreserveNewest"/>
   </ItemGroup>
 
   <ItemGroup>
