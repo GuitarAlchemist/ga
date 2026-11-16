@@ -406,6 +406,28 @@ forwardedHeadersOptions.KnownIPNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
+// The public chatbot page is mounted at /chatbot/ (cloudflared routes
+// demos.guitaralchemist.com/chatbot/* here). The page uses relative URLs
+// (`api/chatbot/chat/stream`, `vendor/vexflow/vexflow.js`), so:
+// - `/chatbot` without the trailing slash redirects to `/chatbot/`; otherwise the
+//   browser resolves those URLs against `/` and they miss the mount (308 keeps POSTs).
+// - UsePathBase moves the prefix into PathBase, so `/chatbot/api/chatbot/*` reaches
+//   the same controllers as `/api/chatbot/*`, and HttpChatSessionCookie scopes the
+//   session cookie to the path the browser actually calls. UsePathBase re-runs
+//   routing on the stripped path. Requests without the prefix are unchanged.
+// Unrouted requests under the mount are page assets; see the static-files block below.
+const string chatbotMount = "/chatbot";
+app.Use(async (ctx, next) =>
+{
+    if (string.Equals(ctx.Request.Path.Value, chatbotMount, StringComparison.Ordinal))
+    {
+        ctx.Response.Redirect(chatbotMount + "/" + ctx.Request.QueryString, permanent: true, preserveMethod: true);
+        return;
+    }
+    await next();
+});
+app.UsePathBase(chatbotMount);
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -432,11 +454,14 @@ app.UseAuthorization();
 // CORS + rate limiting provide weak protection; this gate prevents accidental public exposure
 // while full bearer auth is designed. Replace with [Authorize] + AddAuthentication once a
 // token/key issuance strategy is in place (see todo 036).
+// The public chatbot page is anonymous, as it was on GaChatbot.Api: the calls it makes
+// (PublicChatbotPageApi) pass without a key; every other /api/chatbot route keeps the gate.
 if (!app.Environment.IsDevelopment())
 {
     app.Use(async (ctx, next) =>
     {
         if (ctx.Request.Path.StartsWithSegments("/api/chatbot")
+            && !PublicChatbotPageApi.AllowsAnonymous(ctx.Request)
             && !ctx.Request.Headers.ContainsKey("X-Api-Key"))
         {
             ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -446,20 +471,20 @@ if (!app.Environment.IsDevelopment())
     });
 }
 
-// Enable static files for Blazor.
-// UseDefaultFiles needs to run before UseStaticFiles so a request to /chatbot/
-// is rewritten to /chatbot/index.html before the static-files middleware
-// resolves it. ASP.NET's manifest-based file provider doesn't always expose
-// nested static-web-asset directories as enumerable, so we also rewrite the
-// known SPA shells explicitly — belt-and-braces against the same 404 the
-// chatbot demo hit when the slot-build runtime manifest stripped the
-// `chatbot/` directory listing.
+// The chatbot page and its assets live in wwwroot/chatbot/. A request under the
+// /chatbot mount that no endpoint claimed is one of them: map it back onto
+// wwwroot/chatbot/ for the static-file middleware. The page shell is named
+// explicitly because the manifest-based file provider does not always expose
+// nested static-web-asset directories to UseDefaultFiles (the 404 the chatbot
+// demo hit when the slot-build runtime manifest stripped the `chatbot/` listing).
 app.Use(async (ctx, next) =>
 {
-    var path = ctx.Request.Path.Value;
-    if (path is "/chatbot" or "/chatbot/")
+    if (ctx.Request.PathBase.Equals(chatbotMount) && ctx.GetEndpoint() is null)
     {
-        ctx.Request.Path = "/chatbot/index.html";
+        var path = ctx.Request.Path.Value;
+        ctx.Request.Path = string.IsNullOrEmpty(path) || path == "/"
+            ? chatbotMount + "/index.html"
+            : chatbotMount + path;
     }
     await next();
 });

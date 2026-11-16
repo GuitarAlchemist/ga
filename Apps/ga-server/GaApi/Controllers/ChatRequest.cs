@@ -11,6 +11,12 @@ public class ChatRequest
 
     public List<ChatMessage>? ConversationHistory { get; set; }
     public bool UseSemanticSearch { get; set; } = true;
+
+    /// <summary>
+    ///     Traffic-source tag (the chatbot page's <c>?ref=</c> value) recorded on the routing
+    ///     telemetry of this request; see <c>RoutingTelemetryLog.BeginTrafficSource</c>.
+    /// </summary>
+    public string? Source { get; set; }
 }
 
 /// <summary>Non-streaming JSON response returned by POST /api/chatbot/chat.</summary>

@@ -34,8 +34,11 @@ using Microsoft.AspNetCore.DataProtection;
 ///   <item>SameSite: Lax (allows top-level navigation from external links)</item>
 ///   <item>Secure: true when request is HTTPS</item>
 ///   <item>Max-Age: 30 days (absolute from issuance, not sliding)</item>
-///   <item>Path: <c>/api/chatbot</c></item>
+///   <item>Path: <c>{PathBase}/api/chatbot</c> (<c>/api/chatbot</c> on a direct
+///   request, <c>/chatbot/api/chatbot</c> for the page mounted at <c>/chatbot/</c>)</item>
 /// </list>
+/// A hardcoded <c>/api/chatbot</c> would never be sent back by a browser that calls
+/// <c>/chatbot/api/chatbot/*</c>, so every turn on the mounted page would start a new session.
 /// </para>
 /// <para>
 /// <b>Threat model:</b> rotation across browser sessions (cookie cleared,
@@ -101,7 +104,7 @@ public static class HttpChatSessionCookie
             Secure   = ctx.Request.IsHttps,
             SameSite = SameSiteMode.Lax,
             MaxAge   = CookieLifetime,
-            Path     = "/api/chatbot",
+            Path     = ctx.Request.PathBase.Value + "/api/chatbot",
         });
 
         return newId;
