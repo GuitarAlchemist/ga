@@ -268,3 +268,46 @@ public class ChatbotPageMountProductionTests
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 }
+
+/// <summary>
+///     The page polls status after every message, and the CI Playwright job probes it with a 2 s
+///     timeout to decide GaApi is up. An unreachable provider must not hold the answer.
+/// </summary>
+[TestFixture]
+[Category("Integration")]
+public class ChatbotStatusBoundTests
+{
+    [Test]
+    public async Task Status_WhenTheProviderHangs_AnswersUnavailableWithinTwoSeconds()
+    {
+        var provider = new Mock<IChatService>();
+        provider.Setup(service => service.IsAvailableAsync(It.IsAny<CancellationToken>()))
+            .Returns<CancellationToken>(async ct =>
+            {
+                await Task.Delay(Timeout.Infinite, ct);
+                return true;
+            });
+        using var factory = new TestWebApplicationFactory().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Production");
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<IChatService>();
+                services.AddSingleton(provider.Object);
+            });
+        });
+        using var client = factory.CreateClient();
+
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        using var response = await client.GetAsync("/chatbot/api/chatbot/status");
+        clock.Stop();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(body.GetProperty("isAvailable").GetBoolean(), Is.False);
+            Assert.That(clock.Elapsed, Is.LessThan(TimeSpan.FromSeconds(2)));
+        });
+    }
+}

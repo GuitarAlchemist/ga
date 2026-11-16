@@ -35,6 +35,8 @@ public class ChatbotController(
     private static readonly JsonSerializerOptions _jsonOptions =
         new(JsonSerializerDefaults.Web);
 
+    private static readonly TimeSpan StatusCheckTimeout = TimeSpan.FromSeconds(1);
+
     /// <summary>
     ///     Send a message to the chatbot and receive a streaming response via Server-Sent Events.
     ///     The first SSE event is a routing metadata JSON object:
@@ -208,11 +210,28 @@ public class ChatbotController(
     /// <summary>
     ///     Check whether the Ollama service is reachable and the chatbot is ready to respond.
     /// </summary>
+    /// <remarks>
+    ///     The check is bounded: an unreachable provider counts as unavailable after
+    ///     <see cref="StatusCheckTimeout"/>. Unbounded, the Ollama client's retries held the
+    ///     answer for about 16 s, and the public page calls this after every message.
+    /// </remarks>
     [HttpGet("status")]
     [ProducesResponseType(typeof(ChatbotStatus), StatusCodes.Status200OK)]
     public async Task<ActionResult<ChatbotStatus>> GetStatus(CancellationToken cancellationToken)
     {
-        var isAvailable = await statusService.IsAvailableAsync(cancellationToken);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(StatusCheckTimeout);
+        bool isAvailable;
+        try
+        {
+            isAvailable = await statusService.IsAvailableAsync(timeout.Token).WaitAsync(StatusCheckTimeout, cancellationToken);
+        }
+        catch (Exception ex) when (ex is TimeoutException
+                                   || (ex is OperationCanceledException && !cancellationToken.IsCancellationRequested))
+        {
+            isAvailable = false;
+        }
+
         return Ok(new ChatbotStatus
         {
             IsAvailable = isAvailable,
