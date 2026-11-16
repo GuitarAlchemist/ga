@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "a90bde188e6da958f1e8e159e0cc45191dcbaad4",
-    "generatedAt": "2026-11-16T22:43:16.783077+00:00",
+    "commitSha": "2483e14338a0f258344523b270ad2e6de0a6acf9",
+    "generatedAt": "2026-11-16T22:45:13.864307+00:00",
     "repoCount": 5,
-    "totalPRs": 34
+    "totalPRs": 33
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 13,
+      "prCount": 12,
       "prs": [
         {
           "ageDays": 0,
@@ -134,22 +134,10 @@
           "failingChecks": 0,
           "headRef": "feat/cand4-gaapi-a2a",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 882,
           "title": "feat(gaapi): port the A2A JSON-RPC endpoint from GaChatbot.Api",
           "url": "https://github.com/GuitarAlchemist/ga/pull/882"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T05:07:15Z",
-          "failingChecks": 0,
-          "headRef": "feat/cand4-gaapi-serves-chatbot-page",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 881,
-          "title": "feat(gaapi): serve the public chatbot page under /chatbot/",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/881"
         },
         {
           "ageDays": 1,
@@ -508,7 +496,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1126,
           "title": "ci: run under the merge queue",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
@@ -520,7 +508,7 @@
           "failingChecks": 1,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
@@ -532,7 +520,7 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
@@ -544,7 +532,7 @@
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -556,7 +544,7 @@
           "failingChecks": 1,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -568,7 +556,7 @@
           "failingChecks": 3,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
