@@ -1,6 +1,7 @@
 namespace GaApi.Services;
 
 using System.Diagnostics;
+using GA.Business.ML.Search;
 using GA.Core.Functional;
 using HotChocolate.Utilities;
 using Microsoft.Extensions.Caching.Memory;
@@ -22,7 +23,7 @@ public interface IMonadicHealthCheckService
 
 public class MonadicHealthCheckService(
     MongoDbService mongoDb,
-    IVectorSearchStrategy vectorSearch,
+    IVoicingSearchStrategy vectorSearch,
     IMemoryCache cache,
     ILogger<MonadicHealthCheckService> logger,
     IConfiguration configuration)

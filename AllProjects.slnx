@@ -38,7 +38,6 @@
         <Project Path="Tools/MongoImporter/MongoImporter.csproj" />
         <Project Path="Tools/MongoVerify/MongoVerify.csproj" />
         <Project Path="Tools/QualityLens/QualityLens.csproj" />
-        <Project Path="Demos/Performance/VectorSearchBenchmark/VectorSearchBenchmark.csproj" />
 
     </Folder>
     <Folder Name="/Backend/Infrastructure/">
