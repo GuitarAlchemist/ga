@@ -5,8 +5,9 @@ using GaApi.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
-#pragma warning disable SKEXP0001 // CpuVoicingSearchStrategy is marked experimental; GaApi suppresses it the same way
+#pragma warning disable SKEXP0001 // GA.Business.ML is an [Experimental] assembly; GaApi suppresses it the same way
 
 /// <summary>
 ///     Pins the vector-search health probe to the layer-4 voicing search strategy
@@ -20,10 +21,11 @@ public class VectorSearchHealthCheckTests
     [Test]
     public async Task HealthCheckService_ReportsVoicingSearchStrategyType()
     {
+        var strategy = Mock.Of<IVoicingSearchStrategy>();
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = new HealthCheckService(
             null!, // the vector-search probe does not touch MongoDB
-            new CpuVoicingSearchStrategy(),
+            strategy,
             cache,
             NullLogger<HealthCheckService>.Instance,
             EmptyConfiguration);
@@ -31,16 +33,17 @@ public class VectorSearchHealthCheckTests
         var health = await service.CheckVectorSearchAsync();
 
         Assert.That(health.Status, Is.EqualTo("Healthy"));
-        Assert.That(health.Details!["StrategyType"], Is.EqualTo(nameof(CpuVoicingSearchStrategy)));
+        Assert.That(health.Details!["StrategyType"], Is.EqualTo(strategy.GetType().Name));
     }
 
     [Test]
     public async Task MonadicHealthCheckService_ReportsVoicingSearchStrategyType()
     {
+        var strategy = Mock.Of<IVoicingSearchStrategy>();
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = new MonadicHealthCheckService(
             null!, // the vector-search probe does not touch MongoDB
-            new CpuVoicingSearchStrategy(),
+            strategy,
             cache,
             NullLogger<MonadicHealthCheckService>.Instance,
             EmptyConfiguration);
@@ -48,6 +51,6 @@ public class VectorSearchHealthCheckTests
         var health = (await service.CheckVectorSearchAsync()).GetValueOrThrow();
 
         Assert.That(health.Status, Is.EqualTo("Healthy"));
-        Assert.That(health.Details!["StrategyType"], Is.EqualTo(nameof(CpuVoicingSearchStrategy)));
+        Assert.That(health.Details!["StrategyType"], Is.EqualTo(strategy.GetType().Name));
     }
 }
