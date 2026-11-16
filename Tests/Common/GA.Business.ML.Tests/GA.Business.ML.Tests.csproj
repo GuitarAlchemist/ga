@@ -39,5 +39,8 @@
     <None Update="Data\routing-eval-prompts.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Search\Golden\chord-pitch-classes.golden.tsv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
