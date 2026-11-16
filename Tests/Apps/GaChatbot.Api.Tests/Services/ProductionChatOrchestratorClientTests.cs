@@ -77,12 +77,11 @@ public class ProductionChatOrchestratorClientTests
 
     /// <summary>
     /// Records the <see cref="ChatRequest"/> the adapter hands over. Only the
-    /// two dependencies the primary constructor eagerly enumerates
-    /// (<c>orchestratorSkills</c>, <c>chatHooks</c>) need real values; the
-    /// overridden <c>AnswerAsync</c> touches none of the rest.
+    /// dependency the primary constructor eagerly enumerates (<c>chatHooks</c>)
+    /// needs a real value; the overridden <c>AnswerAsync</c> touches none of the rest.
     /// </summary>
     private sealed class CapturingOrchestrator() : ProductionOrchestrator(
-        null!, null!, null!, null!, null!, [], [], null!, null!, null!, null!, null!, null!, null!)
+        null!, null!, null!, null!, null!, [], null!, null!, null!, null!, null!, null!, null!)
     {
         public ChatRequest? Captured { get; private set; }
 
