@@ -201,6 +201,31 @@ public class A2AControllerTests
         });
     }
 
+    // GaChatbot.Api serves A2A without a key; outside Development GaApi gates only /api/chatbot/*.
+    [TestCase("/chatbot")]
+    [TestCase("")]
+    public async Task InProduction_CardSendAndStream_PassWithoutAKey(string mount)
+    {
+        var intake = new RecordingIntake();
+        using var factory = CreateFactory(intake, builder => builder.UseEnvironment("Production"));
+        using var client = factory.CreateClient();
+
+        using var card = await client.GetAsync($"{mount}/.well-known/agent-card.json");
+        using var send = await client.PostAsJsonAsync($"{mount}/a2a", Rpc("message/send", TextMessage("Explain C major.", "ctx-prod")));
+        using var stream = await client.PostAsJsonAsync($"{mount}/a2a", Rpc("message/stream", TextMessage("Explain C major.", "ctx-prod")));
+        var sent = await send.Content.ReadFromJsonAsync<JsonElement>();
+        var streamed = ReadSseData(await stream.Content.ReadAsStringAsync());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(card.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(send.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(sent.GetProperty("result").GetProperty("parts")[0].GetProperty("text").GetString(), Is.EqualTo(RecordingIntake.Answer));
+            Assert.That(stream.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(streamed, Has.Count.EqualTo(3));
+        });
+    }
+
     private static WebApplicationFactory<Program> CreateFactory(RecordingIntake intake, Action<IWebHostBuilder>? configure = null) =>
         new TestWebApplicationFactory().WithWebHostBuilder(builder =>
         {
