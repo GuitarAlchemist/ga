@@ -33,7 +33,7 @@
       "Common/GA.Business.ML/Embeddings/**",
       "Common/GA.Business.Core/**",
       "docs/runbooks/chatbot-improvement-loop.md",
-      "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml",
+      "Tests/Apps/GaApi.Tests/Corpus/prompts.yaml",
       "docs/contracts/**",
       "AllProjects.slnx",
       "global.json",

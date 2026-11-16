@@ -15,7 +15,7 @@
 #      ix/crates/ix-quality-trend/src/snapshot.rs).
 #
 # The corpus and its invariants live in
-# Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml. PromptCorpusTests.cs
+# Tests/Apps/GaApi.Tests/Corpus/prompts.yaml. PromptCorpusTests.cs
 # is the canonical runner; this script is a thin wrapper that surfaces
 # results in a loop-friendly shape.
 
@@ -197,7 +197,7 @@ if ($Json) {
         # we can express metric_value as pass-rate. Mirrors the walk in
         # the -Snapshot branch below; kept inline to avoid changing the
         # snapshot logic in this fix.
-        $promptsYamlForMetric = Join-Path $repoRoot "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml"
+        $promptsYamlForMetric = Join-Path $repoRoot "Tests/Apps/GaApi.Tests/Corpus/prompts.yaml"
         $totalActive = 0
         $inBlock = $false
         $blockSkipped = $false
@@ -272,7 +272,7 @@ if ($Snapshot) {
     # Walk prompts.yaml to recover totals and per-category populations.
     # The corpus is the source of truth for "what was attempted"; the
     # parsed test output gives us "what failed".
-    $promptsYaml = Join-Path $repoRoot "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml"
+    $promptsYaml = Join-Path $repoRoot "Tests/Apps/GaApi.Tests/Corpus/prompts.yaml"
     $categoryTotals = @{}
     $totalPrompts = 0
     $skippedPrompts = 0

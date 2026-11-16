@@ -11,7 +11,7 @@
   },
 
   "metric": "pass_pct",
-  "metric_description": "Fraction of non-skipped prompts in Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml that satisfy ALL their declared invariants (contains, not_contains, routes_to, must_not_fallback, forbidden_agent_ids, min_routing_confidence, _signature.json shape). Computed by Scripts/run-prompt-corpus.ps1 -Snapshot.",
+  "metric_description": "Fraction of non-skipped prompts in Tests/Apps/GaApi.Tests/Corpus/prompts.yaml that satisfy ALL their declared invariants (contains, not_contains, routes_to, must_not_fallback, forbidden_agent_ids, min_routing_confidence, _signature.json shape). Computed by Scripts/run-prompt-corpus.ps1 -Snapshot.",
   "primary_baseline": 0.94,
   "primary_baseline_source": "post-#224 local snapshot 2026-05-16: 47/50 active prompts passed (94%). The remaining 3 are LLM-bound wording-variance cases on local Ollama. Re-baseline after demos host is redeployed past #221/#224/#225/#227 and cascade is enabled (Mistral fallback should bump the pass rate further).",
 
@@ -44,7 +44,7 @@
     "allow_edit_rationale": "Loop edits skill implementations, MCP wrappers, intent routing, orchestrator plugins, and domain services — the layers behind a chatbot answer. NEVER prompts, corpus, oracle scripts, runbooks, or CI workflows.",
 
     "protected": [
-      "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml",
+      "Tests/Apps/GaApi.Tests/Corpus/prompts.yaml",
       "Tests/Apps/GaChatbot.Api.Tests/Corpus/PromptCorpusTests.cs",
       "Tests/Apps/GaChatbot.Api.Tests/Corpus/CanonicalSignatureChecker.cs",
       "state/quality/chatbot-qa/golden-traces/**/_signature.json",

@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 /// points of <c>ProductionOrchestrator</c> delegate to one routing cascade, whose stage order is
 /// pinned here. The two paths used to be hand-written copies that drifted (the streaming path
 /// skipped the skill hooks and ran the voicing guard after semantic routing). Runtime parity of
-/// the two paths is covered by <c>OrchestratorCascadeParityTests</c> in GaChatbot.Api.Tests.
+/// the two paths is covered by <c>OrchestratorCascadeParityTests</c> in GaApi.Tests.
 /// </summary>
 [TestFixture]
 public class ProductionOrchestratorStreamingParityTests

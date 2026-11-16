@@ -37,7 +37,7 @@ The chatbot's deterministic-first skill surface. Each `IOrchestratorSkill` is a 
 3. **`CanHandle` is the keyword-fallback gate.** Intent keyword + chord-shaped token. Never lowercase-match a bare letter.
 4. **Register in `Common/GA.Business.Core.Orchestration/Plugins/GaPlugin.cs`** via `services.AddOrchestratorSkillIntent<YourSkill>()`. Pass `ServiceLifetime.Scoped` only if your ctor takes `IChatClient`.
 5. **Add tests** under `Tests/Common/GA.Business.ML.Tests/Unit/<Name>SkillTests.cs` mirroring `ChordVoicingsSkillTests.cs` — cover `CanHandle` positive + lowercase-article negative + `ExecuteAsync` happy path + no-intent branch.
-6. **Add a fixture** in `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml` only via the prompt-corpus runbook — see `docs/runbooks/chatbot-improvement-loop.md`. (Do NOT edit `prompts.yaml` directly without the runbook flow.)
+6. **Add a fixture** in `Tests/Apps/GaApi.Tests/Corpus/prompts.yaml` only via the prompt-corpus runbook — see `docs/runbooks/chatbot-improvement-loop.md`. (Do NOT edit `prompts.yaml` directly without the runbook flow.)
 7. **No SKILL.md required** for pure-C# skills. The `skills/<name>/SKILL.md` files are only for the Path B DSL-eval skills (transpose, common-tones, diatonic-chords) and the catalog graduates.
 
 ## What NOT to do here

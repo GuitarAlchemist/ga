@@ -1,4 +1,4 @@
-namespace GaChatbot.Api.Tests.Services;
+namespace GaApi.Tests.Services;
 
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Services;
@@ -95,7 +95,6 @@ public class InvalidChordDeclineTests
     private static WebApplicationFactory<Program> CreateFactory(CountingChatClient chat, RecordingHook hook) =>
         new TestWebApplicationFactory().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("Chatbot:Mode", "full");
             // Unreachable Ollama: any call the fakes miss fails fast instead of reaching a local model.
             builder.UseSetting("Ollama:Endpoint", "http://127.0.0.1:9");
             builder.UseSetting("Ollama:BaseUrl", "http://127.0.0.1:9");

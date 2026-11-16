@@ -48,7 +48,7 @@ The chatbot API host. Standalone ASP.NET process on **port 5252**, separate from
 - Don't merge `GaChatbot.Api.Services.IChatApplicationService` with the orchestration-layer interface of the same name. Codex C-prime explicitly recommended keeping the host-richer one (Trace, readiness, `ChatExecutionResult`). Lines 36-45 of `ServiceCollectionExtensions.cs` document this.
 - Don't put state outside `GA_STATE_DIR`. Slot deploys snapshot only that directory; everything else evaporates.
 - Don't restart `cloudflared` without checking for `STOP_PENDING`. Recovery doc: `reference_cloudflared_recovery` in memory — force-kill PID, then `Start-Service`.
-- Don't edit `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml` directly (standing rule). Run the chatbot-improvement-loop runbook.
+- Don't edit `Tests/Apps/GaApi.Tests/Corpus/prompts.yaml` directly (standing rule). Run the chatbot-improvement-loop runbook.
 - Don't add a new chatbot deploy mode without updating `ChatProviderReadinessProbe` to surface it on `/api/health`.
 
 ## Where to look for related context
