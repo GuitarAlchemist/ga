@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "ad7e46a0cb4a80b4dad8bc34affd6ecf2549a339",
-    "generatedAt": "2026-11-16T14:14:53.244062+00:00",
+    "commitSha": "a90bde188e6da958f1e8e159e0cc45191dcbaad4",
+    "generatedAt": "2026-11-16T22:43:16.783077+00:00",
     "repoCount": 5,
-    "totalPRs": 35
+    "totalPRs": 34
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 14,
+      "prCount": 13,
       "prs": [
         {
           "ageDays": 0,
@@ -122,7 +122,7 @@
           "failingChecks": 0,
           "headRef": "feat/deploy-gaapi-5262",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 883,
           "title": "feat(deploy): production GaApi deploy on :5262",
           "url": "https://github.com/GuitarAlchemist/ga/pull/883"
@@ -143,7 +143,7 @@
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-11-16T05:07:15Z",
-          "failingChecks": 2,
+          "failingChecks": 0,
           "headRef": "feat/cand4-gaapi-serves-chatbot-page",
           "isDraft": false,
           "mergeable": "UNKNOWN",
@@ -152,19 +152,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/881"
         },
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T04:26:43Z",
-          "failingChecks": 0,
-          "headRef": "fix/chord-vocab-upper-m-extensions",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 880,
-          "title": "fix(chat): read uppercase-M major extensions as major",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/880"
-        },
-        {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-11-15T15:34:57Z",
           "failingChecks": 0,
@@ -176,7 +164,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/859"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-11-14T22:37:49Z",
           "failingChecks": 1,
@@ -224,7 +212,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/851"
         },
         {
-          "ageDays": 25,
+          "ageDays": 26,
           "author": "spareilleux",
           "createdAt": "2026-10-21T16:58:52Z",
           "failingChecks": 0,
@@ -327,10 +315,10 @@
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-11-16T05:50:43Z",
-          "failingChecks": 2,
+          "failingChecks": 0,
           "headRef": "refactor/ixctl-host-stop-record",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 559,
           "title": "refactor(ixctl): one definition of the host.stop line for its writer and reader",
           "url": "https://github.com/GuitarAlchemist/ix/pull/559"
@@ -339,10 +327,10 @@
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-11-16T05:50:11Z",
-          "failingChecks": 3,
+          "failingChecks": 0,
           "headRef": "refactor/ixctl-one-boot",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 558,
           "title": "refactor(ixctl): bootInstance is the one way to start an instance",
           "url": "https://github.com/GuitarAlchemist/ix/pull/558"
@@ -351,16 +339,16 @@
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-11-16T05:23:31Z",
-          "failingChecks": 2,
+          "failingChecks": 0,
           "headRef": "refactor/ixctl-replace-ops",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 557,
           "title": "refactor(ixctl): replace takes its file operations as a value",
           "url": "https://github.com/GuitarAlchemist/ix/pull/557"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-11-15T15:29:51Z",
           "failingChecks": 3,
@@ -378,7 +366,7 @@
           "failingChecks": 2,
           "headRef": "feat/ixforge-workshop-r25",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 544,
           "title": "feat(workshop): import IxForge R14\u2013R25 onto main",
           "url": "https://github.com/GuitarAlchemist/ix/pull/544"
@@ -390,7 +378,7 @@
           "failingChecks": 0,
           "headRef": "codex/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 543,
           "title": "Document authorized remote path for IX Forge shared counter creation (no code/data mutation)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/543"
@@ -402,7 +390,7 @@
           "failingChecks": 0,
           "headRef": "claude/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 542,
           "title": "IXFORGE-COUNTER-ACCESS-R1: investigation \u2014 no authorized non-Desktop path to create the shared \u00ab Lectures \u00bb counter",
           "url": "https://github.com/GuitarAlchemist/ix/pull/542"
@@ -414,7 +402,7 @@
           "failingChecks": 0,
           "headRef": "docs/learnings-wasi-validator",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 538,
           "title": "docs(solutions): two learnings from the IXQL WASI validator prototype",
           "url": "https://github.com/GuitarAlchemist/ix/pull/538"
@@ -442,7 +430,7 @@
           "failingChecks": 0,
           "headRef": "feat/evolve-constraint-check",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 392,
           "title": "feat: check the constraints that name code against the code",
           "url": "https://github.com/GuitarAlchemist/tars/pull/392"
@@ -454,7 +442,7 @@
           "failingChecks": 0,
           "headRef": "feat/evolve-api-teacher",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 381,
           "title": "feat: let evolve's teacher run on a paid API with openai:, gemini: or anthropic:",
           "url": "https://github.com/GuitarAlchemist/tars/pull/381"
@@ -466,7 +454,7 @@
           "failingChecks": 0,
           "headRef": "docs/fsproj-not-a-one-way-door",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 346,
           "title": "docs: stop calling a project file a one-way door",
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
@@ -478,7 +466,7 @@
           "failingChecks": 0,
           "headRef": "fix/required-check-runs-on-stacked-prs",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 337,
           "title": "fix: let the required check run on a pull request that is not based on main",
           "url": "https://github.com/GuitarAlchemist/tars/pull/337"
@@ -490,7 +478,7 @@
           "failingChecks": 0,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 319,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/tars/pull/319"
@@ -538,7 +526,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
         },
         {
-          "ageDays": 62,
+          "ageDays": 63,
           "author": "spareilleux",
           "createdAt": "2026-09-14T21:16:08Z",
           "failingChecks": 1,
@@ -562,7 +550,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
         },
         {
-          "ageDays": 93,
+          "ageDays": 94,
           "author": "spareilleux",
           "createdAt": "2026-08-14T18:13:24Z",
           "failingChecks": 1,
@@ -574,7 +562,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
         },
         {
-          "ageDays": 120,
+          "ageDays": 121,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 3,
