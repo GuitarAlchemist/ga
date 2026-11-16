@@ -69,9 +69,11 @@ public class ChordSymbolPitchClassesTests
         });
     }
 
-    [TestCase("Cadd11")]
-    [TestCase("C7sus4")]
     [TestCase("Cxyz")]
+    [TestCase("Cadd")]
+    [TestCase("Cdom")]
+    [TestCase("Co")]
+    [TestCase("C/E")]
     [TestCase("H7")]
     public void TryGetPitchClassesStrict_RefusesUnknownQualityOrRoot(string symbol)
     {
@@ -83,6 +85,73 @@ public class ChordSymbolPitchClassesTests
             Assert.That(pitchClasses, Is.Empty);
         });
     }
+
+    // Read through ChordPitchClasses' compositional parser, these qualities outside the alias table now resolve;
+    // before, the strict reader refused them and the lenient one read a C major triad.
+    [TestCase("C-", new[] { 0, 3, 7 })]
+    [TestCase("C+7", new[] { 0, 4, 8, 10 })]
+    [TestCase("Caug7", new[] { 0, 4, 8, 10 })]
+    [TestCase("Co7", new[] { 0, 3, 6, 9 })]
+    [TestCase("C△", new[] { 0, 4, 7 })]
+    [TestCase("C△7", new[] { 0, 4, 7, 11 })]
+    [TestCase("C69", new[] { 0, 4, 7, 9, 2 })]
+    [TestCase("C6/9", new[] { 0, 4, 7, 9, 2 })]
+    [TestCase("C7sus", new[] { 0, 5, 7, 10 })]
+    [TestCase("C7sus4", new[] { 0, 5, 7, 10 })]
+    [TestCase("C9sus4", new[] { 0, 5, 7, 10, 2 })]
+    [TestCase("Csus4b9", new[] { 0, 5, 7, 1 })]
+    [TestCase("Cadd11", new[] { 0, 4, 7, 5 })]
+    [TestCase("Cadd#11", new[] { 0, 4, 7, 6 })]
+    [TestCase("Caddb9", new[] { 0, 4, 7, 1 })]
+    [TestCase("Cmadd9", new[] { 0, 3, 7, 2 })]
+    [TestCase("C7b13", new[] { 0, 4, 7, 10, 8 })]
+    [TestCase("C7#11", new[] { 0, 4, 7, 10, 6 })]
+    [TestCase("C7(b9)", new[] { 0, 4, 7, 10, 1 })]
+    [TestCase("C7(#9)", new[] { 0, 4, 7, 10, 3 })]
+    [TestCase("C9#11", new[] { 0, 4, 7, 10, 2, 6 })]
+    [TestCase("C13b9", new[] { 0, 4, 7, 10, 1, 5, 9 })]
+    [TestCase("C13#9", new[] { 0, 4, 7, 10, 3, 5, 9 })]
+    [TestCase("C13no11", new[] { 0, 4, 7, 10, 2, 9 })]
+    [TestCase("C9no3", new[] { 0, 7, 10, 2 })]
+    [TestCase("Cmaj7#5", new[] { 0, 4, 8, 11 })]
+    [TestCase("Cmaj7b5", new[] { 0, 4, 6, 11 })]
+    [TestCase("Cmaj7#11", new[] { 0, 4, 7, 11, 6 })]
+    [TestCase("Cmaj9#11", new[] { 0, 4, 7, 11, 2, 6 })]
+    [TestCase("Cmaj7no5", new[] { 0, 4, 11 })]
+    [TestCase("Cmmaj7", new[] { 0, 3, 7, 11 })]
+    [TestCase("CmMaj7", new[] { 0, 3, 7, 11 })]
+    [TestCase("Cm(maj7)", new[] { 0, 3, 7, 11 })]
+    [TestCase("Cm7(b5)", new[] { 0, 3, 6, 10 })]
+    [TestCase("Cm7#5", new[] { 0, 3, 8, 10 })]
+    [TestCase("Cm11b5", new[] { 0, 3, 6, 10, 2, 5 })]
+    [TestCase("C()", new[] { 0, 4, 7 })]
+    public void TryGetPitchClasses_ReadsQualitiesBeyondTheAliasTable(string symbol, int[] expected)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(ChordVocabulary.TryGetPitchClassesStrict(symbol, out var strict), Is.True);
+            Assert.That(strict, Is.EqualTo(expected));
+            Assert.That(ChordVocabulary.TryGetPitchClasses(symbol, out var lenient), Is.True);
+            Assert.That(lenient, Is.EqualTo(expected));
+        });
+    }
+
+    // Every canonical quality reads through the parser with exactly the pitch classes, in the same order, as its
+    // GetFormula entry: the aliases that resolved through the formula table read exactly as before.
+    [TestCaseSource(nameof(CanonicalQualities))]
+    public void ParserSuffix_MatchesFormula(string quality)
+    {
+        var formula = ChordVocabulary.GetFormula(quality);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(formula.Quality, Is.EqualTo(quality), "every canonical quality has its own formula");
+            Assert.That(ChordVocabulary.TryGetPitchClassesStrict("C" + ChordVocabulary.ParserSuffixes[quality], out var pcs), Is.True);
+            Assert.That(pcs, Is.EqualTo(formula.Intervals.Select(i => i % 12).Distinct()));
+        });
+    }
+
+    private static IEnumerable<string> CanonicalQualities() => ChordVocabulary.ParserSuffixes.Keys;
 
     private static readonly IGrothendieckService Grothendieck = new GrothendieckService();
 
@@ -160,14 +229,14 @@ public class ChordSymbolPitchClassesTests
     [Test]
     public async Task VoiceLeadingSkill_RefusesUnknownQuality()
     {
-        // An unknown quality stays a refusal: the skill must not voice-lead "Cadd11" as a C major triad.
+        // An unreadable quality stays a refusal: the skill must not voice-lead "Cadd" as a C major triad.
         var skill = new VoiceLeadingSkill(NullLogger<VoiceLeadingSkill>.Instance);
 
-        var response = await skill.ExecuteAsync("voice leading from Cadd11 to F");
+        var response = await skill.ExecuteAsync("voice leading from Cadd to F");
 
         Assert.Multiple(() =>
         {
-            Assert.That(response.Result, Does.Contain("couldn't parse 'Cadd11'"));
+            Assert.That(response.Result, Does.Contain("couldn't parse 'Cadd'"));
             Assert.That(response.Confidence, Is.LessThan(1.0f));
         });
     }

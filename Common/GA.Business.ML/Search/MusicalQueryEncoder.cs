@@ -236,7 +236,20 @@ public static class ChordPitchClasses
     /// </summary>
     internal static bool TryComputeChordOffsets(string quality, out int[] offsets)
     {
-        offsets = [];
+        var ok = TryComputeChordTones(quality, out var tones);
+        offsets = [.. tones.OrderBy(x => x)];
+        return ok;
+    }
+
+    /// <summary>
+    ///     The same reading as <see cref="TryComputeChordOffsets"/>, with the offsets in chord-tone order instead
+    ///     of ascending: root, third (or the suspended tone), fifth, sixth, seventh, then 9 / 11 / 13 and the
+    ///     added or altered degrees. <c>"9"</c> reads <c>[0, 4, 7, 10, 2]</c>. This is the order
+    ///     <see cref="GA.Business.ML.Agents.ChordVocabulary"/> callers list chord tones in.
+    /// </summary>
+    internal static bool TryComputeChordTones(string quality, out int[] tones)
+    {
+        tones = [];
         var w = (quality ?? string.Empty).Trim();
 
         // ── normalize symbol variants (case matters: 'M7' = major7, 'm' = minor) ──
@@ -251,18 +264,19 @@ public static class ChordPitchClasses
         w = w.ToLowerInvariant();
         w = w.Replace("°", "dim").Replace("o7", "dim7");
 
-        if (w.Length == 0) { offsets = [0, 4, 7]; return true; }  // bare root → major triad
-        if (w == "5") { offsets = [0, 7]; return true; }          // power chord
+        if (w.Length == 0) { tones = [0, 4, 7]; return true; }    // bare root → major triad
+        if (w == "5") { tones = [0, 7]; return true; }            // power chord
 
         // Altered dominant (7alt / alt) is a fixed 7-note sonority — 1 3 b7 b9 #9 #11 b13.
         // It carries BOTH b9 and #9, which a one-value-per-degree map cannot express, so
         // resolve it directly.
-        if (Regex.IsMatch(w, @"^7?alt$")) { offsets = [0, 1, 3, 4, 6, 8, 10]; return true; }
+        if (Regex.IsMatch(w, @"^7?alt$")) { tones = [0, 4, 6, 8, 10, 1, 3]; return true; }
 
-        var set = new SortedSet<int> { 0 };
+        List<int> chordTones = [0];
         var explicitDegrees = new Dictionary<int, int>();         // degree (2/4/6/9/11/13) → semitone
         var omit = new HashSet<int>();                            // chord degrees (3, 5) to drop
         var noThird = false;
+        int? susDegree = null;                                    // 2 or 4 when the third is suspended
         var fifth = 7;
         int? sixth = null;
         int? seventh = null;
@@ -297,8 +311,8 @@ public static class ChordPitchClasses
 
         // ── base triad ──
         bool thirdMinor;
-        if (w.Contains("sus2")) { noThird = true; explicitDegrees[2] = 2; w = w.Replace("sus2", ""); thirdMinor = false; }
-        else if (w.Contains("sus4") || w.Contains("sus")) { noThird = true; explicitDegrees[4] = 5; w = Regex.Replace(w, "sus4|sus", ""); thirdMinor = false; }
+        if (w.Contains("sus2")) { noThird = true; susDegree = 2; explicitDegrees[2] = 2; w = w.Replace("sus2", ""); thirdMinor = false; }
+        else if (w.Contains("sus4") || w.Contains("sus")) { noThird = true; susDegree = 4; explicitDegrees[4] = 5; w = Regex.Replace(w, "sus4|sus", ""); thirdMinor = false; }
         else if (w.Contains("dim")) { thirdMinor = true; fifth = 6; }
         else if (w.Contains("aug") || w.StartsWith("+")) { thirdMinor = false; fifth = 8; w = w.Replace("aug", "").Replace("+", ""); }
         else if (w.StartsWith("min")) { thirdMinor = true; }
@@ -332,18 +346,19 @@ public static class ChordPitchClasses
         var residue = Regex.Replace(w, @"[\s/()+\-]", "");
         if (residue.Length > 0) return false;
 
-        // ── assemble ──
-        if (!noThird && !omit.Contains(3)) set.Add(thirdMinor ? 3 : 4);
-        if (!omit.Contains(5)) set.Add(fifth);
-        if (sixth is { } s6 && !omit.Contains(6)) set.Add(s6);
-        if (seventh is { } s7) set.Add(s7);
-        if (topExt >= 9 && !omit.Contains(9)) set.Add(explicitDegrees.GetValueOrDefault(9, 2));
-        if (topExt >= 11 && !omit.Contains(11)) set.Add(explicitDegrees.GetValueOrDefault(11, 5));
-        if (topExt >= 13 && !omit.Contains(13)) set.Add(explicitDegrees.GetValueOrDefault(13, 9));
+        // ── assemble, in chord-tone order (the suspended tone takes the third's place) ──
+        if (!noThird && !omit.Contains(3)) chordTones.Add(thirdMinor ? 3 : 4);
+        else if (susDegree is { } sd && !omit.Contains(sd)) chordTones.Add(explicitDegrees[sd]);
+        if (!omit.Contains(5)) chordTones.Add(fifth);
+        if (sixth is { } s6 && !omit.Contains(6)) chordTones.Add(s6);
+        if (seventh is { } s7) chordTones.Add(s7);
+        if (topExt >= 9 && !omit.Contains(9)) chordTones.Add(explicitDegrees.GetValueOrDefault(9, 2));
+        if (topExt >= 11 && !omit.Contains(11)) chordTones.Add(explicitDegrees.GetValueOrDefault(11, 5));
+        if (topExt >= 13 && !omit.Contains(13)) chordTones.Add(explicitDegrees.GetValueOrDefault(13, 9));
         foreach (var kv in explicitDegrees)                      // adds + altered degrees, regardless of spine
-            if (!omit.Contains(kv.Key)) set.Add(kv.Value);
+            if (!omit.Contains(kv.Key)) chordTones.Add(kv.Value);
 
-        offsets = [.. set.Select(x => x % 12).Distinct().OrderBy(x => x)];
+        tones = [.. chordTones.Select(x => x % 12).Distinct()];
         return true;
     }
 
