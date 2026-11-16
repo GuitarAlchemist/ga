@@ -188,8 +188,8 @@ public class ChatbotPageMountTests
 
 /// <summary>
 ///     Outside Development, Program.cs requires X-Api-Key on /api/chatbot/*. The public page
-///     sends no key, so its own calls must pass anonymously, as they did on GaChatbot.Api,
-///     while the rest of /api/chatbot stays behind the key.
+///     sends no key, so its own calls and the JSON chat must pass anonymously, as they do on
+///     GaChatbot.Api, while the rest of /api/chatbot stays behind the key.
 /// </summary>
 [TestFixture]
 [Category("Integration")]
@@ -253,9 +253,24 @@ public class ChatbotPageMountProductionTests
         });
     }
 
-    [TestCase("POST", "/chatbot/api/chatbot/chat")]
-    [TestCase("POST", "/api/chatbot/chat")]
+    // GaChatbot.Api serves the JSON chat without a key to external callers and to the deploy
+    // smoke test (docs/runbooks/chatbot-deploy.md); the cutover keeps that contract.
+    [TestCase("/api/chatbot/chat")]
+    [TestCase("/chatbot/api/chatbot/chat")]
+    public async Task TheJsonChat_PassesWithoutAKey(string path)
+    {
+        using var response = await _client!.PostAsJsonAsync(path, new { message = "What is a major triad?" });
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(body.GetProperty("naturalLanguageAnswer").GetString(), Is.EqualTo("A major triad."));
+        });
+    }
+
     [TestCase("POST", "/chatbot/api/chatbot/agui/json")]
+    [TestCase("POST", "/api/chatbot/agui/stream")]
     [TestCase("GET", "/api/chatbot/skills")]
     public async Task OtherChatbotRoutes_StillRequireAKey(string method, string path)
     {
