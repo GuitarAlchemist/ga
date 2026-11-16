@@ -1,5 +1,7 @@
 namespace GA.Business.ML.Agents;
 
+using GA.Business.ML.Search;
+
 /// <summary>
 ///     Shared chord-symbol vocabulary crossed by both <see cref="Mcp.ChordMcpTools"/> (MCP transport
 ///     adapter) and <see cref="Skills.ChordInfoSkill"/> (orchestrator adapter): the root→pitch-class
@@ -49,19 +51,21 @@ public static class ChordVocabulary
 
     /// <summary>
     ///     Reads a chord symbol (<c>"CM7"</c>, <c>"F#°7"</c>, <c>"B♭9"</c>) into its pitch classes, root first,
-    ///     in formula order, without duplicates. False when the root is not a note name.
+    ///     in chord-tone order (root, third, fifth, sixth, seventh, extensions), without duplicates. False when
+    ///     the root is not a note name.
     /// </summary>
     /// <remarks>
-    ///     The single reader the atonal skills cross instead of carrying their own quality tables. Quality
-    ///     goes through <see cref="NormalizeQuality"/>, so <c>"M"</c>/<c>"M7"</c> stay major; an unknown
-    ///     quality falls back to a major triad, as <see cref="GetFormula"/> does.
+    ///     The single reader the skills cross instead of carrying their own quality tables. Quality goes through
+    ///     <see cref="NormalizeQuality"/> (so <c>"M"</c>/<c>"M7"</c> stay major), then through
+    ///     <see cref="ChordPitchClasses"/>' compositional parser. A quality neither can read falls back to a
+    ///     major triad, as <see cref="GetFormula"/> does.
     /// </remarks>
     public static bool TryGetPitchClasses(string symbol, out IReadOnlyList<int> pitchClasses) =>
         TryReadPitchClasses(symbol, strict: false, out pitchClasses);
 
     /// <summary>
-    ///     Like <see cref="TryGetPitchClasses"/>, but also false when the quality is not in the vocabulary
-    ///     (<c>"Cadd11"</c>, <c>"C7sus4"</c>), instead of falling back to a major triad.
+    ///     Like <see cref="TryGetPitchClasses"/>, but also false when the quality cannot be read
+    ///     (<c>"Cxyz"</c>, <c>"Cadd"</c>), instead of falling back to a major triad.
     /// </summary>
     /// <remarks>
     ///     For callers that must refuse a chord they cannot read rather than answer about the wrong one
@@ -79,14 +83,37 @@ public static class ChordVocabulary
         var rootLength = t.Length >= 2 && t[1] is '#' or 'b' ? 2 : 1;
         if (!TryGetPitchClass(NormalizeRoot(t[..rootLength]), out var root)) return false;
 
-        var quality = NormalizeQuality(t[rootLength..]);
-        var formula = GetFormula(quality);
-        // Every GetFormula arm names its formula after its own key, so a mismatch means the major fallback.
-        if (strict && formula.Quality != quality) return false;
+        // Aliases first (case-sensitive "M7", "Δ", long forms such as "dominant 7"), then the compositional
+        // parser reads the quality — the same reader the OPTIC-K query encoder uses. A suffix outside the alias
+        // table goes to the parser as written, so "add11", "7sus4" or "maj7#5" read too.
+        var raw = t[rootLength..];
+        var suffix = ParserSuffixes.TryGetValue(NormalizeQuality(raw), out var canonical) ? canonical : raw;
+        if (!ChordPitchClasses.TryComputeChordTones(suffix, out var tones))
+        {
+            if (strict) return false;
+            tones = [0, 4, 7];  // unknown quality → major triad, as GetFormula does
+        }
 
-        pitchClasses = [.. formula.Intervals.Select(i => (root + i) % 12).Distinct()];
+        pitchClasses = [.. tones.Select(i => (root + i) % 12).Distinct()];
         return true;
     }
+
+    /// <summary>
+    ///     Canonical quality (the <see cref="NormalizeQuality"/> output) → the suffix the compositional parser
+    ///     reads it from. <see cref="GetFormula"/> keeps the display data (interval names, letter steps); a test
+    ///     pins that both agree on every quality's pitch classes and order.
+    /// </summary>
+    internal static IReadOnlyDictionary<string, string> ParserSuffixes { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["major"] = "", ["minor"] = "m", ["diminished"] = "dim", ["augmented"] = "aug", ["power"] = "5",
+        ["sus2"] = "sus2", ["sus4"] = "sus4", ["add9"] = "add9", ["major 6"] = "6", ["minor 6"] = "m6",
+        ["dominant 7"] = "7", ["major 7"] = "maj7", ["minor 7"] = "m7", ["diminished 7"] = "dim7",
+        ["half-diminished"] = "m7b5", ["dominant 7 flat 5"] = "7b5", ["dominant 7 sharp 5"] = "7#5",
+        ["dominant 7 flat 9"] = "7b9", ["dominant 7 sharp 9"] = "7#9", ["altered dominant"] = "7alt",
+        ["dominant 9"] = "9", ["major 9"] = "maj9", ["minor 9"] = "m9",
+        ["dominant 11"] = "11", ["major 11"] = "maj11", ["minor 11"] = "m11",
+        ["dominant 13"] = "13", ["major 13"] = "maj13", ["minor 13"] = "m13",
+    };
 
     /// <summary>
     ///     Normalises a quality suffix to its canonical form (the key <see cref="GetFormula"/> switches on).
@@ -110,7 +137,7 @@ public static class ChordVocabulary
             {
                 "" => "major",
                 "maj" or "major" => "major",
-                "m" or "min" or "minor" => "minor",
+                "m" or "min" or "minor" or "-" => "minor",
                 "dim" or "diminished" or "°" => "diminished",
                 "aug" or "augmented" or "+" => "augmented",
                 "5" or "no3" or "power" => "power",
