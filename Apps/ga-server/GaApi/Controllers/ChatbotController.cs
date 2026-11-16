@@ -5,6 +5,7 @@ using System.Text.Json;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
+using GA.Business.ML.Agents.Intents;
 using Services;
 
 /// <summary>
@@ -80,6 +81,9 @@ public class ChatbotController(
         // mint cookies "wasted on 503s." Validation (message-empty)
         // already ran, so shape-invalid requests still don't get cookies.
         var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
+
+        // Routing telemetry written while serving this request carries the page's ?ref= tag.
+        using var trafficSource = RoutingTelemetryLog.BeginTrafficSource(request.Source, LocalCaller.IsDirect(HttpContext));
 
         Response.StatusCode = StatusCodes.Status200OK;
         Response.Headers.Append("Content-Type", "text/event-stream");
@@ -314,6 +318,16 @@ public class ChatbotController(
                     ])
             ]));
 
+    /// <summary>
+    ///     Return the QA badge of each showcase prompt, keyed by prompt text trimmed of trailing
+    ///     <c>.?!</c>. The chatbot page treats it as best effort: prompts without an entry show
+    ///     "not yet QA-validated".
+    /// </summary>
+    [HttpGet("qa-summary")]
+    [ProducesResponseType(typeof(Dictionary<string, ChatbotQaSummary>), StatusCodes.Status200OK)]
+    public ActionResult<Dictionary<string, ChatbotQaSummary>> GetQaSummary() =>
+        Ok(ChatbotQaSummaryReader.GetCached());
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private static List<ConversationTurn>? ToConversationTurns(List<ChatMessage>? history) =>
@@ -322,14 +336,31 @@ public class ChatbotController(
             .Select(message => new ConversationTurn(message.Role, message.Content, DateTimeOffset.UtcNow))
             .ToList();
 
+    // Each line of an SSE event body needs its own `data: ` prefix, and a blank line ends the
+    // event. Writing a multi-line chunk (markdown tables, lists, code) as one `data:` line lets
+    // the client drop every line after the first, and an embedded blank line ends the event
+    // early: the public page rendered only the first paragraph of table answers. '\r' is
+    // stripped so CRLF text cannot double-terminate a line.
     private async Task WriteSseLineAsync(string data, CancellationToken ct)
     {
-        await Response.WriteAsync($"data: {data}\n\n", ct);
+        foreach (var line in data.Replace("\r", string.Empty).Split('\n'))
+        {
+            await Response.WriteAsync("data: ", ct);
+            await Response.WriteAsync(line, ct);
+            await Response.WriteAsync("\n", ct);
+        }
+        await Response.WriteAsync("\n", ct);
         await Response.Body.FlushAsync(ct);
     }
 
-    private Task WriteSseErrorAsync(string errorMessage, CancellationToken ct) =>
-        WriteSseLineAsync(JsonSerializer.Serialize(new { error = errorMessage }), ct);
+    // A failure goes out as a named `error` event, and no `[DONE]` follows it. An answer chunk
+    // can be any text, including JSON shaped like this payload, but WriteSseLineAsync prefixes
+    // every line of it with `data: `, so only this writer emits an `event:` line.
+    private async Task WriteSseErrorAsync(string errorMessage, CancellationToken ct)
+    {
+        await Response.WriteAsync("event: error\n", ct);
+        await WriteSseLineAsync(JsonSerializer.Serialize(new { error = errorMessage }, _jsonOptions), ct);
+    }
 
     private static IEnumerable<string> SplitIntoChunks(string text) =>
         GA.Business.Core.Orchestration.Helpers.SseChunker.SplitIntoChunks(text);
