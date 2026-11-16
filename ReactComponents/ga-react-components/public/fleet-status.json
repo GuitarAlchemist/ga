@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "27e4174674d8891db9610cfd0831827d7232876e",
-    "generatedAt": "2026-11-16T00:18:45.468117+00:00",
+    "commitSha": "771d0faf1865d306a80a7b95b2c23933439b554f",
+    "generatedAt": "2026-11-16T00:28:50.368543+00:00",
     "repoCount": 5,
-    "totalPRs": 39
+    "totalPRs": 36
   },
   "repos": [
     {
@@ -113,44 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 13,
+      "prCount": 10,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-15T23:14:44Z",
-          "failingChecks": 0,
-          "headRef": "fix/chord-reader-slice2",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 866,
-          "title": "fix(chat): read voice-leading and substitution chords through ChordVocabulary",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/866"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-15T23:13:02Z",
-          "failingChecks": 0,
-          "headRef": "refactor/remove-dead-chord-naming",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 865,
-          "title": "refactor(chords): remove dead second chord-naming stack",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/865"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-15T23:09:37Z",
-          "failingChecks": 0,
-          "headRef": "refactor/frontend-dead-chat-clients",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 863,
-          "title": "refactor(ga-client): remove dead pre-AG-UI chat clients",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/863"
-        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -402,7 +366,7 @@
           "failingChecks": 0,
           "headRef": "refactor/ixctl-1a-frame-transport",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 547,
           "title": "refactor(ixctl): a frame transport under Client, with an in-memory adapter (deepen 1a)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/547"
@@ -414,7 +378,7 @@
           "failingChecks": 3,
           "headRef": "feat/ixforge-mobile-catalog",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 546,
           "title": "feat(ixforge): mobile catalog, tool states, pinning, optional names and widget traits (stacked on #544)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/546"
@@ -438,7 +402,7 @@
           "failingChecks": 0,
           "headRef": "codex/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 543,
           "title": "Document authorized remote path for IX Forge shared counter creation (no code/data mutation)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/543"
@@ -450,7 +414,7 @@
           "failingChecks": 0,
           "headRef": "claude/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 542,
           "title": "IXFORGE-COUNTER-ACCESS-R1: investigation \u2014 no authorized non-Desktop path to create the shared \u00ab Lectures \u00bb counter",
           "url": "https://github.com/GuitarAlchemist/ix/pull/542"
@@ -462,7 +426,7 @@
           "failingChecks": 0,
           "headRef": "docs/learnings-wasi-validator",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 538,
           "title": "docs(solutions): two learnings from the IXQL WASI validator prototype",
           "url": "https://github.com/GuitarAlchemist/ix/pull/538"
@@ -490,7 +454,7 @@
           "failingChecks": 0,
           "headRef": "feat/evolve-constraint-check",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 392,
           "title": "feat: check the constraints that name code against the code",
           "url": "https://github.com/GuitarAlchemist/tars/pull/392"
@@ -502,7 +466,7 @@
           "failingChecks": 0,
           "headRef": "feat/evolve-api-teacher",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 381,
           "title": "feat: let evolve's teacher run on a paid API with openai:, gemini: or anthropic:",
           "url": "https://github.com/GuitarAlchemist/tars/pull/381"
@@ -514,7 +478,7 @@
           "failingChecks": 0,
           "headRef": "docs/fsproj-not-a-one-way-door",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 346,
           "title": "docs: stop calling a project file a one-way door",
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
@@ -526,7 +490,7 @@
           "failingChecks": 0,
           "headRef": "fix/required-check-runs-on-stacked-prs",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 337,
           "title": "fix: let the required check run on a pull request that is not based on main",
           "url": "https://github.com/GuitarAlchemist/tars/pull/337"
@@ -538,7 +502,7 @@
           "failingChecks": 0,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 319,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/tars/pull/319"
