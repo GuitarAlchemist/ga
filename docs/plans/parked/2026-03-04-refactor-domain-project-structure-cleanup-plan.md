@@ -25,7 +25,7 @@ This is not a layer restructure. No code moves between layers. All changes are i
 
 The `Common/` layer currently has:
 - **2 empty skeleton projects** (`GA.Business.Core.AI`, `GA.Business.Core.Generated`) with no compiled output
-- **3 fully-parked projects** (`GA.Business.Configuration`, `GA.Business.Analytics`, `GA.Business.Personalization`) — all files excluded, no signal to contributor that this is intentional
+- **3 fully-parked projects** (`GA.Business.Configuration`, `GA.Business.Analytics`, `GA.Business.Personalization`) — all files excluded, no signal to contributor that this is intentional. *Update 2026-11-16: `GA.Business.Configuration` has since been deleted; the steps below now apply to the other two.*
 - **~6 commented-out `<ProjectReference>` lines** across two `.csproj` files, implying half-done refactors
 - **29 `<Compile Remove>` entries** in `GaApi.csproj`, some redundant or undocumented
 - **2 stale READMEs** describing a DDD layer model that doesn't match the actual five-layer model
@@ -73,7 +73,6 @@ Common/GA.Business.Core.Generated/   ← has .fsproj + StaticCollectionGenerator
 Move these three projects into a `<!-- PARKED -->` XML comment group in the solution file:
 
 ```
-Common/GA.Business.Configuration/    ← all source files excluded
 Common/GA.Business.Analytics/        ← all service files excluded
 Common/GA.Business.Personalization/  ← all files excluded
 ```
@@ -82,7 +81,7 @@ In `AllProjects.slnx`, wrap each with an XML comment explaining their status:
 
 ```xml
 <!-- PARKED: All source files are excluded from compilation. Code preserved for future reference. -->
-<Project Path="Common/GA.Business.Configuration/GA.Business.Configuration.csproj"/>
+<Project Path="Common/GA.Business.Analytics/GA.Business.Analytics.csproj"/>
 ```
 
 Consolidate all three parked projects under a `<Folder Name="/Parked/">` in the solution if that folder doesn't exist.
@@ -331,7 +330,6 @@ Each layer may only depend on layers below it.
 ## Parked Projects
 
 These projects contain parked/excluded code preserved for future reference:
-- `GA.Business.Configuration` — configuration watcher service
 - `GA.Business.Analytics` — musical analytics services
 - `GA.Business.Personalization` — user personalization services
 ```

@@ -36,7 +36,7 @@ These projects have zero compiled output or are fully commented out:
 |---|---|---|
 | `GA.Business.Core.AI` | Empty skeleton | **Delete** — no code, no intent |
 | `GA.Business.Core.Generated` | Empty skeleton | **Delete** — no code, no intent |
-| `GA.Business.Configuration` | All files excluded | **Keep, mark parked** — add `# PARKED` comment in solution file |
+| `GA.Business.Configuration` | All files excluded | **Keep, mark parked** — add `# PARKED` comment in solution file. *Superseded 2026-11-16: the directory was deleted; nothing compiled or referenced it.* |
 | `GA.Business.Analytics` | All service files excluded | **Keep, mark parked** — add `# PARKED` comment in solution file |
 | `GA.Business.Personalization` | All files excluded | **Keep, mark parked** — add `# PARKED` comment in solution file |
 | `GA.Business.Intelligence` (partial) | `IntelligentBspGenerator.cs` excluded | **Keep as-is** — leave excluded file, out of scope to move |

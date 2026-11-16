@@ -19,7 +19,6 @@ $sourcePath = "Common\GA.Business.Core\Services"
 # Create service project directories
 $serviceProjects = @(
     "Common\GA.Business.Analytics",
-    "Common\GA.Business.Configuration", 
     "Common\GA.Business.Validation",
     "Common\GA.Business.Personalization"
 )
@@ -35,9 +34,6 @@ foreach ($project in $serviceProjects) {
 $serviceMoves = @(
     @{ File = "AdvancedMusicalAnalyticsService.cs"; Destination = "Common\GA.Business.Analytics\Services" },
     @{ File = "MusicalAnalyticsService.cs"; Destination = "Common\GA.Business.Analytics\Services" },
-    @{ File = "ConfigurationBroadcastService.cs"; Destination = "Common\GA.Business.Configuration\Services" },
-    @{ File = "ConfigurationWatcherService.cs"; Destination = "Common\GA.Business.Configuration\Services" },
-    @{ File = "MusicalKnowledgeCacheService.cs"; Destination = "Common\GA.Business.Configuration\Services" },
     @{ File = "CachedInvariantValidationService.cs"; Destination = "Common\GA.Business.Validation\Services" },
     @{ File = "InvariantValidationService.cs"; Destination = "Common\GA.Business.Validation\Services" },
     @{ File = "RealtimeInvariantMonitoringService.cs"; Destination = "Common\GA.Business.Validation\Services" },
