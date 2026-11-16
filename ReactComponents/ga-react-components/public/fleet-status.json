@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "db0dfc852fe6ccebe3fd7d0ad7209430b91a27d8",
-    "generatedAt": "2026-11-16T01:06:02.423205+00:00",
+    "commitSha": "a6cf2e1e89efce26cb5c314e78615333d33c6a4a",
+    "generatedAt": "2026-11-16T01:41:58.103982+00:00",
     "repoCount": 5,
-    "totalPRs": 39
+    "totalPRs": 38
   },
   "repos": [
     {
@@ -113,31 +113,19 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 13,
+      "prCount": 12,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-11-16T00:51:49Z",
+          "createdAt": "2026-11-16T01:06:07Z",
           "failingChecks": 0,
-          "headRef": "fix/improvisation-quality-reader",
+          "headRef": "refactor/config-locator-layer-leaks",
           "isDraft": false,
           "mergeable": "UNKNOWN",
-          "number": 870,
-          "title": "fix(chat): classify improvisation chord qualities through ChordVocabulary",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/870"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-16T00:46:45Z",
-          "failingChecks": 0,
-          "headRef": "fix/chord-reader-roots",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 869,
-          "title": "fix(chat): read capo, tuning and parallel-key roots through ChordVocabulary",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/869"
+          "number": 872,
+          "title": "refactor(config): route C# config loaders through ConfigFileLocator",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/872"
         },
         {
           "ageDays": 0,
