@@ -21,33 +21,89 @@ $script:HasErrors = $false
 # ============================================
 # Scope the check to STAGED .cs files (fast; only judges what the commit touches).
 #
-# ADVISORY, not blocking: `dotnet format` against AllProjects.slnx currently
-# crashes opening the workspace —
-#   System.InvalidOperationException: Unexpected null - SolutionState.cs line 363
-#   at MSBuildWorkspace.OpenSolutionAsync
-# — a known dotnet-format/.slnx bug. That makes a hard format gate a false
-# positive on every commit (the tool errors before it can judge drift). So we
-# surface format results as a WARNING and never block on them; CI runs the
-# authoritative format check. Promote back to blocking ($script:HasErrors) once
-# `dotnet format` opens the .slnx workspace cleanly. The BUILD gate below stays
-# strict and is what actually protects the branch.
+# PER PROJECT, not per solution: `dotnet format AllProjects.slnx` crashes opening
+# the workspace (System.InvalidOperationException: Unexpected null -
+# SolutionState.cs, a known dotnet-format/.slnx bug) and, in a fresh worktree,
+# first triggers a whole-solution restore that has hung for 25+ minutes. So each
+# staged file is mapped to its nearest owning .csproj and `dotnet format` runs
+# once per affected project, with --no-restore when the project is already
+# restored and a hard timeout after which the step warns and moves on.
+#
+# ADVISORY, not blocking: format results are WARNINGS only; CI runs the
+# authoritative format check. The BUILD gate below stays strict and is what
+# actually protects the branch.
 Write-Host "▶ Checking code formatting (staged C# files, advisory)..." -ForegroundColor Blue
 
 $stagedCs = git diff --cached --name-only --diff-filter=ACM 2>$null |
     Where-Object { $_ -match '\.cs$' -and (Test-Path $_) }
 
+# Staged .cs files grouped by nearest owning .csproj (walk up directories).
+# Shared by the format step and the build step below.
+$stagedByProject = [ordered]@{}
+foreach ($f in $stagedCs) {
+    $dir = Split-Path -Parent $f
+    while ($dir -and (Test-Path $dir)) {
+        $proj = Get-ChildItem -Path $dir -Filter *.csproj -File -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($proj) {
+            if (-not $stagedByProject.Contains($proj.FullName)) {
+                $stagedByProject[$proj.FullName] = [System.Collections.Generic.List[string]]::new()
+            }
+            # Keep git's repo-relative path: `dotnet format --include` silently
+            # matches nothing when given absolute paths (exit 0, nothing checked).
+            $stagedByProject[$proj.FullName].Add($f)
+            break
+        }
+        $parent = Split-Path -Parent $dir
+        if (-not $parent -or $parent -eq $dir) { break }
+        $dir = $parent
+    }
+}
+
+$formatTimeoutSec = 120
 if (-not $stagedCs) {
     Write-Host "✓ No staged C# files — format check skipped" -ForegroundColor Green
+} elseif ($stagedByProject.Count -eq 0) {
+    Write-Host "✓ Staged C# files belong to no project — format check skipped" -ForegroundColor Green
 } else {
-    $formatCheck = dotnet format AllProjects.slnx --include $stagedCs --verify-no-changes --verbosity quiet 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "✓ Staged C# files are formatted" -ForegroundColor Green
-    } elseif ($formatCheck -match 'SolutionState\.cs|Unexpected null|OpenSolutionAsync') {
-        Write-Host "⚠ Format check skipped — dotnet format could not open AllProjects.slnx" -ForegroundColor Yellow
-        Write-Host "  (known .slnx workspace bug; CI runs the authoritative check)" -ForegroundColor Yellow
-    } else {
-        Write-Host "⚠ Possible formatting drift in staged files (advisory — not blocking):" -ForegroundColor Yellow
-        Write-Host "  Run: dotnet format <project.csproj> --include <staged files>" -ForegroundColor Yellow
+    foreach ($proj in $stagedByProject.Keys) {
+        $name     = Split-Path -Leaf $proj
+        $files    = $stagedByProject[$proj]
+        $restored = Test-Path (Join-Path (Split-Path -Parent $proj) 'obj' 'project.assets.json')
+
+        $psi = [System.Diagnostics.ProcessStartInfo]::new('dotnet')
+        foreach ($a in @('format', $proj, '--verify-no-changes', '--verbosity', 'quiet')) { $psi.ArgumentList.Add($a) }
+        if ($restored) { $psi.ArgumentList.Add('--no-restore') }
+        $psi.ArgumentList.Add('--include')
+        foreach ($file in $files) { $psi.ArgumentList.Add($file) }
+        $psi.UseShellExecute        = $false
+        $psi.RedirectStandardOutput = $true
+        $psi.RedirectStandardError  = $true
+        # No lingering MSBuild worker nodes that would outlive a timeout kill.
+        $psi.Environment['MSBUILDDISABLENODEREUSE'] = '1'
+
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+        $p = [System.Diagnostics.Process]::Start($psi)
+        $stdout = $p.StandardOutput.ReadToEndAsync()
+        $stderr = $p.StandardError.ReadToEndAsync()
+        if (-not $p.WaitForExit($formatTimeoutSec * 1000)) {
+            try { $p.Kill($true) } catch { }
+            Write-Host "⚠ Format check timed out after ${formatTimeoutSec}s in $name — skipped (advisory)" -ForegroundColor Yellow
+            continue
+        }
+        $p.WaitForExit()
+        $secs = [math]::Round($sw.Elapsed.TotalSeconds, 1)
+
+        if ($p.ExitCode -eq 0) {
+            Write-Host "✓ Staged files in $name are formatted (${secs}s)" -ForegroundColor Green
+        } elseif ($p.ExitCode -eq 2) {
+            Write-Host "⚠ Possible formatting drift in $name (${secs}s, advisory — not blocking):" -ForegroundColor Yellow
+            Write-Host "  Run: dotnet format $(Resolve-Path -Relative -LiteralPath $proj) --include $($files -join ' ')" -ForegroundColor Yellow
+        } else {
+            Write-Host "⚠ dotnet format could not check $name (exit $($p.ExitCode), advisory — not blocking)" -ForegroundColor Yellow
+            ("$($stdout.Result)`n$($stderr.Result)" -split "`r?`n") |
+                Where-Object { $_.Trim() } | Select-Object -Last 5 |
+                ForEach-Object { Write-Host "   $_" -ForegroundColor Yellow }
+        }
     }
 }
 
@@ -62,17 +118,7 @@ if (-not $stagedCs) {
 # surface before the locked copy step, so genuine breaks are still caught.
 Write-Host "`n▶ Building affected projects..." -ForegroundColor Blue
 
-$affectedProjects = @{}
-foreach ($f in $stagedCs) {
-    $dir = Split-Path -Parent $f
-    while ($dir -and (Test-Path $dir)) {
-        $proj = Get-ChildItem -Path $dir -Filter *.csproj -File -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($proj) { $affectedProjects[$proj.FullName] = $true; break }
-        $parent = Split-Path -Parent $dir
-        if (-not $parent -or $parent -eq $dir) { break }
-        $dir = $parent
-    }
-}
+$affectedProjects = $stagedByProject
 
 if ($affectedProjects.Count -eq 0) {
     Write-Host "✓ No buildable projects affected — build skipped" -ForegroundColor Green
