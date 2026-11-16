@@ -24,7 +24,6 @@ public static class InfrastructureServiceExtensions
             if (!string.IsNullOrEmpty(aspireCs))
                 settings.ConnectionString = aspireCs;
         });
-        services.Configure<VectorSearchOptions>(configuration.GetSection("VectorSearch"));
 
         // 2. MongoDB
         services.AddSingleton<MongoDbService>();

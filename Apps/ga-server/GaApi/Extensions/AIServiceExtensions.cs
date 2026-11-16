@@ -138,15 +138,6 @@ public static class AiServiceExtensions
         /// </summary>
         private void AddVectorSearchApplicationServices(IConfiguration configuration)
         {
-            // Register local embedding service (used by vector search)
-            services.AddSingleton<LocalEmbeddingService>();
-
-            // Register standard vector search service
-            services.AddSingleton<VectorSearchService>();
-
-            // Register all vector search strategies (from VectorSearchServiceExtensions)
-            services.AddVectorSearchServices();
-
             // Register voicing-specific search services (from VoicingSearchServiceExtensions)
             services.AddVoicingSearchServices(configuration);
 

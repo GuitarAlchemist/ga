@@ -1,5 +1,7 @@
 ﻿# Vector Search Implementation - Complete Summary
 
+> **Retired (2026-11):** GaApi's chord vector-search stack described here (`VectorSearchService`, the `IVectorSearchStrategy` family, `POST /api/search/hybrid`, `GET /api/stats`, `GET /stats`, the `VectorSearchBenchmark` demo) has been removed. Voicing search lives in layer 4 (`GA.Business.ML/Search/IVoicingSearchStrategy`, OPTIC-K) and is served by `POST /api/voicings/retrieve`. This document is kept as history.
+
 ## ✅ **Implementation Complete!**
 
 All AI/LLM vector search features have been successfully implemented for the Guitar Alchemist chord database, running **100% on localhost** with no API keys required!

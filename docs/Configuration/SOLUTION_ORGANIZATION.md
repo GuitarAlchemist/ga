@@ -51,7 +51,6 @@ Apps/
 │  └─ PracticeRoutineDSLDemo
 │
 ├─ 📁 Performance & Benchmarks/
-│  ├─ VectorSearchBenchmark
 │  ├─ GpuBenchmark
 │  └─ PerformanceOptimizationDemo
 │
@@ -99,7 +98,6 @@ Apps/
 
 | Project | Description |
 |---------|-------------|
-| **VectorSearchBenchmark** | Benchmarks MongoDB vector search performance |
 | **GpuBenchmark** | GPU acceleration benchmarks |
 | **PerformanceOptimizationDemo** | Various performance optimization techniques |
 

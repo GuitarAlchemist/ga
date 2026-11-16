@@ -2,12 +2,13 @@ namespace GaApi.Services;
 
 using System.Diagnostics;
 using System.Reflection;
+using GA.Business.ML.Search;
 using Microsoft.Extensions.Caching.Memory;
 using Models;
 
 public class HealthCheckService(
     MongoDbService mongoDb,
-    IVectorSearchStrategy vectorSearch,
+    IVoicingSearchStrategy vectorSearch,
     IMemoryCache cache,
     ILogger<HealthCheckService> logger,
     IConfiguration configuration)
