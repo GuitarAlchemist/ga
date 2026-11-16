@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "771d0faf1865d306a80a7b95b2c23933439b554f",
-    "generatedAt": "2026-11-16T00:28:50.368543+00:00",
+    "commitSha": "db0dfc852fe6ccebe3fd7d0ad7209430b91a27d8",
+    "generatedAt": "2026-11-16T01:06:02.423205+00:00",
     "repoCount": 5,
-    "totalPRs": 36
+    "totalPRs": 39
   },
   "repos": [
     {
@@ -113,8 +113,44 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 10,
+      "prCount": 13,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-16T00:51:49Z",
+          "failingChecks": 0,
+          "headRef": "fix/improvisation-quality-reader",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 870,
+          "title": "fix(chat): classify improvisation chord qualities through ChordVocabulary",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/870"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-16T00:46:45Z",
+          "failingChecks": 0,
+          "headRef": "fix/chord-reader-roots",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 869,
+          "title": "fix(chat): read capo, tuning and parallel-key roots through ChordVocabulary",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/869"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-16T00:35:00Z",
+          "failingChecks": 0,
+          "headRef": "refactor/gaapi-dead-vector-search",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 867,
+          "title": "refactor(gaapi): delete dead ILGPU and strategy-manager vector search code",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/867"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -396,7 +432,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/544"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "app/openai-code-agent",
           "createdAt": "2026-11-15T00:44:38Z",
           "failingChecks": 0,
@@ -408,7 +444,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/543"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "app/anthropic-code-agent",
           "createdAt": "2026-11-15T00:44:33Z",
           "failingChecks": 0,
