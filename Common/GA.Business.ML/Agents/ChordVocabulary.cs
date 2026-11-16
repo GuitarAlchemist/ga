@@ -1,5 +1,6 @@
 namespace GA.Business.ML.Agents;
 
+using System.Text.RegularExpressions;
 using GA.Business.ML.Search;
 
 /// <summary>
@@ -115,24 +116,27 @@ public static class ChordVocabulary
         ["dominant 13"] = "13", ["major 13"] = "maj13", ["minor 13"] = "m13",
     };
 
+    private static readonly Regex UpperMajorMarker = new("M(?=6|7|9|11|13)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     /// <summary>
     ///     Normalises a quality suffix to its canonical form (the key <see cref="GetFormula"/> switches on).
     /// </summary>
     /// <remarks>
-    ///     The uppercase <c>"M"</c> / <c>"M7"</c> arms are matched <b>case-sensitively before</b> the
-    ///     lowercase fallback: <c>"M"</c> means major and must not fold through <c>ToLowerInvariant()</c>
-    ///     to <c>"m"</c> (minor). This is the PR #80 fix; consolidating it here keeps the skill from
+    ///     The uppercase <c>"M"</c> is read <b>case-sensitively before</b> the lowercase fallback: it means major
+    ///     and must not fold through <c>ToLowerInvariant()</c> to <c>"m"</c> (minor). An <c>"M"</c> before
+    ///     6 / 7 / 9 / 11 / 13 becomes <c>"maj"</c> first, the rule <see cref="ChordPitchClasses"/> applies, so
+    ///     <c>"M9"</c>, <c>"M7b5"</c> and <c>"mM7"</c> keep their major seventh or sixth. This is the PR #80 fix; consolidating it here keeps the skill from
     ///     re-introducing the <c>"CM"</c> → C-minor regression. The <c>"Δ"</c> / <c>"Δ7"</c> arms sit up
     ///     there for the same reason: <c>ToLowerInvariant()</c> folds the capital delta to <c>"δ"</c>, so a
     ///     lowercase arm could never match them.
     /// </remarks>
     public static string NormalizeQuality(string raw)
     {
-        var trimmed = raw.Trim();
+        var trimmed = UpperMajorMarker.Replace(raw.Trim(), "maj");
         return trimmed switch
         {
             "M"  => "major",
-            "M7" or "Δ" or "Δ7" => "major 7",
+            "Δ" or "Δ7" => "major 7",
             _    => trimmed.ToLowerInvariant() switch
             {
                 "" => "major",

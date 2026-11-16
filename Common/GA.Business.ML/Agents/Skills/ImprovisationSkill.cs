@@ -403,7 +403,8 @@ public sealed partial class ImprovisationSkill(
         if (CanonicalQualityClasses.TryGetValue(ChordVocabulary.NormalizeQuality(unparenthesized), out var known))
             return known;
 
-        var s = unparenthesized.ToLowerInvariant();
+        // Same case handling as the vocabulary: an "M" before 6 / 7 / 9 / 11 / 13 is major, the rest folds to lower case.
+        var s = ChordVocabulary.NormalizeQuality(unparenthesized);
 
         // Most-specific first. Order matters: mMaj7 must be tested BEFORE the
         // maj7 family (the lowercased "mmaj7" contains "maj7" and would
@@ -418,7 +419,7 @@ public sealed partial class ImprovisationSkill(
         // 2026-05-17 (same family as the pre-#253 CmMaj7→major7 bug).
         if (s.Contains("dim7", StringComparison.Ordinal) || s.Contains("°7", StringComparison.Ordinal) || s.Contains("o7", StringComparison.Ordinal)) return QualityClass.Diminished7;
         if (s.StartsWith("dim", StringComparison.Ordinal) || s.StartsWith("°", StringComparison.Ordinal)) return QualityClass.Diminished;
-        if (s.Contains("mmaj7", StringComparison.Ordinal) || s.Contains("minmaj7", StringComparison.Ordinal)) return QualityClass.MinorMajor7;
+        if (s.Contains("mmaj", StringComparison.Ordinal) || s.Contains("minmaj", StringComparison.Ordinal)) return QualityClass.MinorMajor7;
         if (s.Contains("maj7#11", StringComparison.Ordinal) || s.Contains("maj7+11", StringComparison.Ordinal)) return QualityClass.LydianMaj7;
         if (s.Contains("maj7", StringComparison.Ordinal) || s.Contains("maj9", StringComparison.Ordinal) || s.Contains("maj13", StringComparison.Ordinal) || s.Contains("δ", StringComparison.Ordinal)) return QualityClass.Major7;
         // aug7 / +7 / 7#5 — augmented dominant. Less common than plain aug; flag
@@ -429,7 +430,7 @@ public sealed partial class ImprovisationSkill(
         if (s.Contains("m6", StringComparison.Ordinal)) return QualityClass.MinorMajor7; // mel min territory
         if (s.StartsWith("m7", StringComparison.Ordinal) || s.StartsWith("min7", StringComparison.Ordinal) || s.StartsWith("-7", StringComparison.Ordinal)) return QualityClass.Minor7;
         if (s.StartsWith("m9", StringComparison.Ordinal) || s.StartsWith("m11", StringComparison.Ordinal) || s.StartsWith("m13", StringComparison.Ordinal)) return QualityClass.Minor7;
-        if (s.StartsWith("m", StringComparison.Ordinal) || s.StartsWith("min", StringComparison.Ordinal) || s.StartsWith("-", StringComparison.Ordinal)) return QualityClass.Minor;
+        if ((s.StartsWith("m", StringComparison.Ordinal) && !s.StartsWith("maj", StringComparison.Ordinal)) || s.StartsWith("-", StringComparison.Ordinal)) return QualityClass.Minor;
         if (s.StartsWith("7", StringComparison.Ordinal) || s.StartsWith("9", StringComparison.Ordinal) || s.StartsWith("11", StringComparison.Ordinal) || s.StartsWith("13", StringComparison.Ordinal)) return QualityClass.Dominant7;
         if (s.Length == 0 || s.StartsWith("6", StringComparison.Ordinal) || s.StartsWith("69", StringComparison.Ordinal) || s.StartsWith("maj", StringComparison.Ordinal)) return QualityClass.Major;
         return QualityClass.Unknown;
