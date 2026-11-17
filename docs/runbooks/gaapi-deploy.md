@@ -57,6 +57,9 @@ GaApi normally runs under Aspire, which injects `ConnectionStrings__guitar-alche
 | `--contentRoot` | `.deploy\current` | `appsettings.json` and `wwwroot` come from the release |
 | working directory | `.deploy\work` | GaApi writes `cache\`, `musical-knowledge.db` and similar relative to it; under the worktree root they would be untracked files that fail the next deploy's clean check |
 | `AI__ChatProvider` | `ollama` | what GaChatbot.Api uses; explicit because `appsettings.Development.json` selects `claude`. The model comes from `local-env.cmd` below |
+| `AI__CascadeProvider` | `mistral` | as on GaChatbot.Api: the Ollama client is wrapped in the Mistral cascade, which answers when Ollama times out or is unreachable. `MISTRAL_API_KEY` comes from the user environment |
+| `AI__Embedding__Routing__Model` | `bge-large` | same routing embedder as GaChatbot.Api (`Apps/GaChatbot.Api/appsettings.json`) |
+| `AI__Routing__MinConfidence` | `0.64` | the threshold calibrated for bge-large; it only makes sense together with the line above (nomic's default is 0.55) |
 | `VoicingSearch__OpticIndexPath` | `<main checkout>\state\voicings\optick.index` | read-only; the gitignored OPTK index only exists in the main checkout. GaApi reads this key, not `GA_OPTICK_INDEX_PATH` |
 | `VoicingSearch__EnableIndexing` | `false` | the startup indexer embeds every voicing through Ollama, which the public chatbot shares. OPTK search needs no warmup, so it is not needed |
 | `Governance__DemerzelRoot` | `.deploy\work\governance\demerzel` | unset, GaApi falls back to the main checkout's `governance\demerzel` and writes algedonic signals and beliefs there |
@@ -77,9 +80,7 @@ set Logging__LogLevel__Microsoft.AspNetCore.Hosting.Diagnostics=Information
 
 Without it GaApi uses `llama3.2:3b` from `appsettings.json`. The routing shadows live in the shared `SemanticIntentRouter`, so they work in GaApi too: `GA_ROUTER_JEV_SHADOW` (see [router-jev-shadow.md](router-jev-shadow.md)) spends `TYPESAFE_API_KEY` budget on each routed prompt, and `GA_ROUTER_SHADOW` / `GA_LEARNED_HEAD_PATH` are user-level variables the task inherits.
 
-`AI__CascadeProvider=mistral`, which the chatbot launcher sets, has no effect on GaApi: GaApi registers its own `IChatClient` (`OllamaChatClientAdapter`) and does not wrap it in the Mistral cascade, so an Ollama timeout is not retried on Mistral. That is a parity gap to close in code, not a launcher setting.
-
-The same holds for the routing embedder. GaChatbot.Api routes with `bge-large` and `AI:Routing:MinConfidence=0.64` (`Apps/GaChatbot.Api/appsettings.json`). GaApi reads the threshold but registers no `IEmbeddingGeneratorFactory`, so `AI:Embedding:Routing:Model` is ignored and routing stays on `nomic-embed-text`. The launcher therefore sets neither: 0.64 on nomic would decline in-scope prompts, and the two settings must land together. Once GaApi registers the factory, add both lines to the launcher in the same change. After editing it, run `Stop-ScheduledTask GA-GaApi-5262` then `Start-ScheduledTask GA-GaApi-5262`, or redeploy.
+After editing it, run `Stop-ScheduledTask GA-GaApi-5262` then `Start-ScheduledTask GA-GaApi-5262`, or redeploy.
 
 ## Cutover: point the public chat routes at :5262
 

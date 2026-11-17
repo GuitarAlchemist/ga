@@ -56,6 +56,14 @@ Notes:
 - `Chatbot__Mode=routed` uses a lightweight keyword router plus specialized prompt profiles, still without the full orchestration graph.
 - Use `Chatbot__Mode=full` or `Chatbot__Mode=orchestrated` only when you want the richer orchestration stack.
 - `GITHUB_TOKEN` is only needed when `AI__ChatProvider=github` or `AI__EmbeddingProvider=github`.
+- `AI__ChatProvider=anthropic` (alias `claude`) runs chat on Anthropic.
+  - Key: `Anthropic__ApiKey` or `ANTHROPIC_API_KEY`.
+  - Model: `Anthropic__Model` (default `claude-sonnet-5-5`; set `claude-haiku-5-5` for the cheapest).
+  - `Anthropic__WorkspaceId`: required when the key is not scoped to a workspace. It is sent as `anthropic-workspace-id` on every request; without it the API answers 400.
+  - `Anthropic__MaxOutputTokens`: minimum `max_tokens` per request (default 2048). Haiku 5.5 thinks before answering and the thinking shares this budget. Thinking is never shown; only text blocks are returned.
+  - `/status` calls `GET /v1/models` with the same headers (no inference cost). It reports ready when the call succeeds and the configured model is listed.
+- `AI__ChatProvider=mistral` reads `Mistral__ApiKey` or `MISTRAL_API_KEY`. `/status` reports it ready when the key is set.
+- Either provider can also be the fallback via `AI__CascadeProvider`. Embeddings still come from `AI__EmbeddingProvider` (Ollama by default).
 - The algebra route now supports an external IX process over a simple JSON stdin/stdout contract. Configure it with:
 
 ```text

@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "9cfa861537d6cd66d3e77978fc0c462ca300e047",
-    "generatedAt": "2026-11-17T01:14:12.598077+00:00",
+    "commitSha": "19996c052cbbec0ebf2857d8355503619ffcece9",
+    "generatedAt": "2026-11-17T03:14:00.205691+00:00",
     "repoCount": 5,
-    "totalPRs": 29
+    "totalPRs": 32
   },
   "repos": [
     {
@@ -113,8 +113,32 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 11,
+      "prCount": 13,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T02:01:35Z",
+          "failingChecks": 0,
+          "headRef": "fix/888-routing-parsing",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 897,
+          "title": "fix(chat): route and parse the four realistic questions of #888",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/897"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T01:19:07Z",
+          "failingChecks": 0,
+          "headRef": "fix/886-voicing-comfort-chord-identity",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 894,
+          "title": "fix(chatbot): voicing-comfort answers only real voicings of the chord",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/894"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -122,7 +146,7 @@
           "failingChecks": 0,
           "headRef": "fix/889-progression-mood-key",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 891,
           "title": "fix(chatbot): honour the requested key in the progression-mood skill",
           "url": "https://github.com/GuitarAlchemist/ga/pull/891"
@@ -164,7 +188,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/854"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "app/claude",
           "createdAt": "2026-11-14T03:06:25Z",
           "failingChecks": 0,
@@ -261,8 +285,20 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 7,
+      "prCount": 8,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T02:44:21Z",
+          "failingChecks": 0,
+          "headRef": "fix/ixctl-bookmark-test-stall",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 564,
+          "title": "test(ixctl): the bookmark test no longer queues its requests behind a full replay",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/564"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -364,7 +400,7 @@
       "prCount": 5,
       "prs": [
         {
-          "ageDays": 34,
+          "ageDays": 35,
           "author": "spareilleux",
           "createdAt": "2026-10-13T02:09:29Z",
           "failingChecks": 0,
@@ -454,7 +490,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
         },
         {
-          "ageDays": 56,
+          "ageDays": 57,
           "author": "spareilleux",
           "createdAt": "2026-09-21T03:02:23Z",
           "failingChecks": 1,
