@@ -127,6 +127,23 @@ public class AgentStructuredResponseFallbackTests
     }
 
     [Test]
+    public async Task ProseWithPitchClassSet_KeepsTheSet()
+    {
+        // Pitch-class sets use braces but are not JSON (Codex P2 on #903).
+        var response = await TheoryAnswerFor("C major has pitch classes {0, 4, 7}.");
+
+        Assert.That(response.Result, Is.EqualTo("C major has pitch classes {0, 4, 7}."));
+    }
+
+    [Test]
+    public async Task PitchClassSetAndBrokenJson_DropsOnlyTheJson()
+    {
+        var response = await TheoryAnswerFor("C major has pitch classes {0, 4, 7}. {\"confidence\": 0.9, \"evid");
+
+        Assert.That(response.Result, Is.EqualTo("C major has pitch classes {0, 4, 7}."));
+    }
+
+    [Test]
     public async Task EntirelyFencedTab_IsKept()
     {
         var response = await TheoryAnswerFor(VexTabExample);

@@ -143,16 +143,37 @@ internal static class AgentResponseParser
         return content.StartsWith('{') || content.StartsWith('[') || info.StartsWith('{');
     }
 
+    /// <summary>
+    /// Removes JSON objects (balanced or cut off) from <paramref name="text"/>. A
+    /// <c>{</c> counts as a JSON object only when a key (<c>"</c>), a closing
+    /// <c>}</c> or the end of the text follows it, so brace notation such as the
+    /// pitch-class set <c>{0, 4, 7}</c> is kept.
+    /// </summary>
     private static string WithoutJsonObjects(string text)
     {
-        int brace;
-        while ((brace = text.IndexOf('{')) >= 0)
+        var brace = text.IndexOf('{');
+        while (brace >= 0)
         {
+            if (!StartsJsonObject(text, brace))
+            {
+                brace = text.IndexOf('{', brace + 1);
+                continue;
+            }
+
             var end = FindMatchingBrace(text, brace);
             text = end < 0 ? text[..brace] : text[..brace] + text[(end + 1)..];
+            brace = text.IndexOf('{', brace);
         }
 
         return text;
+    }
+
+    private static bool StartsJsonObject(string text, int openIndex)
+    {
+        var next = openIndex + 1;
+        while (next < text.Length && char.IsWhiteSpace(text[next]))
+            next++;
+        return next == text.Length || text[next] is '"' or '}';
     }
 
     /// <summary>
