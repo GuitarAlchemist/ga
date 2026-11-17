@@ -162,7 +162,7 @@ public static class AiServiceExtensions
     /// <summary>
     /// Wraps <paramref name="primary"/> in a <see cref="Providers.CascadingChatClient"/> whose
     /// secondary is <paramref name="cascadeProvider"/> (the <c>AI:CascadeProvider</c> value:
-    /// mistral, ollama, docker or github). Returns <paramref name="primary"/> unchanged when
+    /// mistral, anthropic/claude, ollama, docker or github). Returns <paramref name="primary"/> unchanged when
     /// <paramref name="cascadeProvider"/> is empty. Hosts that build their own primary client
     /// (GaApi) use this to get the same cascade as <see cref="AddGuitarAlchemistChatClient"/>.
     /// </summary>
