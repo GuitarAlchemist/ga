@@ -35,7 +35,7 @@ public class TechniqueAgent(IChatClient chatClient, ILogger<TechniqueAgent> logg
         var prompt = BuildTechniquePrompt(request);
         var responseText = await ChatAsync(request.Query, prompt, cancellationToken, request.ConversationHistory);
 
-        return ParseStructuredResponse(responseText, "Technique evaluation failed.");
+        return ParseStructuredResponse(responseText, IncompleteAnswerFallback);
     }
 
     private string BuildTechniquePrompt(AgentRequest _) => BuildSystemPrompt() + """
@@ -106,13 +106,13 @@ public class ComposerAgent(IChatClient chatClient, ILogger<ComposerAgent> logger
                 var enrichedQuery = $"{request.Query}\n\n[Theory context]: {theoryResult.Result}";
                 var prompt = BuildComposerPrompt(request);
                 var responseText = await ChatAsync(enrichedQuery, prompt, cancellationToken, request.ConversationHistory);
-                return ParseStructuredResponse(responseText, "Composition generation failed.");
+                return ParseStructuredResponse(responseText, IncompleteAnswerFallback);
             }
         }
 
         var composerPrompt = BuildComposerPrompt(request);
         var text = await ChatAsync(request.Query, composerPrompt, cancellationToken, request.ConversationHistory);
-        return ParseStructuredResponse(text, "Composition generation failed.");
+        return ParseStructuredResponse(text, IncompleteAnswerFallback);
     }
 
     private static bool MentionsKey(string query)
@@ -178,7 +178,7 @@ public class CriticAgent(IChatClient chatClient, ILogger<CriticAgent> logger)
         var prompt = BuildCriticPrompt(request);
         var responseText = await ChatAsync(request.Query, prompt, cancellationToken, request.ConversationHistory);
 
-        return ParseStructuredResponse(responseText, "Musical critique failed.");
+        return ParseStructuredResponse(responseText, IncompleteAnswerFallback);
     }
 
     private string BuildCriticPrompt(AgentRequest _) => BuildSystemPrompt() + """
