@@ -17,11 +17,17 @@ public class FretboardChordsGenerator(FretboardClass fretboard)
     /// <param name="notes">The set of pitch classes to form the chord.</param>
     /// <param name="minNotes">Minimum number of notes to play.</param>
     /// <param name="span">Maximum fret span (default 4).</param>
+    /// <param name="requiredNotes">
+    /// Pitch classes every voicing must sound (default: all of <paramref name="notes"/>). Pass a
+    /// subset to let a chord with more tones than strings drop its optional ones (e.g. a 13th
+    /// chord's fifth).
+    /// </param>
     /// <returns>A collection of voicings, each represented as a list of positions.</returns>
     public IEnumerable<ImmutableList<Position>> GetChordPositions(
-        PitchClassSet notes, 
-        int minNotes = 3, 
-        int span = 4)
+        PitchClassSet notes,
+        int minNotes = 3,
+        int span = 4,
+        PitchClassSet? requiredNotes = null)
     {
         // Naive implementation: 
         // 1. Find all locations for each pitch class on the fretboard.
@@ -57,7 +63,7 @@ public class FretboardChordsGenerator(FretboardClass fretboard)
             locationsPerString[s] = positions;
         }
 
-        return GenerateCombinations(locationsPerString, notes, minNotes, span);
+        return GenerateCombinations(locationsPerString, requiredNotes ?? notes, minNotes, span);
     }
     
     /// <summary>
@@ -80,7 +86,7 @@ public class FretboardChordsGenerator(FretboardClass fretboard)
 
     private IEnumerable<ImmutableList<Position>> GenerateCombinations(
         List<Position>[] locationsPerString,
-        PitchClassSet notes,
+        PitchClassSet requiredNotes,
         int minNotes,
         int span)
     {
@@ -114,9 +120,9 @@ public class FretboardChordsGenerator(FretboardClass fretboard)
             
             if (minFret != int.MaxValue && (maxFret - minFret) > span) continue;
 
-            // Every pitch class of the chord must sound: a combination that covers only part of the
-            // set (e.g. A-A-C for F major, no root) is a different chord, not a voicing of this one.
-            if (soundedPitchClasses.Count != notes.Count) continue;
+            // Every required pitch class must sound: a combination that covers only part of the
+            // chord (e.g. A-A-C for F major, no root) is a different chord, not a voicing of this one.
+            if (!requiredNotes.All(soundedPitchClasses.Contains)) continue;
 
             yield return combination.ToImmutableList();
         }
