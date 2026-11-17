@@ -25,7 +25,10 @@ using Microsoft.Extensions.Configuration;
 /// </remarks>
 public static class AnthropicProvider
 {
-    public const string DefaultModel = "claude-sonnet-5";
+    public const string DefaultModel = "claude-sonnet-5-5";
+
+    /// <summary>Configuration key for the chat model; <see cref="DefaultModel"/> when unset.</summary>
+    public const string ModelConfigKey = "Anthropic:Model";
 
     /// <summary>
     /// Returns true if an Anthropic API key is reachable from configuration or
@@ -40,7 +43,7 @@ public static class AnthropicProvider
     /// </summary>
     /// <param name="configuration">Application configuration; resolves the API key
     /// from <c>Anthropic:ApiKey</c> first, then <c>ANTHROPIC_API_KEY</c>.</param>
-    /// <param name="model">Anthropic model name (e.g. <c>claude-sonnet-5</c>).
+    /// <param name="model">Anthropic model name (e.g. <c>claude-sonnet-5-5</c>).
     /// Falls back to <see cref="DefaultModel"/> when null/empty.</param>
     /// <param name="timeout">HTTP timeout for chat requests. Default is 100s
     /// (Anthropic SDK default). Long-output tasks (curator, summarizer with
@@ -108,6 +111,26 @@ public static class AnthropicProvider
             .UseFunctionInvocation()
             .Build();
     }
+
+    /// <summary>
+    /// Resolves the chat model from <c>Anthropic:Model</c>, falling back to
+    /// <see cref="DefaultModel"/> when it is unset or blank.
+    /// </summary>
+    public static string ResolveModel(IConfiguration configuration)
+    {
+        var configured = configuration[ModelConfigKey];
+        return string.IsNullOrWhiteSpace(configured) ? DefaultModel : configured;
+    }
+
+    /// <summary>
+    /// Builds the host's main <see cref="IChatClient"/> from configuration: key
+    /// from <c>Anthropic:ApiKey</c> / <c>ANTHROPIC_API_KEY</c>, model from
+    /// <c>Anthropic:Model</c>. Used when <c>AI:ChatProvider</c> or
+    /// <c>AI:CascadeProvider</c> is <c>anthropic</c>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">No API key is configured.</exception>
+    public static IChatClient CreateChatClientFromConfig(IConfiguration configuration) =>
+        CreateChatClient(configuration, ResolveModel(configuration));
 
     private static string? ResolveApiKey(IConfiguration configuration) =>
         configuration["Anthropic:ApiKey"]

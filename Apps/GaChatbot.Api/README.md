@@ -56,6 +56,7 @@ Notes:
 - `Chatbot__Mode=routed` uses a lightweight keyword router plus specialized prompt profiles, still without the full orchestration graph.
 - Use `Chatbot__Mode=full` or `Chatbot__Mode=orchestrated` only when you want the richer orchestration stack.
 - `GITHUB_TOKEN` is only needed when `AI__ChatProvider=github` or `AI__EmbeddingProvider=github`.
+- `AI__ChatProvider=anthropic` (alias `claude`) runs chat on Anthropic: key from `Anthropic__ApiKey` or `ANTHROPIC_API_KEY`, model from `Anthropic__Model` (default `claude-sonnet-5-5`). `AI__ChatProvider=mistral` reads `Mistral__ApiKey` or `MISTRAL_API_KEY`. Either one can also be the fallback via `AI__CascadeProvider`. `/status` reports these providers ready when their key is set. Embeddings still come from `AI__EmbeddingProvider` (Ollama by default).
 - The algebra route now supports an external IX process over a simple JSON stdin/stdout contract. Configure it with:
 
 ```text
