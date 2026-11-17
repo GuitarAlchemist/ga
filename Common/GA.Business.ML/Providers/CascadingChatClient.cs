@@ -5,8 +5,9 @@ using Microsoft.Extensions.AI;
 
 /// <summary>
 /// Wraps a primary <see cref="IChatClient"/> with a secondary fallback. The
-/// secondary is invoked when the primary either cancels (timeout) or throws
-/// a network-level exception before producing any output.
+/// secondary is invoked when the primary either cancels (timeout), throws a
+/// network-level exception, or reports an unsuccessful provider response
+/// before producing any output.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -28,7 +29,7 @@ public sealed class CascadingChatClient(
     IChatClient secondary,
     ILogger<CascadingChatClient>? logger = null) : IChatClient
 {
-    private readonly IChatClient _primary   = primary   ?? throw new ArgumentNullException(nameof(primary));
+    private readonly IChatClient _primary = primary ?? throw new ArgumentNullException(nameof(primary));
     private readonly IChatClient _secondary = secondary ?? throw new ArgumentNullException(nameof(secondary));
     private readonly ILogger<CascadingChatClient>? _logger = logger;
 
@@ -50,7 +51,7 @@ public sealed class CascadingChatClient(
             // Caller-driven cancellation — do not cascade.
             throw;
         }
-        catch (Exception primaryEx) when (ShouldCascade(primaryEx))
+        catch (Exception primaryEx) when (ShouldCascade(primaryEx, cancellationToken))
         {
             _logger?.LogWarning(
                 primaryEx,
@@ -85,7 +86,7 @@ public sealed class CascadingChatClient(
                 // pre-enumerator path violating the documented contract.
                 throw;
             }
-            catch (Exception ex) when (ShouldCascade(ex))
+            catch (Exception ex) when (ShouldCascade(ex, cancellationToken))
             {
                 primaryFailure = ex;
             }
@@ -103,7 +104,7 @@ public sealed class CascadingChatClient(
                 {
                     throw;
                 }
-                catch (Exception ex) when (!primarySucceededAtLeastOnce && ShouldCascade(ex))
+                catch (Exception ex) when (!primarySucceededAtLeastOnce && ShouldCascade(ex, cancellationToken))
                 {
                     primaryFailure = ex;
                     break;
@@ -148,15 +149,29 @@ public sealed class CascadingChatClient(
         _secondary.Dispose();
     }
 
-    private static bool ShouldCascade(Exception ex) => ex switch
-    {
-        // OperationCanceledException covers TaskCanceledException too (the
-        // shape HttpClient uses for its own timeouts). We treat any non-
-        // caller-driven cancellation here as a primary-side failure — the
-        // caller-driven case is filtered at each catch site.
-        OperationCanceledException => true,
-        HttpRequestException       => true,       // network / non-2xx
-        TimeoutException           => true,
-        _                          => false,
-    };
+    /// <summary>
+    /// Message prefix Microsoft.Extensions.AI.Ollama puts on the
+    /// <see cref="InvalidOperationException"/> it throws for a non-2xx Ollama
+    /// response (for example Ollama Cloud's "Add usage credits" refusal).
+    /// </summary>
+    internal const string OllamaErrorPrefix = "Ollama error:";
+
+    private static bool ShouldCascade(Exception ex, CancellationToken cancellationToken) =>
+        // A cancelled caller wants nothing more; never spend a secondary call.
+        !cancellationToken.IsCancellationRequested && ex switch
+        {
+            // OperationCanceledException covers TaskCanceledException too (the
+            // shape HttpClient uses for its own timeouts). We treat any non-
+            // caller-driven cancellation here as a primary-side failure — the
+            // caller-driven case is filtered at each catch site.
+            OperationCanceledException => true,
+            HttpRequestException => true,       // network / non-2xx
+            TimeoutException => true,
+            // Provider adapters that surface an unsuccessful response as
+            // InvalidOperationException. Matched narrowly so a bug in our own
+            // code (any other InvalidOperationException) still propagates.
+            InvalidOperationException { InnerException: HttpRequestException } => true,
+            InvalidOperationException ioe when ioe.Message.StartsWith(OllamaErrorPrefix, StringComparison.Ordinal) => true,
+            _ => false,
+        };
 }
