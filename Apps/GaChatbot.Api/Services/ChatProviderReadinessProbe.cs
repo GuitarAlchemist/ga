@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Text.Json;
 using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Extensions;
+using GA.Business.ML.Providers.Mistral;
+using GA.Providers.Anthropic;
 using GaChatbot.Api.Controllers;
 using Microsoft.Extensions.AI;
 
@@ -73,6 +75,18 @@ public sealed class ChatProviderReadinessProbe(
         var providerStatus = provider switch
         {
             "github" => TokenBasedStatus("GITHUB_TOKEN", "GitHub Models", provider),
+            "anthropic" or "claude" => KeyBasedStatus(
+                AnthropicProvider.IsAvailable(configuration),
+                "Anthropic",
+                "Set ANTHROPIC_API_KEY or Anthropic:ApiKey.",
+                provider,
+                AnthropicProvider.ResolveModel(configuration)),
+            "mistral" => KeyBasedStatus(
+                MistralProvider.IsAvailable(configuration),
+                "Mistral",
+                $"Set {MistralProvider.ApiKeyEnvVar} or Mistral:ApiKey.",
+                provider,
+                configuration["Mistral:Model"] ?? MistralProvider.DefaultChatModel),
             "ollama" => await GetOllamaStatusAsync(cancellationToken),
             "docker" => await GetDockerStatusAsync(cancellationToken),
             _ => new ChatbotStatus
@@ -248,20 +262,35 @@ public sealed class ChatProviderReadinessProbe(
             || id.Contains("modes",            StringComparison.OrdinalIgnoreCase);
     }
 
-    private static ChatbotStatus TokenBasedStatus(string envVarName, string providerName, string providerKey)
-    {
-        var configured = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(envVarName));
-        return new ChatbotStatus
+    private static ChatbotStatus TokenBasedStatus(string envVarName, string providerName, string providerKey) =>
+        KeyBasedStatus(
+            !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(envVarName)),
+            providerName,
+            $"Set {envVarName}.",
+            providerKey);
+
+    /// <summary>
+    /// Readiness for a hosted provider that needs only an API key: available iff
+    /// the key is configured. No network call, so /status stays cheap and does
+    /// not spend provider quota; a revoked key surfaces on the first answer.
+    /// </summary>
+    private static ChatbotStatus KeyBasedStatus(
+        bool configured,
+        string providerName,
+        string setKeyHint,
+        string providerKey,
+        string? chatModel = null) =>
+        new()
         {
             IsAvailable = configured,
             ProviderReachable = configured,
             Provider = providerKey,
+            ChatModel = chatModel,
             Message = configured
                 ? $"{providerName} is configured."
-                : $"{providerName} is not configured. Set {envVarName}.",
+                : $"{providerName} is not configured. {setKeyHint}",
             Timestamp = DateTime.UtcNow,
         };
-    }
 
     private async Task<ChatbotStatus> GetOllamaStatusAsync(CancellationToken cancellationToken)
     {
