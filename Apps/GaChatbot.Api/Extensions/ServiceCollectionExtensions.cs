@@ -125,7 +125,36 @@ public static class ServiceCollectionExtensions
             services.AddGuitarAlchemistChatClient(chatProvider, configuration);
         }
 
+        RecordGenerationOutcomes(services);
         return services;
+    }
+
+    /// <summary>
+    /// Wraps the registered <see cref="Microsoft.Extensions.AI.IChatClient"/> in a
+    /// <see cref="GenerationHealthChatClient"/>, so every LLM generation in this host
+    /// feeds the readiness probe's <c>generationOk</c>.
+    /// </summary>
+    private static void RecordGenerationOutcomes(IServiceCollection services)
+    {
+        var registered = services.LastOrDefault(d =>
+            d.ServiceType == typeof(Microsoft.Extensions.AI.IChatClient) && !d.IsKeyedService);
+        if (registered is null)
+        {
+            return;
+        }
+
+        services.Remove(registered);
+        services.Add(ServiceDescriptor.Describe(
+            typeof(Microsoft.Extensions.AI.IChatClient),
+            sp => new GenerationHealthChatClient(
+                Resolve(registered, sp),
+                sp.GetRequiredService<ChatGenerationHealth>()),
+            registered.Lifetime));
+
+        static Microsoft.Extensions.AI.IChatClient Resolve(ServiceDescriptor descriptor, IServiceProvider sp) =>
+            (Microsoft.Extensions.AI.IChatClient)(descriptor.ImplementationInstance
+                ?? descriptor.ImplementationFactory?.Invoke(sp)
+                ?? ActivatorUtilities.CreateInstance(sp, descriptor.ImplementationType!));
     }
 
     /// <summary>

@@ -311,10 +311,10 @@ public sealed class OrchestratedChatApplicationServiceTests
         Dictionary<string, string?>? configurationOverrides = null,
         ChatGenerationHealth? generationHealth = null)
     {
+        directChatClient ??= new StubChatClient("direct fallback answer");
         var directChat = new DirectChatApplicationService(
-            directChatClient ?? new StubChatClient("direct fallback answer"),
-            new ReadyProbe(),
-            generationHealth);
+            generationHealth is null ? directChatClient : new GenerationHealthChatClient(directChatClient, generationHealth),
+            new ReadyProbe());
         var configurationValues = new Dictionary<string, string?>
         {
             ["Chatbot:StreamTimeoutSeconds"] = "5",
