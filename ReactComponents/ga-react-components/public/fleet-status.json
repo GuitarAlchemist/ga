@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "82d627124293f80f446b116881e4c79bc1c94a2c",
-    "generatedAt": "2026-11-17T03:12:50.370330+00:00",
+    "commitSha": "19996c052cbbec0ebf2857d8355503619ffcece9",
+    "generatedAt": "2026-11-17T03:14:00.205691+00:00",
     "repoCount": 5,
-    "totalPRs": 35
+    "totalPRs": 32
   },
   "repos": [
     {
@@ -113,32 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 16,
+      "prCount": 13,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T02:19:24Z",
-          "failingChecks": 0,
-          "headRef": "fix/skills-decline-missing-argument",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 899,
-          "title": "fix(chat): decline skills whose required argument is absent",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/899"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T02:08:03Z",
-          "failingChecks": 0,
-          "headRef": "fix/anthropic-workspace-header",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 898,
-          "title": "fix(anthropic): send workspace header, floor max_tokens, hide thinking",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/898"
-        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -162,18 +138,6 @@
           "number": 894,
           "title": "fix(chatbot): voicing-comfort answers only real voicings of the chord",
           "url": "https://github.com/GuitarAlchemist/ga/pull/894"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T01:17:46Z",
-          "failingChecks": 0,
-          "headRef": "fix/chatbot-status-reflects-failed-generation",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 892,
-          "title": "fix(chatbot): report a failed generation in /api/chatbot/status",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/892"
         },
         {
           "ageDays": 0,
