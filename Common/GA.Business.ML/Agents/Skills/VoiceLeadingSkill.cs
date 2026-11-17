@@ -224,6 +224,7 @@ public sealed class VoiceLeadingSkill(ILogger<VoiceLeadingSkill> logger) : IOrch
 
     private static AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = AgentIds.Theory,
         Result     = "Ask about voice leading between two chords, e.g. \"voice leading from C to F\" or \"smoothest voicing G7 to Cmaj7\".",
         Confidence = 0.1f,
