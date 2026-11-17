@@ -64,11 +64,33 @@ public sealed class SemanticKnowledgeSource(
                 return doubles;
             }
 
-            var generator = optickActive ? (Func<string, Task<double[]>>)MusicalVectorAsync : OllamaVectorAsync;
             mode = optickActive ? "optk" : "ollama";
 
             var searchStart = System.Diagnostics.Stopwatch.GetTimestamp();
-            var results = await voicingSearch.SearchAsync(query, generator, limit);
+            List<VoicingSearchResult> results;
+            if (optickActive)
+            {
+                // Extract once: the parsed chord shapes the vector and decides the ranking. The
+                // vector alone ranks a chord's supersets and neighbours above it (Gadd9 above every
+                // G triad, Cmaj9 above every E7#9 on the 2026-04-19 index), so voicings named after
+                // the parsed chord come first. The plain vector ranking is the fallback when the
+                // corpus labels no voicing with that symbol, as in VoicingAgent.
+                var vector = await MusicalVectorAsync(query);
+                Task<double[]> Vector(string _) => Task.FromResult(vector);
+
+                results = structured?.ChordSymbol is { } chord
+                    ? await voicingSearch.SearchAsync(
+                        query, Vector, limit, new VoicingSearchFilters(ChordName: chord), cancellationToken)
+                    : [];
+                if (results.Count == 0)
+                {
+                    results = await voicingSearch.SearchAsync(query, Vector, limit, cancellationToken: cancellationToken);
+                }
+            }
+            else
+            {
+                results = await voicingSearch.SearchAsync(query, OllamaVectorAsync, limit, cancellationToken: cancellationToken);
+            }
             var total = System.Diagnostics.Stopwatch.GetElapsedTime(searchStart).TotalMilliseconds;
             searchMs = Math.Max(0, total - extractMs - encodeMs - embedMs);
 

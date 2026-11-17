@@ -60,8 +60,7 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
                 "guitar" or "bass" or "ukulele" => filters.VoicingType.ToLowerInvariant(),
                 _ => null
             };
-            var poolSize = Math.Max(limit * 10, 100);
-            var pool = SearchInternal(queryEmbedding, poolSize, instrument, "hybrid search", cancellationToken);
+            var pool = SearchInternal(queryEmbedding, HybridPoolSize(limit, filters), instrument, "hybrid search", cancellationToken);
             // Index-bound metadata filters (ApplyFilters) + the shared comfort seam. Comfort is the one
             // rich filter OPTK *can* honor without a reindex — it only needs the diagram, which the index
             // carries. The ~30 metadata filters it can't back are surfaced via UnsupportedPopulatedFilters
@@ -71,6 +70,19 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
                 .Take(limit)
                 .ToList();
         }, cancellationToken);
+
+    /// <summary>
+    ///     Candidate pool scanned before the post-hoc filters. A chord-name filter gets a deep pool:
+    ///     the vector ranks the requested chord's supersets and neighbours first (on the 2026-04-19
+    ///     index the first voicing named G for "open G major chord" ranks 105, E7#9 ranks 306), so a
+    ///     100-voicing pool left the filter nothing to keep.
+    /// </summary>
+    internal static int HybridPoolSize(int limit, VoicingSearchFilters filters) =>
+        filters.ChordName is { Length: > 0 }
+            ? Math.Max(limit * 10, ChordNamePoolSize)
+            : Math.Max(limit * 10, 100);
+
+    private const int ChordNamePoolSize = 4096;
 
     public Task<List<VoicingSearchResult>> FindSimilarVoicingsAsync(
         string voicingId,
