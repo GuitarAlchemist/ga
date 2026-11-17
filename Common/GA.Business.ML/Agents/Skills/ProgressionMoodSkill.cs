@@ -195,9 +195,10 @@ public sealed class ProgressionMoodSkill : IOrchestratorSkill
     /// <summary>A key named in the request, e.g. "in D minor", "in the key of F#", "in Ebm", "in B flat".</summary>
     private sealed record RequestedKey(Tonic Tonic, bool IsMinor)
     {
-        // The letter must be upper-case so "in a song" is not read as A major.
+        // The introducing words match in any case ("In D minor, ..."), but the letter must be upper-case so
+        // "in a song" is not read as A major.
         private static readonly Regex KeyMention = new(
-            @"\b(?:in|key\s+of)\s+(?:the\s+key\s+of\s+)?(?<letter>[A-G])(?:(?<accidental>[#♯b♭])|[\s-]+(?<accidental>(?i:flat|sharp))\b)?" +
+            @"\b(?i:in|key\s+of)\s+(?i:the\s+key\s+of\s+)?(?<letter>[A-G])(?:(?<accidental>[#♯b♭])|[\s-]+(?<accidental>(?i:flat|sharp))\b)?" +
             @"(?:\s*(?<mode>(?i:major|minor|maj|min))\b|(?<mode>m)\b|(?=[\s,.;:!?)]|$))",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
 

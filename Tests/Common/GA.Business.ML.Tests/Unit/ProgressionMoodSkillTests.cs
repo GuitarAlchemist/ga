@@ -70,6 +70,8 @@ public class ProgressionMoodSkillTests
     [TestCase("Write a melancholy chord progression in the key of C minor", "Cm – Ab – Fm – G7")]
     [TestCase("Make a sad progression in B flat minor", "Bbm – Gb – Ebm – F7")]
     [TestCase("Sad chords in Em please", "Em – C – Am – B7")]
+    [TestCase("In D minor, suggest a sad chord progression", "Dm – Bb – Gm – A7")]
+    [TestCase("Key of G minor: something sad", "Gm – Eb – Cm – D7")]
     public async Task ExecuteAsync_SadRequestInAMinorKey_ProposesAConcreteProgressionInThatKey(
         string prompt, string expectedProgression)
     {
