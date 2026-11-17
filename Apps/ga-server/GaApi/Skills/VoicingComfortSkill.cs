@@ -13,7 +13,7 @@ using GaApi.Services;
 /// Registered by <see cref="GaApiPlugin"/> and runs at the orchestrator fast-path.
 /// When triggered, it parses a chord name from the message (if present) or defaults to "C",
 /// calls <see cref="VoicingComfortService.GetComfortRankedAsync"/>, and presents
-/// the three lowest-stretch alternatives with fret diagrams and stretch metrics.
+/// the three most comfortable voicings with fret diagrams and stretch metrics.
 /// </remarks>
 public sealed class VoicingComfortSkill(VoicingComfortService comfortService) : IOrchestratorSkill
 {
@@ -79,7 +79,7 @@ public sealed class VoicingComfortSkill(VoicingComfortService comfortService) : 
         }
         else
         {
-            sb.AppendLine($"Here are the {voicings.Count} most comfortable voicings for **{chordName}** (ranked by fret stretch, lowest first):");
+            sb.AppendLine($"Here are the {voicings.Count} most comfortable voicings for **{chordName}** (root in the bass, closest to the nut, smallest fret stretch first; frets written from the low E string):");
             sb.AppendLine();
 
             for (var i = 0; i < voicings.Count; i++)
@@ -111,12 +111,14 @@ public sealed class VoicingComfortSkill(VoicingComfortService comfortService) : 
             Result     = sb.ToString().TrimEnd(),
             Confidence = 1.0f,
             Evidence   = evidence,
-            Assumptions = ["Voicings sorted by fret stretch ascending; full barre chords excluded"]
+            Assumptions = ["Voicings contain every chord tone, ranked root-in-bass first, then by highest fret and fret stretch; full barre chords excluded"]
         };
     }
 
+    // Frets hold string 1 (high E) first, as Voicing.Positions does; guitarists read a diagram
+    // from the low E string, so write it reversed ("1-3-3-2-1-1" is the E-shape F barre).
     private static string FormatFrets(int[] frets) =>
-        string.Join("-", frets.Select(f => f < 0 ? "x" : f.ToString()));
+        string.Join("-", Enumerable.Reverse(frets).Select(f => f < 0 ? "x" : f.ToString()));
 
     private static string NormalizeChord(Match m)
     {
