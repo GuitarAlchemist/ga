@@ -153,6 +153,23 @@ public sealed class VoicingAgent(
             };
         }
 
+        // Every result scoring 0 means nothing musical matched: the query named no chord, mode
+        // or known voicing tag ("finger vibrato", "CAGED system") and the index returned
+        // arbitrary voicings. Decline so the request reaches another handler.
+        if (results.All(r => r.Score <= 0.0))
+        {
+            return new AgentResponse
+            {
+                Declined = true,
+                AgentId = AgentId,
+                Result = "No voicing in the OPTIC-K index matches this query musically.",
+                Confidence = 0.0f,
+                Evidence = [],
+                Assumptions = ["Every search result scored 0."],
+                Data = new { interpreted = structured }
+            };
+        }
+
         var evidence = results
             .Take(Math.Min(results.Count, 5))
             .Select(r => $"{r.Document.ChordName ?? "?"} · {PlayableNotationFormatter.ToChartOrder(r.Document.Diagram)} · score={r.Score:F4}")

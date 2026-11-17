@@ -101,6 +101,8 @@ public static class AiServiceExtensions
             var selection = ChatProviderSelection.FromConfiguration(configuration);
             services.AddSingleton(selection);
             services.AddSingleton<IChatProviderAvailability, ChatProviderAvailability>();
+            // Outcome of the last real generation, read by GET /api/chatbot/status.
+            services.AddSingleton<ChatGenerationHealth>();
 
             // Register the IChatClient every chat path uses (agents, skills, the
             // direct-chat fallback). Provider-aware so AI:ChatProvider=claude
@@ -127,7 +129,8 @@ public static class AiServiceExtensions
                 var anthropicClient = GA.Providers.Anthropic.AnthropicProvider.CreateChatClient(
                     configuration,
                     configuration["Anthropic:Model"]);
-                services.AddSingleton<IChatClient>(sp => WithCascadeFallback(anthropicClient, selection, configuration, sp));
+                services.AddSingleton<IChatClient>(sp =>
+                    RecordingGenerationOutcomes(WithCascadeFallback(anthropicClient, selection, configuration, sp), sp));
             }
             else
             {
@@ -136,16 +139,25 @@ public static class AiServiceExtensions
                 // every provider. Requests stream under the hood so the transport timeout
                 // bounds only the wait for the first bytes, as with the former services.
                 services.AddSingleton<IChatClient>(sp =>
-                    WithCascadeFallback(
-                            new StreamingAggregationChatClient(CreateLocalChatClient(selection, ollamaBaseUrl, sp)),
-                            selection,
-                            configuration,
-                            sp)
-                        .AsBuilder()
-                        .UseFunctionInvocation()
-                        .Build(sp));
+                    RecordingGenerationOutcomes(
+                        WithCascadeFallback(
+                                new StreamingAggregationChatClient(CreateLocalChatClient(selection, ollamaBaseUrl, sp)),
+                                selection,
+                                configuration,
+                                sp)
+                            .AsBuilder()
+                            .UseFunctionInvocation()
+                            .Build(sp),
+                        sp));
             }
         }
+
+        /// <summary>
+        ///     Outermost wrapper: every generation, whichever provider in the cascade
+        ///     served it, updates <see cref="ChatGenerationHealth"/>.
+        /// </summary>
+        private static IChatClient RecordingGenerationOutcomes(IChatClient client, IServiceProvider sp) =>
+            new GenerationHealthChatClient(client, sp.GetRequiredService<ChatGenerationHealth>());
 
         private static IChatClient WithCascadeFallback(
             IChatClient primary,

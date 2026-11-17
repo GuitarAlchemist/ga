@@ -165,8 +165,10 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
 
     private static (string Root, string Quality)? TryParse(string message)
     {
-        var chordQuestion = ChordQuestionRegex().Match(message);
-        if (chordQuestion.Success)
+        // The article "a" ("what is a sus4 chord") is not a chord root.
+        var chordQuestion = ChordQuestionRegex().Matches(message)
+            .FirstOrDefault(match => !IsArticle(message, match.Groups["root"]));
+        if (chordQuestion is not null)
         {
             return (ChordVocabulary.NormalizeRoot(chordQuestion.Groups["root"].Value), ChordVocabulary.NormalizeQuality(chordQuestion.Groups["quality"].Value));
         }
@@ -179,6 +181,11 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
 
         return null;
     }
+
+    // A lowercase "a" followed by a space is the indefinite article; a chord root written in
+    // lowercase sits against its quality ("a7", "am") or is capitalized ("A sus4").
+    private static bool IsArticle(string message, Group root) =>
+        root.Value == "a" && root.Index + 1 < message.Length && char.IsWhiteSpace(message[root.Index + 1]);
 
     /// <summary>
     /// The notes named after the verb of a note-set question ("which chords contain both E and

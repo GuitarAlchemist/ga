@@ -261,10 +261,12 @@ public class ProductionOrchestrator(
         // keyword), so when it fires there is no ambiguity worth routing
         // semantically. Diagnosed 2026-05-07 by codex CLI second-opinion;
         // roadmap P1 #6 (#81). The guard is a pure function of the message, so
-        // it is not retried after semantic dispatch.
-        if (TrySelectDeterministicAgent(turn.Message, out var deterministicAgent, out var deterministicRouting))
+        // it is not retried after semantic dispatch. A declining agent (no voicing
+        // matched musically) leaves the request to the rest of the cascade.
+        if (TrySelectDeterministicAgent(turn.Message, out var deterministicAgent, out var deterministicRouting)
+            && await DispatchDeterministicAgentAsync(turn, deterministicAgent, deterministicRouting, ct) is { } deterministicResponse)
         {
-            return await DispatchDeterministicAgentAsync(turn, deterministicAgent, deterministicRouting, ct);
+            return deterministicResponse;
         }
 
         // ── Deterministic algebra fast-path runs BEFORE semantic intent routing ──
@@ -496,11 +498,24 @@ public class ProductionOrchestrator(
             }
             else
             {
-                var agentResponse = await selectedAgent.ProcessAsync(new AgentRequest
+                var request = new AgentRequest
                 {
                     Query = turn.Message,
                     ConversationHistory = turn.AgentHistory,
-                }, ct);
+                };
+                var agentResponse = await selectedAgent.ProcessAsync(request, ct);
+
+                // A declining agent found nothing it handles in the message (e.g. no voicing
+                // matched musically): the next-ranked agent answers instead.
+                if (agentResponse.Declined && NextAgent(routing, selectedAgent) is { } next)
+                {
+                    EmitDeclinedTrace(selectedAgent.AgentId);
+                    selectedAgent = next.Agent;
+                    routingMetadata = new AgentRoutingMetadata(next.Agent.AgentId, next.Score, "agent-declined-fallthrough");
+                    turn.Activity?.SetTag("orchestration.branch", $"agent.{next.Agent.AgentId}");
+                    agentResponse = await next.Agent.ProcessAsync(request, ct);
+                }
+
                 answer = agentResponse.Result;
             }
 
@@ -523,9 +538,9 @@ public class ProductionOrchestrator(
             result,
             new AgentResponse
             {
-                AgentId    = routing.SelectedAgent.AgentId,
+                AgentId    = routingMetadata.AgentId,
                 Result     = result.NaturalLanguageAnswer ?? string.Empty,
-                Confidence = routing.Confidence,
+                Confidence = routingMetadata.Confidence,
             },
             matchedSkillName: null,
             ct,
@@ -533,12 +548,29 @@ public class ProductionOrchestrator(
     }
 
     /// <summary>
+    /// The agent that answers when <paramref name="declined"/> declines: the next agent in the
+    /// router's ranking, else the theory agent; null when there is none.
+    /// </summary>
+    private (GuitarAlchemistAgentBase Agent, float Score)? NextAgent(RoutingResult routing, GuitarAlchemistAgentBase declined)
+    {
+        foreach (var (agent, score) in routing.AllScores)
+        {
+            if (!ReferenceEquals(agent, declined)) return (agent, score);
+        }
+
+        return router.Agents.FirstOrDefault(a => a.AgentId == AgentIds.Theory && !ReferenceEquals(a, declined)) is { } theory
+            ? (theory, routing.Confidence)
+            : null;
+    }
+
+    /// <summary>
     /// Shared dispatch path for deterministic agents (e.g. VoicingAgent for
     /// explicit voicing requests). The cascade calls it before semantic intent
     /// routing, so high-precision voicing prompts never reach
-    /// SemanticIntentRouter, which can mis-rank them.
+    /// SemanticIntentRouter, which can mis-rank them. Returns null when the agent
+    /// declines, so the cascade continues.
     /// </summary>
-    private async Task<ChatResponse> DispatchDeterministicAgentAsync(
+    private async Task<ChatResponse?> DispatchDeterministicAgentAsync(
         CascadeTurn turn,
         GuitarAlchemistAgentBase agent,
         AgentRoutingMetadata routing,
@@ -551,6 +583,11 @@ public class ProductionOrchestrator(
             Query = turn.Message,
             ConversationHistory = turn.AgentHistory,
         }, ct);
+        if (agentResponse.Declined)
+        {
+            EmitDeclinedTrace(agent.AgentId);
+            return null;
+        }
 
         var deterministicResponse = new ChatResponse(
             NaturalLanguageAnswer: agentResponse.Result,

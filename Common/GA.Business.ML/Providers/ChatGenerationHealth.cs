@@ -1,4 +1,4 @@
-namespace GaChatbot.Api.Services;
+namespace GA.Business.ML.Providers;
 
 /// <summary>
 /// Remembers how the most recent LLM generation ended, so the readiness probe

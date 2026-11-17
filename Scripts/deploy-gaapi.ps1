@@ -235,7 +235,10 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXIT
 #      (its launcher and appsettings.json), so the public chat answers and routes the same
 #      way after the cutover. The provider is explicit because appsettings.Development.json
 #      selects Claude. MinConfidence=0.64 is calibrated for bge-large; the two settings
-#      only make sense together. MISTRAL_API_KEY comes from the user environment.
+#      only make sense together. AmbiguousBelow=0.75 with MinMargin=0.03 is calibrated on
+#      the same embedder: a skill scoring under 0.75 must lead the runner-up by 0.03, or a
+#      free-form question goes to the agent path. MISTRAL_API_KEY comes from the user
+#      environment.
 #    - OPTIC-K voicing search reads the index in the main checkout, read-only. With it,
 #      voicing search needs no warmup, so the startup indexer (which embeds every voicing
 #      through the Ollama instance the public chatbot shares) stays off.
@@ -256,6 +259,8 @@ set AI__ChatProvider=ollama
 set AI__CascadeProvider=mistral
 set AI__Embedding__Routing__Model=bge-large
 set AI__Routing__MinConfidence=0.64
+set AI__Routing__AmbiguousBelow=0.75
+set AI__Routing__MinMargin=0.03
 $indexLine
 set VoicingSearch__EnableIndexing=false
 set Governance__DemerzelRoot=$workDir\governance\demerzel

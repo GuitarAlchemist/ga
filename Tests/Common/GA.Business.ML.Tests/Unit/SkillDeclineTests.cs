@@ -118,4 +118,46 @@ public sealed class SkillDeclineTests
 
         Assert.That(response.Declined, Is.True, response.Result);
     }
+
+    [Test]
+    public async Task VoiceLeading_MessageWithoutTwoChords_Declines()
+    {
+        var response = await new VoiceLeadingSkill(NullLogger<VoiceLeadingSkill>.Instance)
+            .ExecuteAsync("What does good voice leading mean when comping chords on guitar?");
+
+        Assert.That(response.Declined, Is.True, response.Result);
+    }
+
+    [Test]
+    public async Task VoiceLeading_TwoChords_DoesNotDecline()
+    {
+        var response = await new VoiceLeadingSkill(NullLogger<VoiceLeadingSkill>.Instance)
+            .ExecuteAsync("voice leading from C to F");
+
+        Assert.That(response.Declined, Is.False, response.Result);
+    }
+
+    // The article "a" is not a chord root: "a sus4 chord" names no chord, so the skill declines
+    // instead of answering "A sus4 chord contains A, D, and E."
+    [Test]
+    public async Task ChordInfo_ArticleBeforeQuality_Declines()
+    {
+        var response = await new ChordInfoSkill(NullLogger<ChordInfoSkill>.Instance)
+            .ExecuteAsync("What is a sus4 chord and how does it usually resolve?");
+
+        Assert.That(response.Declined, Is.True, response.Result);
+    }
+
+    [TestCase("What notes are in a C major triad", "C, E, and G")]
+    [TestCase("What is an A sus4 chord?", "A, D, and E")]
+    public async Task ChordInfo_RootAfterArticle_Answers(string question, string notes)
+    {
+        var response = await new ChordInfoSkill(NullLogger<ChordInfoSkill>.Instance).ExecuteAsync(question);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Declined, Is.False, response.Result);
+            Assert.That(response.Result, Does.Contain(notes));
+        });
+    }
 }
