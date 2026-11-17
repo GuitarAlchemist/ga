@@ -9,7 +9,8 @@ using Microsoft.Extensions.AI;
 
 public sealed class DirectChatApplicationService(
     IChatClient chatClient,
-    IChatProviderReadinessProbe readinessProbe) : IChatApplicationService
+    IChatProviderReadinessProbe readinessProbe,
+    ChatGenerationHealth? generationHealth = null) : IChatApplicationService
 {
     private static readonly AgentRoutingMetadata DirectRouting = new("direct", 1f, "direct-chat");
 
@@ -96,7 +97,20 @@ public sealed class DirectChatApplicationService(
 
         messages.Add(new Microsoft.Extensions.AI.ChatMessage(ChatRole.User, request.Message));
 
-        var response = await chatClient.GetResponseAsync(messages, cancellationToken: cancellationToken);
+        Microsoft.Extensions.AI.ChatResponse response;
+        try
+        {
+            response = await chatClient.GetResponseAsync(messages, cancellationToken: cancellationToken);
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            // A cancelled token is the caller's decision (or the caller's own
+            // timeout, which the caller records); anything else is the provider.
+            generationHealth?.RecordFailure(exception);
+            throw;
+        }
+
+        generationHealth?.RecordSuccess();
         return response.Messages.LastOrDefault()?.Text?.Trim()
                ?? "I could not generate a response right now.";
     }

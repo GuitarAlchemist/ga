@@ -598,6 +598,85 @@ public class ChatProviderReadinessProbeTests
         });
     }
 
+    // ── Generation outcome ───────────────────────────────────────────────────
+
+    [Test]
+    public async Task GetStatusAsync_LastGenerationFailed_ReturnsUnavailable()
+    {
+        // Ollama Cloud out of credits: /api/tags lists the model, the catalog
+        // round-trip and the embedding succeed, yet every generation fails.
+        var health = new ChatGenerationHealth();
+        health.RecordFailure(new InvalidOperationException(
+            "Ollama error: Add usage credits or subscribe to continue using cloud models."));
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            generationHealth: health);
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.GenerationOk, Is.False);
+            Assert.That(status.IsAvailable, Is.False);
+            Assert.That(status.OrchestratorRoundTripOk, Is.True);
+            Assert.That(status.Message, Does.Contain("Add usage credits"));
+        });
+    }
+
+    [Test]
+    public async Task GetStatusAsync_GenerationRecovered_ReturnsAvailable()
+    {
+        var health = new ChatGenerationHealth();
+        health.RecordFailure("timed out after 15s");
+        health.RecordSuccess();
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            generationHealth: health);
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.GenerationOk, Is.True);
+            Assert.That(status.IsAvailable, Is.True);
+        });
+    }
+
+    [Test]
+    public async Task GetStatusAsync_NoRecentGeneration_ReportsUnknownAndStaysAvailable()
+    {
+        var time = new ManualTimeProvider(DateTimeOffset.Parse("2026-11-16T12:00:00Z"));
+        var health = new ChatGenerationHealth(time);
+        health.RecordFailure("timed out after 15s");
+        time.Advance(ChatGenerationHealth.OutcomeWindow + TimeSpan.FromSeconds(1));
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            generationHealth: health);
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.GenerationOk, Is.Null);
+            Assert.That(status.IsAvailable, Is.True);
+        });
+    }
+
+    private sealed class ManualTimeProvider(DateTimeOffset start) : TimeProvider
+    {
+        private DateTimeOffset _now = start;
+
+        public void Advance(TimeSpan by) => _now += by;
+
+        public override DateTimeOffset GetUtcNow() => _now;
+    }
+
     private sealed class FakeEmbeddingGenerator(
         Func<CancellationToken, Task<GeneratedEmbeddings<Embedding<float>>>> behavior)
         : IEmbeddingGenerator<string, Embedding<float>>
@@ -674,7 +753,8 @@ public class ChatProviderReadinessProbeTests
         IIntent[]? intents = null,
         IEmbeddingGenerator<string, Embedding<float>>? embeddings = null,
         IEmbeddingGeneratorFactory? embeddingFactory = null,
-        TimeSpan? embeddingTimeout = null)
+        TimeSpan? embeddingTimeout = null,
+        ChatGenerationHealth? generationHealth = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(values)
@@ -708,7 +788,8 @@ public class ChatProviderReadinessProbeTests
             configuration,
             new StubHttpClientFactory(httpClient),
             sp,
-            NullLogger<ChatProviderReadinessProbe>.Instance)
+            NullLogger<ChatProviderReadinessProbe>.Instance,
+            generationHealth)
         {
             EmbeddingProbeTimeout = embeddingTimeout ?? TimeSpan.FromSeconds(10), // production default
         };

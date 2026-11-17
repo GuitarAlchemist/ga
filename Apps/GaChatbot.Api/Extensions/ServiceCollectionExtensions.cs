@@ -31,6 +31,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<GaChatbot.Api.Services.ILlmConcurrencyGate, GaChatbot.Api.Services.LlmConcurrencyGate>();
         services.TryAddSingleton<ConversationHistoryStore>();
         services.TryAddSingleton<RoutingContextEnricher>();
+        services.AddSingleton<ChatGenerationHealth>();
         services.AddSingleton<IChatProviderReadinessProbe, ChatProviderReadinessProbe>();
         services.AddScoped<DirectChatApplicationService>();
         services.AddScoped<RoutedChatApplicationService>();

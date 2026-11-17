@@ -626,7 +626,8 @@ public sealed class ChatbotStatus
     /// <summary>
     /// True iff the chatbot can serve a request: provider HTTP reachable AND
     /// configured chat model installed AND configured embedding model installed
-    /// AND the orchestrator round-trip and the embedding probe succeed.
+    /// AND the orchestrator round-trip and the embedding probe succeed
+    /// AND the most recent generation, if any, did not fail.
     /// </summary>
     public bool IsAvailable { get; set; }
 
@@ -671,6 +672,15 @@ public sealed class ChatbotStatus
     /// <see cref="EmbeddingModelInstalled"/> cannot see.
     /// </summary>
     public bool? EmbeddingRoundTripOk { get; set; }
+
+    /// <summary>
+    /// How the most recent LLM generation ended: <see langword="false"/> when it
+    /// failed (provider error or timeout), <see langword="null"/> when none ended
+    /// within <see cref="GaChatbot.Api.Services.ChatGenerationHealth.OutcomeWindow"/>.
+    /// Catches a provider that lists its models and embeds but refuses to
+    /// generate, such as Ollama Cloud without credits.
+    /// </summary>
+    public bool? GenerationOk { get; set; }
 
     public DateTime Timestamp { get; set; }
 }
