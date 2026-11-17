@@ -74,11 +74,13 @@ public sealed class SemanticKnowledgeSource(
                 // vector alone ranks a chord's supersets and neighbours above it (Gadd9 above every
                 // G triad, Cmaj9 above every E7#9 on the 2026-04-19 index), so voicings named after
                 // the parsed chord come first. The plain vector ranking is the fallback when the
-                // corpus labels no voicing with that symbol, as in VoicingAgent.
+                // corpus labels no voicing with that symbol, as in VoicingAgent. A symbol with
+                // parenthesized chord tones ("Em(maj7)") skips the filter: it reads "(...)" as a
+                // stored voicing tag ("Cmaj7(shell)") and would search a plain Em triad.
                 var vector = await MusicalVectorAsync(query);
                 Task<double[]> Vector(string _) => Task.FromResult(vector);
 
-                results = structured?.ChordSymbol is { } chord
+                results = structured?.ChordSymbol is { } chord && !chord.Contains('(')
                     ? await voicingSearch.SearchAsync(
                         query, Vector, limit, new VoicingSearchFilters(ChordName: chord), cancellationToken)
                     : [];

@@ -43,6 +43,20 @@ public class SemanticKnowledgeSourceTests
         Assert.That(results, Has.Count.EqualTo(2));
     }
 
+    [TestCase("Em(maj7) voicing")]
+    [TestCase("James Bond chord")]
+    public async Task OptickSearch_WithParenthesizedChordTones_KeepsTheVectorRanking(string query)
+    {
+        // The name filter reads "(...)" as a stored voicing tag ("Cmaj7(shell)"), so it would search
+        // Em(maj7) as a plain Em triad. The encoder keeps the major seventh; the vector ranking stays.
+        var strategy = new RecordingStrategy(named: [Result("Em")], unfiltered: [Result("Emmaj7")]);
+
+        var results = await Create(strategy).SearchAsync(query, 5, CancellationToken.None);
+
+        Assert.That(strategy.ChordNameFilters, Is.EqualTo(new string?[] { null }));
+        Assert.That(results, Has.Count.EqualTo(1));
+    }
+
     [Test]
     public async Task OptickSearch_WithoutAChord_DoesNotFilterOnChordName()
     {
