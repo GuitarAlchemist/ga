@@ -41,7 +41,7 @@ public sealed class FretSpanSkill(ILogger<FretSpanSkill> logger) : IOrchestrator
     {
         var frets = FretDiagram.TryParseFrets(message);
         if (frets is null)
-            return Task.FromResult(CannotHelp("Could not parse a chord diagram from your message."));
+            return Task.FromResult(AgentResponse.Decline(AgentIds.Technique, "Could not parse a chord diagram from your message."));
 
         var pressed = frets.Where(f => f > 0).ToList();
         if (pressed.Count == 0)

@@ -10,7 +10,8 @@ public sealed class OrchestratedChatApplicationService(
     IChatProviderReadinessProbe readinessProbe,
     DirectChatApplicationService directChat,
     IConfiguration configuration,
-    ILogger<OrchestratedChatApplicationService> logger) : IChatApplicationService
+    ILogger<OrchestratedChatApplicationService> logger,
+    ChatGenerationHealth? generationHealth = null) : IChatApplicationService
 {
     private readonly int _chatTimeoutSeconds = Math.Max(5, configuration.GetValue("Chatbot:StreamTimeoutSeconds", 60));
     private readonly float _fallbackMinConfidence = Math.Clamp(
@@ -235,6 +236,8 @@ public sealed class OrchestratedChatApplicationService(
                     $"Our reasoning service is currently slow or unavailable — the LLM call exceeded the {_fallbackTimeoutSeconds}s timeout. " +
                     "This is on our side, not your prompt. Try again in a moment, or use a deterministic music-theory query " +
                     "(e.g. \"modes of C major\", \"relative minor of G major\", \"transpose C E G to D\") which doesn't depend on the LLM.";
+
+                generationHealth?.RecordFailure($"generation timed out after {_fallbackTimeoutSeconds}s");
 
                 fallbackStep.Complete(
                     "error",

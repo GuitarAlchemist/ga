@@ -364,4 +364,20 @@ public record AgentResponse
         Evidence = [],
         Assumptions = ["Request falls outside agent's domain"]
     };
+
+    /// <summary>
+    /// Creates a <see cref="Declined"/> response for a request that lacks the argument the skill
+    /// needs (no chord symbol, no key name), so the orchestrator continues to the next handler.
+    /// <paramref name="reason"/> remains the result for callers that do not check
+    /// <see cref="Declined"/>.
+    /// </summary>
+    public static AgentResponse Decline(string agentId, string reason) => new()
+    {
+        Declined = true,
+        AgentId = agentId,
+        Result = reason,
+        Confidence = 0.0f,
+        Evidence = [],
+        Assumptions = ["Request lacks the input this skill handles"]
+    };
 }

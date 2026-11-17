@@ -27,7 +27,8 @@ public sealed class ChatProviderReadinessProbe(
     IConfiguration configuration,
     IHttpClientFactory httpClientFactory,
     IServiceProvider serviceProvider,
-    ILogger<ChatProviderReadinessProbe> logger) : IChatProviderReadinessProbe
+    ILogger<ChatProviderReadinessProbe> logger,
+    ChatGenerationHealth? generationHealth = null) : IChatProviderReadinessProbe
 {
     /// <summary>
     /// Synthetic query for the orchestrator round-trip probe. Routes to a
@@ -75,12 +76,7 @@ public sealed class ChatProviderReadinessProbe(
         var providerStatus = provider switch
         {
             "github" => TokenBasedStatus("GITHUB_TOKEN", "GitHub Models", provider),
-            "anthropic" or "claude" => KeyBasedStatus(
-                AnthropicProvider.IsAvailable(configuration),
-                "Anthropic",
-                "Set ANTHROPIC_API_KEY or Anthropic:ApiKey.",
-                provider,
-                AnthropicProvider.ResolveModel(configuration)),
+            "anthropic" or "claude" => await GetAnthropicStatusAsync(provider, cancellationToken),
             "mistral" => KeyBasedStatus(
                 MistralProvider.IsAvailable(configuration),
                 "Mistral",
@@ -125,6 +121,24 @@ public sealed class ChatProviderReadinessProbe(
             providerStatus.Message = string.IsNullOrEmpty(providerStatus.Message)
                 ? failed.Diagnostic
                 : $"{providerStatus.Message} | Embedding: {failed.Diagnostic}";
+        }
+
+        // Generation outcome: none of the checks above generates, so a provider
+        // that lists its models and embeds but refuses to generate (Ollama Cloud
+        // without credits, 2026-11-16) still reported ready. Report the outcome
+        // of the last real generation instead of running paid inference here.
+        if (generationHealth?.Latest is { } generation)
+        {
+            providerStatus.GenerationOk = generation.Ok;
+            if (!generation.Ok)
+            {
+                var diagnostic =
+                    $"last generation failed {generation.Age.TotalSeconds:F0}s ago: {generation.Diagnostic}";
+                providerStatus.IsAvailable = false;
+                providerStatus.Message = string.IsNullOrEmpty(providerStatus.Message)
+                    ? diagnostic
+                    : $"{providerStatus.Message} | Generation: {diagnostic}";
+            }
         }
 
         return providerStatus;
@@ -291,6 +305,68 @@ public sealed class ChatProviderReadinessProbe(
                 : $"{providerName} is not configured. {setKeyHint}",
             Timestamp = DateTime.UtcNow,
         };
+
+    /// <summary>
+    /// Anthropic readiness: no key means not configured (no HTTP call); otherwise
+    /// <c>GET /v1/models</c> with the chat client's own headers (key, version,
+    /// workspace), which costs no inference. Ready iff the call succeeds and the
+    /// configured chat model is listed.
+    /// </summary>
+    private async Task<ChatbotStatus> GetAnthropicStatusAsync(string providerKey, CancellationToken cancellationToken)
+    {
+        var model = AnthropicProvider.ResolveModel(configuration);
+        if (!AnthropicProvider.IsAvailable(configuration))
+        {
+            return KeyBasedStatus(false, "Anthropic", "Set ANTHROPIC_API_KEY or Anthropic:ApiKey.", providerKey, model);
+        }
+
+        var status = new ChatbotStatus
+        {
+            Provider  = providerKey,
+            ChatModel = model,
+            Timestamp = DateTime.UtcNow,
+        };
+
+        try
+        {
+            var listing = await AnthropicProvider.ListModelsAsync(
+                configuration, httpClientFactory.CreateClient("Anthropic"), cancellationToken);
+            if (!listing.IsSuccess)
+            {
+                status.IsAvailable       = false;
+                status.ProviderReachable = false;
+                status.Message           = listing.ErrorMessage is { Length: > 0 } error
+                    ? $"Anthropic returned {listing.StatusCode} from /v1/models: {error}"
+                    : $"Anthropic returned {listing.StatusCode} from /v1/models.";
+                return status;
+            }
+
+            status.ProviderReachable  = true;
+            status.ChatModelInstalled = ModelListed(listing.ModelIds, model);
+            status.IsAvailable        = status.ChatModelInstalled == true;
+            status.Message            = status.IsAvailable
+                ? $"Anthropic is configured. Model '{model}' is listed by /v1/models."
+                : $"Anthropic is reachable but model '{model}' is not listed by /v1/models. Set Anthropic:Model.";
+            return status;
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            status.IsAvailable       = false;
+            status.ProviderReachable = false;
+            status.Message           = $"Anthropic is not reachable: {ex.Message}";
+            return status;
+        }
+    }
+
+    /// <summary>
+    /// Exact id, or a dated snapshot of it (<c>claude-x</c> matches <c>claude-x-20261001</c>,
+    /// but <c>claude-haiku-5</c> does not match <c>claude-haiku-5-5</c>).
+    /// </summary>
+    private static bool ModelListed(IReadOnlyList<string> listed, string model) =>
+        listed.Any(id => string.Equals(id, model, StringComparison.OrdinalIgnoreCase)
+                         || (id.Length == model.Length + 9
+                             && id.StartsWith(model + "-", StringComparison.OrdinalIgnoreCase)
+                             && id[(model.Length + 1)..].All(char.IsAsciiDigit)));
 
     private async Task<ChatbotStatus> GetOllamaStatusAsync(CancellationToken cancellationToken)
     {
