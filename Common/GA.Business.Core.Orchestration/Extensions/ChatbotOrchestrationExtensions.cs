@@ -126,6 +126,8 @@ public static class ChatbotOrchestrationExtensions
         // model override and its recalibrated threshold land together as one atomic,
         // reversible change. Absent AI:Routing:MinConfidence the const default (0.55,
         // nomic-tuned) is used — zero behaviour change when no override is set.
+        // AI:Routing:AmbiguousBelow and AI:Routing:MinMargin are embedder-specific in
+        // the same way and default to 0 (rule off).
         services.AddSingleton<SemanticIntentRouter>(sp =>
         {
             var configuration = sp.GetRequiredService<IConfiguration>();
@@ -137,7 +139,9 @@ public static class ChatbotOrchestrationExtensions
                 sp.GetRequiredService<IRoutingHintProvider>(),
                 sp.GetRequiredService<ILogger<SemanticIntentRouter>>())
             {
-                MinConfidence = minConfidence
+                MinConfidence = minConfidence,
+                AmbiguousBelow = configuration.GetValue("AI:Routing:AmbiguousBelow", 0f),
+                MinMargin = configuration.GetValue("AI:Routing:MinMargin", 0f),
             };
         });
         services.AddHostedService<IntentEmbeddingWarmupService>();

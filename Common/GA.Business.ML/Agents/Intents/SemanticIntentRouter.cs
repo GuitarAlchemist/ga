@@ -68,6 +68,15 @@ public sealed class SemanticIntentRouter(
     /// <summary>Cosine-similarity threshold above which an intent claims the query.</summary>
     public float MinConfidence { get; init; } = DefaultMinConfidence;
 
+    /// <summary>
+    /// Ambiguity ceiling: a top score below this value claims the query only when it leads the
+    /// runner-up by at least <see cref="MinMargin"/>. 0 (the default) turns the rule off.
+    /// </summary>
+    public float AmbiguousBelow { get; init; }
+
+    /// <summary>Lead over the runner-up that a top score below <see cref="AmbiguousBelow"/> needs.</summary>
+    public float MinMargin { get; init; }
+
     /// <summary>True iff embedding infrastructure is wired. Used by the warmup
     /// hosted service to skip when there's no embedder to call.</summary>
     public bool IsAvailable => textEmbeddings is not null;
@@ -229,13 +238,19 @@ public sealed class SemanticIntentRouter(
 
         var top = withHints[0];
 
+        // A middling top score that barely leads an unrelated runner-up is specific to
+        // neither intent (free-form questions such as "How do I develop a good finger
+        // vibrato?"), so it claims nothing and the query falls through to the agent path.
+        var ambiguous = top.Score < AmbiguousBelow && margin is { } lead && lead < MinMargin;
+        var routed = top.Score >= MinConfidence && !ambiguous;
+
         // SHADOW (default OFF; never affects routing): when GA_ROUTER_SHADOW=1 and a
         // learned head is configured, log the head's pick alongside production's on
         // the SAME query embedding — for offline head-vs-prod comparison and
         // real-traffic eval mining (Hermes Spike-A). Fully error-swallowed.
         if (LearnedHeadShadow.Instance is { } shadow)
         {
-            var prodChosenForShadow = top.Score >= MinConfidence ? top.Intent.Id : null;
+            var prodChosenForShadow = routed ? top.Intent.Id : null;
             shadow.LogShadow(query, queryVec, prodChosenForShadow);
         }
 
@@ -250,7 +265,7 @@ public sealed class SemanticIntentRouter(
             jev.Observe(
                 query,
                 withHints.Select(r => r.Intent).ToList(),
-                top.Score >= MinConfidence ? top.Intent.Id : null,
+                routed ? top.Intent.Id : null,
                 top.Score,
                 margin);
         }
@@ -260,7 +275,6 @@ public sealed class SemanticIntentRouter(
         // it drove, so the OOD lens can flag queries far from the in-domain reference
         // set. One row per routed query, covering both the routed and declined paths.
         // Error-swallowed + env-gated like the telemetry above; never affects routing.
-        var routed = top.Score >= MinConfidence;
         QueryEmbeddingLog.Append(new QueryEmbeddingRecord
         {
             QueryId         = Guid.NewGuid().ToString("n"),
@@ -274,11 +288,11 @@ public sealed class SemanticIntentRouter(
             Embedding       = queryVec,
         });
 
-        if (top.Score < MinConfidence)
+        if (!routed)
         {
             logger.LogDebug(
-                "SemanticIntentRouter: top score {Score:F3} below threshold {Threshold:F2}; falling through",
-                top.Score, MinConfidence);
+                "SemanticIntentRouter: top score {Score:F3} (threshold {Threshold:F2}, lead {Margin:F3}) claims nothing; falling through",
+                top.Score, MinConfidence, margin);
             RoutingTelemetryLog.Append(new RoutingTelemetryRecord
             {
                 Timestamp   = DateTime.UtcNow.ToString("o"),
