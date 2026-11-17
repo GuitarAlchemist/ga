@@ -34,7 +34,7 @@ public class ChatbotPageMountTests
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        _intake = new Mock<IChatIntake>();
+        _intake = new Mock<IChatIntake>().RunsLikeIntake();
         _intake.Setup(service => service.IntakeAsync(It.IsAny<ChatIntakeRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<ChatResponse, ChatIntakeError>.Success(new ChatResponse(MultiLineAnswer, [])));
         var provider = new Mock<IChatProviderAvailability>();
@@ -201,7 +201,7 @@ public class ChatbotPageMountProductionTests
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        var intake = new Mock<IChatIntake>();
+        var intake = new Mock<IChatIntake>().RunsLikeIntake();
         intake.Setup(service => service.IntakeAsync(It.IsAny<ChatIntakeRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<ChatResponse, ChatIntakeError>.Success(new ChatResponse("A major triad.", [])));
         var provider = new Mock<IChatProviderAvailability>();

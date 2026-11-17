@@ -273,13 +273,9 @@ public class A2AControllerTests
             ChatIntakeRequest request, CancellationToken cancellationToken = default) =>
             Task.FromResult(Record(request));
 
-        public async Task<Result<ChatResponse, ChatIntakeError>> IntakeStreamingAsync(
-            ChatIntakeRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default)
-        {
-            var result = Record(request);
-            if (result.IsSuccess) await onToken(Answer);
-            return result;
-        }
+        public IAsyncEnumerable<ChatEvent> RunAsync(
+            ChatIntakeRequest request, CancellationToken cancellationToken = default) =>
+            ChatRunFakes.Events(Record(request));
 
         private Result<ChatResponse, ChatIntakeError> Record(ChatIntakeRequest request)
         {

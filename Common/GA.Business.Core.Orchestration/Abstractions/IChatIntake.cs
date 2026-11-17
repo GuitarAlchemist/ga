@@ -16,8 +16,8 @@ using GA.Core.Functional;
 /// adapters depend on; the wrapper is removed once all three GaApi transports route
 /// through this seam (PR D). See <c>docs/adr/0005-gaapi-single-canonical-chat-host.md</c>
 /// and the <c>#1</c> section of <c>docs/plans/2026-06-21-arch-deepening-campaign-plan.md</c>.
-/// Streaming (<c>IntakeStreamingAsync</c>) lands with the AG-UI migration (PR C) — added
-/// only when a streaming transport routes through the seam, not speculatively.
+/// Streaming transports call <see cref="RunAsync"/>, which yields typed <see cref="ChatEvent"/>s;
+/// JSON and A2A <c>message/send</c> keep the one-shot <see cref="IntakeAsync"/>.
 /// </remarks>
 public interface IChatIntake
 {
@@ -30,10 +30,15 @@ public interface IChatIntake
         ChatIntakeRequest request,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Validate, acquire the gate, and stream through the application pipeline.</summary>
-    Task<Result<ChatResponse, ChatIntakeError>> IntakeStreamingAsync(
+    /// <summary>
+    /// Validate, gate, and run a chat request as a stream of <see cref="ChatEvent"/>s:
+    /// routing, then the answer text as the model produces it, then the outcome. A rejected
+    /// request and a pipeline error both end the stream with <see cref="ChatEvent.Failed"/>;
+    /// only cancellation by <paramref name="cancellationToken"/> throws. Stopping the
+    /// enumeration early cancels the run and releases the gate.
+    /// </summary>
+    IAsyncEnumerable<ChatEvent> RunAsync(
         ChatIntakeRequest request,
-        Func<string, Task> onToken,
         CancellationToken cancellationToken = default);
 }
 

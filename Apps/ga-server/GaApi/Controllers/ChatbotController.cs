@@ -43,8 +43,13 @@ public class ChatbotController(
     ///     Send a message to the chatbot and receive a streaming response via Server-Sent Events.
     ///     The first SSE event is a routing metadata JSON object:
     ///     <c>data: {"type":"routing","agentId":"Theory","confidence":0.91,"routingMethod":"semantic"}</c>
-    ///     Subsequent events are plain text chunks. The final event is <c>data: [DONE]</c>.
+    ///     Subsequent events are plain text chunks, written as the model produces them.
+    ///     The final event is <c>data: [DONE]</c>.
     /// </summary>
+    /// <remarks>
+    ///     A thin adapter over <see cref="IChatIntake.RunAsync"/>: each chat event maps to one
+    ///     SSE frame. The routing frame's trace covers the steps done when routing was known.
+    /// </remarks>
     [HttpPost("chat/stream")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -103,50 +108,48 @@ public class ChatbotController(
         try
         {
             // Cross the chat intake seam (#1): validation + gating + dispatch live
-            // there. Busy/Validation become SSE error frames (the wire never returns
-            // 503 after StartAsync); Ok streams the routing frame + chunks + [DONE].
-            var result = await chatIntake.IntakeAsync(
-                new ChatIntakeRequest(message, sessionId, ToConversationTurns(request.ConversationHistory)),
-                cancellationToken);
-
-            if (result.IsFailure)
+            // there. A rejection becomes an SSE error frame (the wire never returns
+            // 503 after StartAsync); a run streams the routing frame, text frames, [DONE].
+            await foreach (var chatEvent in chatIntake.RunAsync(
+                               new ChatIntakeRequest(message, sessionId, ToConversationTurns(request.ConversationHistory)),
+                               cancellationToken))
             {
-                var errorMessage = result.GetErrorOrThrow() switch
+                switch (chatEvent)
                 {
-                    ChatIntakeError.Busy => "Service is busy. Please try again in a few seconds.",
-                    ChatIntakeError.Validation v => v.Reason,
-                    _ => "Failed to process message. Please try again."
-                };
-                await WriteSseErrorAsync(errorMessage, cancellationToken);
-                return;
+                    case ChatEvent.Routing routing:
+                        // Trace and grounding ride on this frame to match the JSON wire's
+                        // contract — codex CLI 2026-05-08 risk-list item 3 ("SSE parity
+                        // is easy to miss").
+                        await WriteSseLineAsync(JsonSerializer.Serialize(new
+                        {
+                            type = "routing",
+                            agentId = routing.AgentId,
+                            confidence = routing.Confidence,
+                            routingMethod = routing.Method,
+                            grounding = routing.Grounding,
+                            trace = traceCapture.Build(),
+                        }, _jsonOptions), cancellationToken);
+                        break;
+                    case ChatEvent.TextDelta delta:
+                        await WriteSseLineAsync(delta.Text, cancellationToken);
+                        break;
+                    case ChatEvent.Completed:
+                        await Response.WriteAsync("data: [DONE]\n\n", cancellationToken);
+                        await Response.Body.FlushAsync(cancellationToken);
+                        return;
+                    case ChatEvent.Failed failed:
+                        var errorMessage = failed.Rejection switch
+                        {
+                            ChatIntakeError.Busy => "Service is busy. Please try again in a few seconds.",
+                            ChatIntakeError.Validation v => v.Reason,
+                            _ => "Failed to process message. Please try again."
+                        };
+                        if (failed.Rejection is null)
+                            logger.LogError("Chat stream run {RunId} failed: {Error}", failed.RunId, failed.Message);
+                        await WriteSseErrorAsync(errorMessage, cancellationToken);
+                        return;
+                }
             }
-
-            var response = result.GetValueOrThrow();
-
-            // 1. Emit routing metadata event (first, before text). Trace and
-            // grounding are included on this frame to match the JSON wire's
-            // contract — codex CLI 2026-05-08 risk-list item 3 ("SSE parity
-            // is easy to miss").
-            var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
-            var routingPayload = JsonSerializer.Serialize(new
-            {
-                type = "routing",
-                agentId = routing.AgentId,
-                confidence = routing.Confidence,
-                routingMethod = routing.RoutingMethod,
-                grounding = response.Grounding,
-                trace = traceCapture.Build(),
-            }, _jsonOptions);
-            await WriteSseLineAsync(routingPayload, cancellationToken);
-
-            // 2. Stream the answer text in sentence-boundary chunks
-            var answer = response.NaturalLanguageAnswer ?? string.Empty;
-            foreach (var chunk in SplitIntoChunks(answer))
-                await WriteSseLineAsync(chunk, cancellationToken);
-
-            // 3. Signal completion
-            await Response.WriteAsync("data: [DONE]\n\n", cancellationToken);
-            await Response.Body.FlushAsync(cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -400,6 +403,4 @@ public class ChatbotController(
         await WriteSseLineAsync(JsonSerializer.Serialize(new { error = errorMessage }, _jsonOptions), ct);
     }
 
-    private static IEnumerable<string> SplitIntoChunks(string text) =>
-        GA.Business.Core.Orchestration.Helpers.SseChunker.SplitIntoChunks(text);
 }

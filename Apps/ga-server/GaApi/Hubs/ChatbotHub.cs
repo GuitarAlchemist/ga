@@ -1,12 +1,12 @@
 namespace GaApi.Hubs;
 
 using System.Collections.Concurrent;
-using System.Text;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using Services;
 
 /// <summary>
@@ -24,11 +24,11 @@ public sealed class ChatbotHub(
     IChatIntake chatIntake,
     IAgenticTraceCapture traceCapture,
     ChatbotSessionOrchestrator sessionOrchestrator,
-    ISemanticKnowledgeSource semanticKnowledge)
+    ISemanticKnowledgeSource semanticKnowledge,
+    IOptions<ChatbotHubOptions> hubOptions)
     : Hub
 {
     private static readonly ConcurrentDictionary<string, List<ChatMessage>> _conversations = new();
-    private static readonly TimeSpan _pipelineBudget = TimeSpan.FromSeconds(25);
     private const int MaxStoredMessages = 50;
 
     // Per-connection rate limit. The HTTP PartitionedRateLimiter only fires
@@ -103,82 +103,83 @@ public sealed class ChatbotHub(
         var history = _conversations.GetOrAdd(connectionId, _ => []);
         var connectionAborted = Context.ConnectionAborted;
 
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(connectionAborted);
-        cts.CancelAfter(_pipelineBudget);
-        var cancellationToken = cts.Token;
+        // The stall budget bounds the wait for the first text and then between two pieces
+        // of it, not the whole answer: a long answer that keeps streaming is never cut off.
+        var stallTimeout = hubOptions.Value.StallTimeout;
+        using var stall = CancellationTokenSource.CreateLinkedTokenSource(connectionAborted);
+        stall.CancelAfter(stallTimeout);
+        var cancellationToken = stall.Token;
 
         try
         {
-            // Cross the chat intake seam (#1): it owns validation + gating + dispatch.
+            // Cross the chat intake seam (#1): it owns validation + gating + dispatch, and
+            // this hub only maps the run's events to SignalR messages.
             // SessionId = Context.ConnectionId — SignalR's server-issued ConnectionId is a
             // 128-bit cryptographically-random per-tab handle (default
             // IConnectionIdGenerator), exactly what MemoryHook needs to scope retrieval per
             // conversation rather than across every anonymous tab (PR #157 Phase A). The
             // seam takes it as an opaque id. Rate-limit + length cap stay here above
             // (SignalR-specific: the HTTP limiter only fires on the WS upgrade).
-            // Forward the stored per-connection turns like the REST and AG-UI transports do;
-            // without them, LLM agents on the non-streaming path receive no conversation history.
-            var result = await chatIntake.IntakeAsync(
-                new ChatIntakeRequest(trimmedMessage, connectionId, ToConversationTurns(history)),
-                cancellationToken);
-
-            if (result.IsFailure)
+            // Forward the stored per-connection turns like the REST and AG-UI transports do.
+            await foreach (var chatEvent in chatIntake.RunAsync(
+                               new ChatIntakeRequest(trimmedMessage, connectionId, ToConversationTurns(history)),
+                               cancellationToken))
             {
-                var errorMessage = result.GetErrorOrThrow() switch
+                switch (chatEvent)
                 {
-                    ChatIntakeError.Busy => "Service is busy. Please try again in a few seconds.",
-                    ChatIntakeError.Validation v => v.Reason,
-                    _ => "Failed to process message. Please try again."
-                };
-                await Clients.Caller.SendAsync("Error", errorMessage, cancellationToken);
-                return;
+                    case ChatEvent.Routing routing:
+                        // Grounding is included when the intent that handled the request was
+                        // deterministic-compute-backed (e.g. ix-algebra) so the SPA can surface
+                        // "this came from a verifiable source vs an LLM guess", the same field
+                        // ChatbotController returns.
+                        await Clients.Caller.SendAsync("MessageRoutingMetadata", new
+                        {
+                            agentId = routing.AgentId,
+                            confidence = routing.Confidence,
+                            routingMethod = routing.Method,
+                            grounding = routing.Grounding is null
+                                ? null
+                                : new
+                                {
+                                    source = routing.Grounding.Source,
+                                    revision = routing.Grounding.Revision,
+                                    queryType = routing.Grounding.QueryType
+                                },
+                            trace = traceCapture.Build()
+                        }, cancellationToken);
+                        break;
+                    case ChatEvent.TextDelta delta:
+                        await Clients.Caller.SendAsync("ReceiveMessageChunk", delta.Text, cancellationToken);
+                        stall.CancelAfter(stallTimeout);
+                        break;
+                    case ChatEvent.Completed completed:
+                        var answer = completed.Response.NaturalLanguageAnswer ?? string.Empty;
+                        RecordTurn(connectionId, history, trimmedMessage, answer);
+                        await Clients.Caller.SendAsync("MessageComplete", answer, CancellationToken.None);
+                        return;
+                    case ChatEvent.Failed failed:
+                        var errorMessage = failed.Rejection switch
+                        {
+                            ChatIntakeError.Busy => "Service is busy. Please try again in a few seconds.",
+                            ChatIntakeError.Validation v => v.Reason,
+                            _ => "Failed to process message. Please try again."
+                        };
+                        if (failed.Rejection is null)
+                            logger.LogError("Chat run {RunId} failed for {ConnectionId}: {Error}",
+                                failed.RunId, connectionId, failed.Message);
+                        await Clients.Caller.SendAsync("Error", errorMessage, CancellationToken.None);
+                        return;
+                }
             }
-
-            var response = result.GetValueOrThrow();
-
-            // Emit routing metadata to client. Grounding is included when the
-            // intent that handled the request was deterministic-compute-backed
-            // (e.g. ix-algebra) so the SPA can surface "this came from a
-            // verifiable source vs an LLM guess" — the same field
-            // GaChatbot.Api's ChatJsonResponse and ChatbotController return.
-            // Without this, the deployed /chatbot/ UI silently strips grounding
-            // even though ProductionOrchestrator produces it.
-            var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
-            await Clients.Caller.SendAsync("MessageRoutingMetadata", new
-            {
-                agentId = routing.AgentId,
-                confidence = routing.Confidence,
-                routingMethod = routing.RoutingMethod,
-                grounding = response.Grounding is null
-                    ? null
-                    : new
-                    {
-                        source = response.Grounding.Source,
-                        revision = response.Grounding.Revision,
-                        queryType = response.Grounding.QueryType
-                    },
-                trace = traceCapture.Build()
-            });
-
-            // Stream answer in chunks
-            var answer = response.NaturalLanguageAnswer ?? string.Empty;
-            foreach (var chunk in SplitIntoChunks(answer))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                await Clients.Caller.SendAsync("ReceiveMessageChunk", chunk);
-            }
-
-            // Normalise and store history; cap at MaxStoredMessages to bound per-session memory
-            var updatedHistory = sessionOrchestrator.NormalizeHistory(
-                history.Concat([
-                    new ChatMessage { Role = "user", Content = trimmedMessage },
-                    new ChatMessage { Role = "assistant", Content = answer }
-                ]));
-            _conversations[connectionId] = updatedHistory.Count > MaxStoredMessages
-                ? [.. updatedHistory.TakeLast(MaxStoredMessages)]
-                : updatedHistory;
-
-            await Clients.Caller.SendAsync("MessageComplete", answer);
+        }
+        catch (OperationCanceledException) when (!connectionAborted.IsCancellationRequested)
+        {
+            // The stall budget ran out, not the connection: the caller is still there to tell.
+            logger.LogWarning(
+                "Chat run for {ConnectionId} stalled for {StallTimeout}; reporting an error",
+                connectionId, stallTimeout);
+            await Clients.Caller.SendAsync("Error",
+                "The answer is taking too long. Please try again.", CancellationToken.None);
         }
         catch (OperationCanceledException)
         {
@@ -260,6 +261,16 @@ public sealed class ChatbotHub(
             ? null
             : [.. history.Select(message => new ConversationTurn(message.Role, message.Content, DateTimeOffset.UtcNow))];
 
-    private static IEnumerable<string> SplitIntoChunks(string text) =>
-        GA.Business.Core.Orchestration.Helpers.SseChunker.SplitIntoChunks(text);
+    // Normalise and store history; cap at MaxStoredMessages to bound per-session memory.
+    private void RecordTurn(string connectionId, List<ChatMessage> history, string message, string answer)
+    {
+        var updatedHistory = sessionOrchestrator.NormalizeHistory(
+            history.Concat([
+                new ChatMessage { Role = "user", Content = message },
+                new ChatMessage { Role = "assistant", Content = answer }
+            ]));
+        _conversations[connectionId] = updatedHistory.Count > MaxStoredMessages
+            ? [.. updatedHistory.TakeLast(MaxStoredMessages)]
+            : updatedHistory;
+    }
 }

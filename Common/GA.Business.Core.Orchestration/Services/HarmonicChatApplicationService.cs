@@ -25,6 +25,7 @@ public sealed class HarmonicChatApplicationService(IHarmonicChatOrchestrator orc
         orchestrator.AnswerAsync(request, cancellationToken);
 
     public Task<ChatResponse> ChatStreamingAsync(
-        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default) =>
-        orchestrator.AnswerStreamingAsync(request, onToken, cancellationToken);
+        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null) =>
+        orchestrator.AnswerStreamingAsync(request, onToken, cancellationToken, onRouting);
 }

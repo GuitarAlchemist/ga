@@ -233,8 +233,10 @@ public class FallbackChatApplicationServiceTests
         var inner = new Mock<IChatApplicationService>();
         inner.Setup(s => s.ChatAsync(It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(toThrow);
-        inner.Setup(s => s.ChatStreamingAsync(It.IsAny<ChatRequest>(), It.IsAny<Func<string, Task>>(), It.IsAny<CancellationToken>()))
-            .Returns(async (ChatRequest _, Func<string, Task> onToken, CancellationToken _) =>
+        inner.Setup(s => s.ChatStreamingAsync(It.IsAny<ChatRequest>(), It.IsAny<Func<string, Task>>(), It.IsAny<CancellationToken>(),
+                It.IsAny<Func<AgentRoutingMetadata, GroundingMetadata?, Task>?>()))
+            .Returns(async (ChatRequest _, Func<string, Task> onToken, CancellationToken _,
+                Func<AgentRoutingMetadata, GroundingMetadata?, Task>? _) =>
             {
                 if (emitTokenFirst) await onToken("partial ");
                 throw toThrow;

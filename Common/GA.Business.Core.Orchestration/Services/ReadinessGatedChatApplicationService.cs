@@ -36,11 +36,13 @@ public sealed class ReadinessGatedChatApplicationService(
         ExecuteAsync(request, null, cancellationToken);
 
     public Task<ChatResponse> ChatStreamingAsync(
-        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default) =>
-        ExecuteAsync(request, onToken, cancellationToken);
+        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null) =>
+        ExecuteAsync(request, onToken, cancellationToken, onRouting);
 
     private async Task<ChatResponse> ExecuteAsync(
-        ChatRequest request, Func<string, Task>? onToken, CancellationToken cancellationToken)
+        ChatRequest request, Func<string, Task>? onToken, CancellationToken cancellationToken,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null)
     {
         var sw = Stopwatch.StartNew();
         ChatReadinessResult readiness;
@@ -71,7 +73,7 @@ public sealed class ReadinessGatedChatApplicationService(
 
         if (readiness.IsReady)
         {
-            return onToken is null ? await inner.ChatAsync(request, cancellationToken) : await inner.ChatStreamingAsync(request, onToken, cancellationToken);
+            return onToken is null ? await inner.ChatAsync(request, cancellationToken) : await inner.ChatStreamingAsync(request, onToken, cancellationToken, onRouting);
         }
 
         // Short-circuit: deterministic, low-confidence, no grounding,

@@ -30,9 +30,14 @@ public interface IChatApplicationService
     /// </summary>
     Task<ChatResponse> ChatAsync(ChatRequest request, CancellationToken cancellationToken = default);
 
-    /// <summary>Stream text through the same readiness, fallback, and trace pipeline.</summary>
+    /// <summary>
+    /// Stream text through the same readiness, fallback, and trace pipeline.
+    /// <paramref name="onRouting"/> receives the routing decision before the first token
+    /// that depends on it; the returned response carries the final metadata.
+    /// </summary>
     Task<ChatResponse> ChatStreamingAsync(
         ChatRequest request,
         Func<string, Task> onToken,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null);
 }
