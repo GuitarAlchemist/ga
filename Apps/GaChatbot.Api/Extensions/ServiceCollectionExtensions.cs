@@ -59,6 +59,10 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(15);
         });
 
+        // Readiness probe for AI:ChatProvider=anthropic (GET /v1/models; the
+        // request carries an absolute URI and its own headers).
+        services.AddHttpClient("Anthropic", client => client.Timeout = TimeSpan.FromSeconds(10));
+
         if (usesOrchestration)
         {
             services.AddSingleton<IRoutingFeedback, InMemoryRoutingFeedback>();
