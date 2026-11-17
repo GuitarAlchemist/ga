@@ -676,7 +676,7 @@ public sealed class ChatbotStatus
     /// <summary>
     /// How the most recent LLM generation ended: <see langword="false"/> when it
     /// failed (provider error or timeout), <see langword="null"/> when none ended
-    /// within <see cref="GaChatbot.Api.Services.ChatGenerationHealth.OutcomeWindow"/>.
+    /// within <see cref="GA.Business.ML.Providers.ChatGenerationHealth.OutcomeWindow"/>.
     /// Catches a provider that lists its models and embeds but refuses to
     /// generate, such as Ollama Cloud without credits.
     /// </summary>

@@ -5,6 +5,7 @@ using GA.Business.Core.Orchestration.Extensions;
 using GA.Business.Core.Orchestration.Services;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Extensions;
+using GA.Business.ML.Providers;
 using GA.Business.ML.Search;
 using GA.Domain.Repositories;
 using GA.Infrastructure.Documentation;
