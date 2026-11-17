@@ -430,8 +430,10 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
     // multi-LLM correctness review's testing-gap note on PR #210.
     // Issue #888: also the plural and qualified forms ("which common chords contain both E and
     // G#?", "what chords have a C and an E"). "Are" stays out: "what chords are in C major" asks
-    // for a key's chords, not for the chords holding some notes.
-    [GeneratedRegex(@"\b(?:which|what)\s+(?:[a-z]+\s+){0,2}?chord(?<plural>s)?\s+(?:is|contains?|containing|has|have|uses?|includes?)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    // for a key's chords, not for the chords holding some notes. Only neutral qualifiers are
+    // accepted: a quality word ("which minor chords contain C and E?") narrows the question in a
+    // way the list does not apply, so the skill leaves that question to another route.
+    [GeneratedRegex(@"\b(?:which|what)\s+(?:(?:common|possible|basic|simple|standard|the)\s+){0,2}chord(?<plural>s)?\s+(?:is|contains?|containing|has|have|uses?|includes?)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex NoteSetQuestionRegex();
 
     [GeneratedRegex(@"(?<![A-Za-z])(?<note>[A-Ga-g][#b]?)(?![A-Za-z])", RegexOptions.CultureInvariant)]

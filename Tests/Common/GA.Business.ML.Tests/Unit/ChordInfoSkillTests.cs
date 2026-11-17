@@ -90,6 +90,22 @@ public class ChordInfoSkillTests
         });
     }
 
+    // A quality word narrows the question ("minor chords", "seventh chords"); the list cannot
+    // apply it, so the skill leaves the question alone rather than answer a broader one.
+    [Test]
+    [TestCase("Which minor chords contain C and E?")]
+    [TestCase("Which seventh chords contain C E G?")]
+    public async Task QualifiedContainmentQuestion_IsNotAnsweredWithEveryQuality(string question)
+    {
+        var response = await Skill.ExecuteAsync(question);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(Skill.CanHandle(question), Is.False);
+            Assert.That(response.Declined, Is.True, response.Result);
+        });
+    }
+
     [Test]
     public async Task SymmetricChords_AreListedOnce()
     {
