@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "c00252b92c618e4ceea016672b96a027d076b167",
-    "generatedAt": "2026-11-17T05:04:55.590122+00:00",
+    "commitSha": "93ab81fe924a96c89f554d28fa65ed176077a442",
+    "generatedAt": "2026-11-17T05:44:04.697161+00:00",
     "repoCount": 5,
-    "totalPRs": 31
+    "totalPRs": 32
   },
   "repos": [
     {
@@ -113,8 +113,32 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 14,
+      "prCount": 15,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T05:20:57Z",
+          "failingChecks": 0,
+          "headRef": "fix/skill-overcapture",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 904,
+          "title": "fix(chat): stop skills and the voicing agent capturing free-form questions",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/904"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T05:18:47Z",
+          "failingChecks": 0,
+          "headRef": "fix/anthropic-effort-agent-json",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 903,
+          "title": "fix(anthropic): low effort, 8192 floor, prompt caching, no raw agent JSON",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/903"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -150,18 +174,6 @@
           "number": 894,
           "title": "fix(chatbot): voicing-comfort answers only real voicings of the chord",
           "url": "https://github.com/GuitarAlchemist/ga/pull/894"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T01:13:17Z",
-          "failingChecks": 0,
-          "headRef": "fix/889-progression-mood-key",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 891,
-          "title": "fix(chatbot): honour the requested key in the progression-mood skill",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/891"
         },
         {
           "ageDays": 1,
@@ -318,19 +330,19 @@
           "failingChecks": 3,
           "headRef": "feat/ixforge-mobile-catalog",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 546,
           "title": "feat(ixforge): mobile catalog, tool states, pinning, optional names and widget traits (stacked on #544)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/546"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-11-15T05:33:50Z",
           "failingChecks": 0,
           "headRef": "feat/ixforge-workshop-r25",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
           "number": 544,
           "title": "feat(workshop): import IxForge R14\u2013R25 onto main",
           "url": "https://github.com/GuitarAlchemist/ix/pull/544"
@@ -342,7 +354,7 @@
           "failingChecks": 0,
           "headRef": "codex/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 543,
           "title": "Document authorized remote path for IX Forge shared counter creation (no code/data mutation)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/543"
@@ -354,7 +366,7 @@
           "failingChecks": 0,
           "headRef": "claude/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 542,
           "title": "IXFORGE-COUNTER-ACCESS-R1: investigation \u2014 no authorized non-Desktop path to create the shared \u00ab Lectures \u00bb counter",
           "url": "https://github.com/GuitarAlchemist/ix/pull/542"
@@ -366,7 +378,7 @@
           "failingChecks": 0,
           "headRef": "docs/learnings-wasi-validator",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 538,
           "title": "docs(solutions): two learnings from the IXQL WASI validator prototype",
           "url": "https://github.com/GuitarAlchemist/ix/pull/538"
@@ -424,7 +436,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
         },
         {
-          "ageDays": 49,
+          "ageDays": 50,
           "author": "spareilleux",
           "createdAt": "2026-09-28T05:06:46Z",
           "failingChecks": 0,
