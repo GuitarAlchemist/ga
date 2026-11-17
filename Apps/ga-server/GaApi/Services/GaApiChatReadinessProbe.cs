@@ -3,7 +3,7 @@ namespace GaApi.Services;
 using GA.Business.Core.Orchestration.Abstractions;
 
 /// <summary>Bounds the configured provider's availability check; does not run paid inference.</summary>
-public sealed class GaApiChatReadinessProbe(IChatService chatService) : IChatReadinessProbe
+public sealed class GaApiChatReadinessProbe(IChatProviderAvailability availability) : IChatReadinessProbe
 {
     private static readonly TimeSpan CheckTimeout = TimeSpan.FromMilliseconds(750);
 
@@ -14,7 +14,7 @@ public sealed class GaApiChatReadinessProbe(IChatService chatService) : IChatRea
         timeout.CancelAfter(CheckTimeout);
         try
         {
-            var available = await chatService.IsAvailableAsync(timeout.Token).WaitAsync(CheckTimeout, cancellationToken);
+            var available = await availability.IsAvailableAsync(timeout.Token).WaitAsync(CheckTimeout, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             return new ChatReadinessResult(available,
                 available ? "Configured chat provider is available." : "Configured chat provider is unavailable.");

@@ -148,15 +148,30 @@ public static class AiServiceExtensions
         // MISTRAL_API_KEY surfaces at first DI resolution (typically app
         // startup) rather than at the cascade trigger point.
         services.TryAddSingleton<IChatClient>(sp =>
-        {
-            var primary   = BuildPrimary();
-            var secondary = BuildCascadeSecondary(cascadeProvider, configuration);
-            var logger    = sp.GetService<ILogger<Providers.CascadingChatClient>>();
-            return new Providers.CascadingChatClient(primary, secondary, logger);
-        });
+            WithCascadeFallback(
+                BuildPrimary(),
+                cascadeProvider,
+                configuration,
+                sp.GetService<ILogger<Providers.CascadingChatClient>>()));
 
         return services;
     }
+
+    /// <summary>
+    /// Wraps <paramref name="primary"/> in a <see cref="Providers.CascadingChatClient"/> whose
+    /// secondary is <paramref name="cascadeProvider"/> (the <c>AI:CascadeProvider</c> value:
+    /// mistral, ollama, docker or github). Returns <paramref name="primary"/> unchanged when
+    /// <paramref name="cascadeProvider"/> is empty. Hosts that build their own primary client
+    /// (GaApi) use this to get the same cascade as <see cref="AddGuitarAlchemistChatClient"/>.
+    /// </summary>
+    public static IChatClient WithCascadeFallback(
+        IChatClient primary,
+        string? cascadeProvider,
+        IConfiguration configuration,
+        ILogger<Providers.CascadingChatClient>? logger = null) =>
+        string.IsNullOrWhiteSpace(cascadeProvider)
+            ? primary
+            : new Providers.CascadingChatClient(primary, BuildCascadeSecondary(cascadeProvider, configuration), logger);
 
     private static IChatClient BuildCascadeSecondary(string cascadeProvider, IConfiguration configuration) =>
         cascadeProvider.ToLowerInvariant() switch

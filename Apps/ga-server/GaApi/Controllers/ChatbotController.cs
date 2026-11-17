@@ -29,7 +29,7 @@ public class ChatbotController(
     ILogger<ChatbotController> logger,
     IChatIntake chatIntake,
     IAgenticTraceCapture traceCapture,
-    IChatService statusService)
+    IChatProviderAvailability statusService)
     : ControllerBase
 {
     private static readonly JsonSerializerOptions _jsonOptions =

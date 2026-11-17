@@ -57,7 +57,7 @@ GaApi's `wwwroot/chatbot/index.html` and `ChatbotHub` (SignalR) are now dead in 
 | `/api/chatbot/skills` | GET | `AgUiChatController.ListSkills` (`Apps/ga-server/GaApi/Controllers/AgUiChatController.cs:33`) | GaApi | _(none)_ | `[ { Name, Description } ]` per registered `IOrchestratorSkill` | 🟡 metadata helper | Used by MCP / agent discovery. Not chat traffic per se. |
 | `/api/chatbot/chat/stream` | POST | `ChatbotController.ChatStream` (`Apps/ga-server/GaApi/Controllers/ChatbotController.cs:36`) | GaApi | `ChatRequest { Message: string [Required, MaxLen 2000]; ConversationHistory?: ChatMessage[]; UseSemanticSearch: bool = true }` (`Apps/ga-server/GaApi/Controllers/ChatRequest.cs:6`) | `text/event-stream`: first frame is `{"type":"routing", agentId, confidence, routingMethod}`, subsequent frames are sentence chunks (`Helpers.SseChunker.SplitIntoChunks`), final frame `data: [DONE]`. Errors delivered as `{ "error": "…" }` SSE frame. | 🟡 parallel-to-canonical | Pre-AG-UI streaming protocol. Backed by `ProductionOrchestrator.AnswerAsync` (NOT the streaming overload — text is split client-side after the full answer is generated). Behind `ILlmConcurrencyGate`. |
 | `/api/chatbot/chat` | POST | `ChatbotController.Chat` (`Apps/ga-server/GaApi/Controllers/ChatbotController.cs:119`) | GaApi | `ChatRequest` (same as above) | `ChatJsonResponse { NaturalLanguageAnswer; AgentId; Confidence; RoutingMethod; ElapsedMs; TraceId? }` (`ChatRequest.cs:15`) | 🟡 parallel-to-canonical | Non-streaming JSON for MCP tool callers. |
-| `/api/chatbot/status` | GET | `ChatbotController.GetStatus` (`Apps/ga-server/GaApi/Controllers/ChatbotController.cs:159`) | GaApi | _(none)_ | `ChatbotStatus { IsAvailable; Message; Timestamp }` (`Apps/ga-server/GaApi/Controllers/ChatbotStatus.cs:3`) | 🟡 health helper | Probes `IChatService.IsAvailableAsync` (Ollama by default). |
+| `/api/chatbot/status` | GET | `ChatbotController.GetStatus` (`Apps/ga-server/GaApi/Controllers/ChatbotController.cs:159`) | GaApi | _(none)_ | `ChatbotStatus { IsAvailable; Message; Timestamp }` (`Apps/ga-server/GaApi/Controllers/ChatbotStatus.cs:3`) | 🟡 health helper | Probes `IChatProviderAvailability.IsAvailableAsync` (Ollama `/api/tags` by default; no inference). |
 | `/api/chatbot/examples` | GET | `ChatbotController.GetExamples` (`Apps/ga-server/GaApi/Controllers/ChatbotController.cs:177`) | GaApi | _(none)_ | `string[]` of canned prompts | 🟡 helper | Hard-coded list, no orchestrator hop. |
 | `/api/chatbot/ask` | POST | _(no controller)_ | GaApi (?) | unknown — frontend sends `{question?, query?}` (`ReactComponents/.../PrimeRadiant/TriageDropZone.tsx:82`) | _N/A_ | 🪦 deprecated-candidate / dangling | No matching server-side action found via grep across `Apps/ga-server/`. Frontend caller likely fails with 404 today. |
 | `/api/Chat` | POST | `GA.AI.Service.Controllers.ChatController.Chat` (controller + microservice removed in #467) | **GA.AI.Service** (separate microservice, deleted) | `GA.Business.Core.Orchestration.Models.ChatRequest { Message; SessionId?; KeyContext?; History? }` (`Common/GA.Business.Core.Orchestration/Models/ChatModels.cs:11`) | `ChatResponse { NaturalLanguageAnswer; Candidates; Progression?; Routing?; QueryFilters?; DebugParams? }` (`ChatModels.cs:86`) | 🪦 deprecated-candidate | Service is **not started** by Aspire AppHost — `AddProject("ai-service", …)` is commented out at `AllProjects.AppHost/Program.cs:87`. Reachable only if launched manually. |
@@ -125,7 +125,7 @@ Other hubs (`PipelineHub`, `GovernanceHub`) handle non-chat traffic and are out 
 
 ## 4. Specialized agents
 
-All concrete subclasses of `GuitarAlchemistAgentBase` (`Common/GA.Business.ML/Agents/GuitarAlchemistAgentBase.cs:26`). Base class signature: `(IChatClient chatClient, ILogger logger)`; `IChatClient` is `Microsoft.Extensions.AI.IChatClient`. The production `IChatClient` binding in GaApi is `OllamaChatClientAdapter` (`Apps/ga-server/GaApi/Extensions/AIServiceExtensions.cs:102`).
+All concrete subclasses of `GuitarAlchemistAgentBase` (`Common/GA.Business.ML/Agents/GuitarAlchemistAgentBase.cs:26`). Base class signature: `(IChatClient chatClient, ILogger logger)`; `IChatClient` is `Microsoft.Extensions.AI.IChatClient`. The production `IChatClient` binding in GaApi follows `AI:ChatProvider` (Anthropic, Ollama or Docker Model Runner; see §5).
 
 | Agent | Class | Purpose | Constructor deps | Currently invoked from | Status |
 |---|---|---|---|---|---|
@@ -142,17 +142,21 @@ Streaming: only `GuitarAlchemistAgentBase.ProcessStreamingAsync` (line 178) yiel
 
 ---
 
-## 5. `IChatService` implementations
+## 5. Chat provider selection (`IChatClient`)
 
-`IChatService` (`Apps/ga-server/GaApi/Services/IChatService.cs:3`) is the **GaApi-local** abstraction used by `ChatbotSessionOrchestrator` and surfaced via `ChatbotController.GetStatus`. Selection happens at startup in `Apps/ga-server/GaApi/Extensions/AIServiceExtensions.cs:92-99` based on the `AI:ChatProvider` config key.
+GaApi has one generation channel: `Microsoft.Extensions.AI.IChatClient`, registered in `Apps/ga-server/GaApi/Extensions/AIServiceExtensions.cs` from the `AI:ChatProvider` config key. Agents, skills (through `IChatClientFactory`) and the direct-chat fallback (`GaApiFallbackChatHandler`) all use it. The GaApi-local `IChatService` and `OllamaChatClientAdapter` were folded into it in 2026-11.
 
-| Implementation | Backend | When selected | Path |
-|---|---|---|---|
-| `OllamaChatService` | Local Ollama HTTP `/api/chat` (named HttpClient `Ollama`, model from `Ollama:ChatModel` or `ChatbotOptions.Model`, default `llama3.2:3b`). Streaming JSON-lines. | `AI:ChatProvider` ∉ {claude, docker} (default) | `Apps/ga-server/GaApi/Services/OllamaChatService.cs:13` |
-| `ClaudeChatService` | Anthropic SDK `MessagesService.CreateStreaming` (default model `claude-haiku-4-5-20251001`). Reads `Anthropic:ApiKey` or `ANTHROPIC_API_KEY`. | `AI:ChatProvider == "claude"` | `Apps/ga-server/GaApi/Services/ClaudeChatService.cs:12` |
-| `DockerModelRunnerChatService` | Docker Desktop's OpenAI-compatible `/v1/chat/completions` on port 12434 (default model `docker.io/ai/llama3.2:latest`). | `AI:ChatProvider == "docker"` | `Apps/ga-server/GaApi/Services/DockerModelRunnerChatService.cs:16` |
+| `AI:ChatProvider` | `IChatClient` | Model |
+|---|---|---|
+| `claude` | `AnthropicProvider.CreateChatClient` (built eagerly, so a missing key fails at startup) | `Anthropic:Model` |
+| `docker` | `DockerModelRunnerProvider.CreateChatClientFromConfig` (OpenAI-compatible `/v1/chat/completions` on port 12434) | `DockerModelRunner:ChatModel`, default `docker.io/ai/llama3.2:latest` |
+| anything else (default `ollama`) | `OllamaProvider.CreateChatClient` over the named `Ollama` HttpClient (base address, Cloudflare Access headers, `Chatbot:StreamTimeoutSeconds`) | `Chatbot:Model`, then `Ollama:ChatModel`, then `llama3.2:3b` |
 
-Important: `IChatService` is **not** the same channel as the `IChatClient` (Microsoft.Extensions.AI) used by the specialized agents. GaApi registers `IChatClient` as `OllamaChatClientAdapter` regardless of `AI:ChatProvider` (`AIServiceExtensions.cs:102`). The Nebula pipeline bypasses both interfaces and talks to providers directly via its own `HttpClient`.
+Every binding runs the same `UseFunctionInvocation()` pipeline, so tool-calling skills behave the same on each provider. Ollama and Docker answer non-streaming calls by aggregating their stream (`StreamingAggregationChatClient`), so their transport timeout (`Chatbot:StreamTimeoutSeconds`, 60 s for Docker) bounds only the wait for the first bytes.
+
+`AI:CascadeProvider` (mistral, ollama, docker or github) wraps the primary in the same `CascadingChatClient` as GaChatbot.Api, through the shared `GA.Business.ML.Extensions.AiServiceExtensions.WithCascadeFallback`. The embedding generator and the purpose-aware `IEmbeddingGeneratorFactory` come from the shared `AddTextEmbeddings`, so `AI:Embedding:Routing:Model` (e.g. `bge-large`) reaches the semantic intent router together with `AI:Routing:MinConfidence`.
+
+Reachability is separate and never runs inference: `IChatProviderAvailability` (`Apps/ga-server/GaApi/Services/ChatProviderAvailability.cs`) backs `ChatbotController.GetStatus` and, when `Chatbot:Readiness:ProviderCheck` is on, `GaApiChatReadinessProbe`. It reports the primary provider and shares the registration-time `ChatProviderSelection` snapshot with the `IChatClient`. The Nebula pipeline bypasses both and talks to providers directly via its own `HttpClient`.
 
 ---
 
@@ -262,7 +266,7 @@ Reclassify to `🪦 deprecated-candidate` once `<ChatWidget>` has migrated to th
 | **AG-UI protocol bridge** | ✅ `AgUiChatController` (`/agui/stream` for SSE, `/agui/json` for non-streaming). | None (single implementation). |
 | **SignalR streaming chat** | 🟡 `ChatbotHub` at `/hubs/chatbot` on GaApi — same orchestrator substrate as the REST surfaces. Not in the deployed `/chatbot/` flow since 2026-05-13 (§0): the demo is served by `GaChatbot.Api` over REST. | 🟡 Parallel REST/SSE surfaces exist (`/api/chatbot/chat`, `/api/chatbot/chat/stream`) and must stay wire-equivalent where the public demo depends on shared metadata (`Grounding`, `Trace`, routing). |
 | **GraphQL chat mutation** | ❌ none defined; `Apps/ga-server/GaApi/Program.cs:113-121` registers Query types only. | _N/A_ |
-| **`IChatService` (GaApi-local)** | ✅ used by `ChatbotSessionOrchestrator.NormalizeHistory` and `ChatbotController.GetStatus` only. Provider chosen via `AI:ChatProvider`. | 🟡 `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` exist but are not called from any controller or hub today. |
+| **Chat provider (`IChatClient`)** | ✅ one binding chosen via `AI:ChatProvider` (§5); reachability through `IChatProviderAvailability` for `ChatbotController.GetStatus` and the opt-in readiness probe. | None (the GaApi-local `IChatService` was folded into `IChatClient` in 2026-11). |
 | **Specialized agent invocation** | ✅ via `SemanticRouter.RouteAsync` (called by `ProductionOrchestrator`). | 🟡 `SemanticRouter.AggregateAsync` and `DebateAsync` exist but are not currently exposed through any HTTP/SignalR surface. |
 | **Voicing-grounded retrieval inside chat** | ✅ `SpectralRagOrchestrator` reached via `TabAwareOrchestrator`. | 🟡 `VoicingAgent` performs an independent OPTIC-K retrieval path through `EnhancedVoicingSearchService` whenever the router selects it — produces a structured-list response rather than a narrated one. Two independent retrieval surfaces over the same corpus. |
 | **GA.AI.Service / `POST /api/Chat`** | _N/A_ | 🪦 **deleted** (campaign slice #6, #467) — GaApi is the single canonical chat host; see [ADR-0005](../adr/0005-gaapi-single-canonical-chat-host.md). |
@@ -321,10 +325,10 @@ flowchart LR
         VO["VoicingAgent ✅"]
     end
 
-    %% ── IChatService / IChatClient ─────────────────────────────
+    %% ── IChatClient / provider availability ────────────────────
     subgraph "Chat backends"
-        ICS["IChatService<br/>(Ollama / Claude / Docker)"]
-        ICC["IChatClient<br/>(OllamaChatClientAdapter)"]
+        ICS["IChatProviderAvailability<br/>(reachability only)"]
+        ICC["IChatClient<br/>(Anthropic / Ollama / Docker)"]
         ANTHTTP["Anthropic API<br/>(direct HttpClient)"]
         OLLAMA["Ollama HTTP /api/chat"]
     end
@@ -362,7 +366,6 @@ flowchart LR
     PROD --> TAB
     TAB --> RAG
 
-    SESS --> ICS
     STAT --> ICS
 
     TH --> ICC
@@ -374,7 +377,7 @@ flowchart LR
 
     ICC --> OLLAMA
     ICS --> OLLAMA
-    ICS -.AI:ChatProvider=claude.-> ANTHTTP
+    ICC -.AI:ChatProvider=claude.-> ANTHTTP
 ```
 
 ---

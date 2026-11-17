@@ -35,14 +35,14 @@ public class DeployGaApiProbeTests
     public void OneTimeSetUp()
     {
         // Status must not depend on a live model provider.
-        var provider = new Mock<IChatService>();
+        var provider = new Mock<IChatProviderAvailability>();
         provider.Setup(service => service.IsAvailableAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _factory = new TestWebApplicationFactory().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Production");
             builder.ConfigureServices(services =>
             {
-                services.RemoveAll<IChatService>();
+                services.RemoveAll<IChatProviderAvailability>();
                 services.AddSingleton(provider.Object);
             });
         });
