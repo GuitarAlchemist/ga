@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "c05c4f0b691c1efdab888c803336b5786ccfcb57",
-    "generatedAt": "2026-11-17T15:06:52.027496+00:00",
+    "commitSha": "7b4e290c206013cfb1fe86717b65f605c648be7a",
+    "generatedAt": "2026-11-17T23:03:52.914371+00:00",
     "repoCount": 5,
-    "totalPRs": 34
+    "totalPRs": 33
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 16,
+      "prCount": 15,
       "prs": [
         {
           "ageDays": 0,
@@ -131,10 +131,10 @@
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-11-17T14:01:13Z",
-          "failingChecks": 1,
+          "failingChecks": 0,
           "headRef": "fix/gaapi-anthropic-provider-alias",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 905,
           "title": "fix(gaapi): accept \"anthropic\" as chat provider and reject unknown ones",
           "url": "https://github.com/GuitarAlchemist/ga/pull/905"
@@ -146,7 +146,7 @@
           "failingChecks": 0,
           "headRef": "fix/anthropic-effort-agent-json",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 903,
           "title": "fix(anthropic): low effort, 8192 floor, prompt caching, no raw agent JSON",
           "url": "https://github.com/GuitarAlchemist/ga/pull/903"
@@ -176,19 +176,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/897"
         },
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T01:19:07Z",
-          "failingChecks": 0,
-          "headRef": "fix/886-voicing-comfort-chord-identity",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 894,
-          "title": "fix(chatbot): voicing-comfort answers only real voicings of the chord",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/894"
-        },
-        {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-11-15T15:34:57Z",
           "failingChecks": 0,
@@ -200,7 +188,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/859"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-11-14T22:37:49Z",
           "failingChecks": 1,
@@ -248,7 +236,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/851"
         },
         {
-          "ageDays": 26,
+          "ageDays": 27,
           "author": "spareilleux",
           "createdAt": "2026-10-21T16:58:52Z",
           "failingChecks": 0,
@@ -348,7 +336,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/563"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-11-15T15:29:51Z",
           "failingChecks": 3,
@@ -508,7 +496,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1126,
           "title": "ci: run under the merge queue",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
@@ -520,19 +508,19 @@
           "failingChecks": 1,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
         },
         {
-          "ageDays": 63,
+          "ageDays": 64,
           "author": "spareilleux",
           "createdAt": "2026-09-14T21:16:08Z",
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
@@ -544,31 +532,31 @@
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
         },
         {
-          "ageDays": 94,
+          "ageDays": 95,
           "author": "spareilleux",
           "createdAt": "2026-08-14T18:13:24Z",
           "failingChecks": 1,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
         },
         {
-          "ageDays": 121,
+          "ageDays": 122,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 3,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
