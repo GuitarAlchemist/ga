@@ -79,6 +79,7 @@ public sealed class VoicingIntent(VoicingAgent voicingAgent) : IIntent
             Answer: response.Result,
             Confidence: response.Confidence,
             Evidence: response.Evidence?.ToList(),
-            RoutingMethodOverride: "semantic-intent-voicing");
+            RoutingMethodOverride: "semantic-intent-voicing",
+            Declined: response.Declined);
     }
 }

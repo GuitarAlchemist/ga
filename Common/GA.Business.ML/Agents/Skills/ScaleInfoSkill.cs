@@ -161,7 +161,7 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
 
         var match = KeyPattern.Match(message);
         if (!match.Success)
-            return Task.FromResult(CannotHelp("Could not parse a key name from your question."));
+            return Task.FromResult(Decline("the question names no key"));
 
         var rootStr  = match.Groups[1].Value;
         var modeStr  = match.Groups[2].Value.ToLowerInvariant();

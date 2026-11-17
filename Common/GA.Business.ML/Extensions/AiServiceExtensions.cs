@@ -115,8 +115,9 @@ public static class AiServiceExtensions
     }
 
     /// <summary>
-    /// Adds an <see cref="IChatClient"/> based on the specified provider. If
-    /// <c>AI:CascadeProvider</c> is set (e.g. <c>mistral</c>), the primary
+    /// Adds an <see cref="IChatClient"/> based on the specified provider
+    /// (<c>ollama</c>, <c>docker</c>, <c>mistral</c>, <c>anthropic</c> / <c>claude</c>,
+    /// <c>github</c>). If <c>AI:CascadeProvider</c> is set (e.g. <c>mistral</c>), the primary
     /// client is wrapped in a <see cref="Providers.CascadingChatClient"/>
     /// that falls back to the secondary on timeout or network failure.
     /// </summary>
@@ -130,6 +131,7 @@ public static class AiServiceExtensions
             "ollama"  => Providers.OllamaProvider.CreateChatClientFromConfig(configuration),
             "docker"  => Providers.DockerModelRunnerProvider.CreateChatClientFromConfig(configuration),
             "mistral" => Providers.Mistral.MistralProvider.CreateChatClientFromConfig(configuration),
+            "anthropic" or "claude" => GA.Providers.Anthropic.AnthropicProvider.CreateChatClientFromConfig(configuration),
             "github"  => Providers.GitHubModelsProvider.IsAvailable()
                 ? Providers.GitHubModelsProvider.CreateChatClientFromConfig(configuration)
                 : throw new InvalidOperationException("GitHub Models requires the GITHUB_TOKEN environment variable."),
@@ -145,7 +147,7 @@ public static class AiServiceExtensions
 
         // Cascade mode: primary + secondary, wrapped in CascadingChatClient.
         // Secondary is constructed lazily inside the factory so a missing
-        // MISTRAL_API_KEY surfaces at first DI resolution (typically app
+        // MISTRAL_API_KEY / ANTHROPIC_API_KEY surfaces at first DI resolution (typically app
         // startup) rather than at the cascade trigger point.
         services.TryAddSingleton<IChatClient>(sp =>
             WithCascadeFallback(
@@ -160,7 +162,7 @@ public static class AiServiceExtensions
     /// <summary>
     /// Wraps <paramref name="primary"/> in a <see cref="Providers.CascadingChatClient"/> whose
     /// secondary is <paramref name="cascadeProvider"/> (the <c>AI:CascadeProvider</c> value:
-    /// mistral, ollama, docker or github). Returns <paramref name="primary"/> unchanged when
+    /// mistral, anthropic/claude, ollama, docker or github). Returns <paramref name="primary"/> unchanged when
     /// <paramref name="cascadeProvider"/> is empty. Hosts that build their own primary client
     /// (GaApi) use this to get the same cascade as <see cref="AddGuitarAlchemistChatClient"/>.
     /// </summary>
@@ -179,12 +181,13 @@ public static class AiServiceExtensions
             "mistral" => Providers.Mistral.MistralProvider.CreateChatClientFromConfig(configuration),
             "ollama"  => Providers.OllamaProvider.CreateChatClientFromConfig(configuration),
             "docker"  => Providers.DockerModelRunnerProvider.CreateChatClientFromConfig(configuration),
+            "anthropic" or "claude" => GA.Providers.Anthropic.AnthropicProvider.CreateChatClientFromConfig(configuration),
             "github"  => Providers.GitHubModelsProvider.IsAvailable()
                 ? Providers.GitHubModelsProvider.CreateChatClientFromConfig(configuration)
                 : throw new InvalidOperationException(
                     "GitHub Models cascade requires the GITHUB_TOKEN environment variable."),
             _ => throw new ArgumentException(
-                $"Unknown AI:CascadeProvider '{cascadeProvider}'. Valid values: mistral, ollama, docker, github.",
+                $"Unknown AI:CascadeProvider '{cascadeProvider}'. Valid values: mistral, anthropic (alias claude), ollama, docker, github.",
                 nameof(cascadeProvider)),
         };
 
