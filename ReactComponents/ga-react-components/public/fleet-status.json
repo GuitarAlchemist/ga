@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "7b4e290c206013cfb1fe86717b65f605c648be7a",
-    "generatedAt": "2026-11-17T23:03:52.914371+00:00",
+    "commitSha": "bb46e72bef59df6bef0fc434e106f6f02cdc09bf",
+    "generatedAt": "2026-11-17T23:05:57.204741+00:00",
     "repoCount": 5,
-    "totalPRs": 33
+    "totalPRs": 32
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 15,
+      "prCount": 14,
       "prs": [
         {
           "ageDays": 0,
@@ -122,22 +122,10 @@
           "failingChecks": 0,
           "headRef": "fix/optick-retrieval-chord-identity",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 906,
           "title": "fix(search): rank voicings of the parsed chord first in OPTIC-K retrieval",
           "url": "https://github.com/GuitarAlchemist/ga/pull/906"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T14:01:13Z",
-          "failingChecks": 0,
-          "headRef": "fix/gaapi-anthropic-provider-alias",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 905,
-          "title": "fix(gaapi): accept \"anthropic\" as chat provider and reject unknown ones",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/905"
         },
         {
           "ageDays": 0,
@@ -496,7 +484,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1126,
           "title": "ci: run under the merge queue",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
@@ -508,7 +496,7 @@
           "failingChecks": 1,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
@@ -520,7 +508,7 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
@@ -532,7 +520,7 @@
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -544,7 +532,7 @@
           "failingChecks": 1,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -556,7 +544,7 @@
           "failingChecks": 3,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
