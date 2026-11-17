@@ -468,4 +468,80 @@ public class SemanticIntentRouterTests
         Assert.That(match, Is.Not.Null);
         Assert.That(match!.Value.MatchedExample, Is.EqualTo("List the diatonic modes"));
     }
+
+    // ── Ambiguity: a low score that barely leads the runner-up claims nothing ──
+    //
+    // Free-form questions ("How do I develop a good finger vibrato?") reach a skill at a
+    // middling score with another, unrelated skill right behind it. Neither is specific to
+    // the question, so the router falls through to the LLM agent path instead.
+
+    private static (SemanticIntentRouter Router, IServiceProvider Services) TwoIntentRouter(
+        float topScore, float runnerUpScore, float ambiguousBelow, float minMargin)
+    {
+        var top = new StubIntent("skill.top", "top description", ["top example"]);
+        var runnerUp = new StubIntent("skill.runnerup", "runner-up description", ["runner-up example"]);
+
+        // The query is the unit x vector, so each example's cosine is its x component.
+        float[] At(float cosine) => [cosine, MathF.Sqrt(1f - cosine * cosine), 0f, 0f];
+        float[] Below(float cosine) => [cosine, 0f, MathF.Sqrt(1f - cosine * cosine), 0f];
+        var vectors = new Dictionary<string, float[]>
+        {
+            ["top example"]        = At(topScore),
+            ["top description"]    = At(topScore - 0.2f),
+            ["runner-up example"]     = Below(runnerUpScore),
+            ["runner-up description"] = Below(runnerUpScore - 0.2f),
+            ["the question"]       = [1f, 0f, 0f, 0f],
+        };
+
+        var router = new SemanticIntentRouter(
+            StubEmbedder(vectors),
+            EmptyHintProvider.Instance,
+            NullLogger<SemanticIntentRouter>.Instance)
+        {
+            MinConfidence = 0.64f,
+            AmbiguousBelow = ambiguousBelow,
+            MinMargin = minMargin,
+        };
+        return (router, Services(top, runnerUp));
+    }
+
+    [Test]
+    public async Task RouteAsync_LowScoreWithinMarginOfRunnerUp_FallsThrough()
+    {
+        var (router, services) = TwoIntentRouter(topScore: 0.70f, runnerUpScore: 0.69f, ambiguousBelow: 0.75f, minMargin: 0.03f);
+
+        var match = await router.RouteAsync("the question", services);
+
+        Assert.That(match, Is.Null);
+    }
+
+    [Test]
+    public async Task RouteAsync_LowScoreWithClearLead_Routes()
+    {
+        var (router, services) = TwoIntentRouter(topScore: 0.70f, runnerUpScore: 0.60f, ambiguousBelow: 0.75f, minMargin: 0.03f);
+
+        var match = await router.RouteAsync("the question", services);
+
+        Assert.That(match?.Intent.Id, Is.EqualTo("skill.top"));
+    }
+
+    [Test]
+    public async Task RouteAsync_HighScoreWithinMarginOfRunnerUp_Routes()
+    {
+        var (router, services) = TwoIntentRouter(topScore: 0.90f, runnerUpScore: 0.89f, ambiguousBelow: 0.75f, minMargin: 0.03f);
+
+        var match = await router.RouteAsync("the question", services);
+
+        Assert.That(match?.Intent.Id, Is.EqualTo("skill.top"));
+    }
+
+    [Test]
+    public async Task RouteAsync_AmbiguityRuleOffByDefault()
+    {
+        var (router, services) = TwoIntentRouter(topScore: 0.70f, runnerUpScore: 0.69f, ambiguousBelow: 0f, minMargin: 0f);
+
+        var match = await router.RouteAsync("the question", services);
+
+        Assert.That(match?.Intent.Id, Is.EqualTo("skill.top"));
+    }
 }
