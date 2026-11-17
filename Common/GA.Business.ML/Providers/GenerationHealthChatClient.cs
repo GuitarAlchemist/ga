@@ -1,4 +1,4 @@
-namespace GaChatbot.Api.Services;
+namespace GA.Business.ML.Providers;
 
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;

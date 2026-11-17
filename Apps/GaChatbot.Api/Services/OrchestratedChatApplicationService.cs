@@ -3,6 +3,7 @@ namespace GaChatbot.Api.Services;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Notation;
+using GA.Business.ML.Providers;
 using GaChatbot.Api.Controllers;
 
 public sealed class OrchestratedChatApplicationService(

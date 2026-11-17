@@ -5,6 +5,7 @@ using System.Text.Json;
 using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Extensions;
 using GA.Business.ML.Providers.Mistral;
+using GA.Business.ML.Providers;
 using GA.Providers.Anthropic;
 using GaChatbot.Api.Controllers;
 using Microsoft.Extensions.AI;

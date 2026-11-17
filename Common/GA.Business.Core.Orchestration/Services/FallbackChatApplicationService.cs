@@ -5,6 +5,7 @@ using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
+using GA.Business.ML.Providers;
 using Microsoft.Extensions.Options;
 
 /// <summary>
@@ -62,12 +63,14 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
     private readonly IFallbackChatHandler _fallback;
     private readonly IOptions<FallbackOptions> _options;
     private readonly IAgenticTraceCapture _capture;
+    private readonly ChatGenerationHealth? _generationHealth;
 
     public FallbackChatApplicationService(
         IChatApplicationService inner,
         IFallbackChatHandler fallback,
         IOptions<FallbackOptions> options,
-        IAgenticTraceCapture capture)
+        IAgenticTraceCapture capture,
+        ChatGenerationHealth? generationHealth = null)
     {
         // Validate options eagerly — codex CLI 2026-05-08 P1 QA: bad config
         // (negative timeout, out-of-range confidence) used to silently turn
@@ -94,6 +97,7 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
         _fallback = fallback;
         _options = options;
         _capture = capture;
+        _generationHealth = generationHealth;
     }
 
     /// <summary>
@@ -292,6 +296,9 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             sw.Stop();
+            // Our own timeout, not the caller's: the generation wrapper skips a
+            // cancelled token, so record the failed generation here.
+            _generationHealth?.RecordFailure($"direct-chat generation timed out after {opts.TimeoutSeconds}s");
             _capture.AddStep(
                 "orchestration.fallback",
                 "error",

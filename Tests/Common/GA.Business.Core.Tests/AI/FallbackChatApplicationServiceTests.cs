@@ -5,6 +5,7 @@ using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Services;
 using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
+using GA.Business.ML.Providers;
 using Microsoft.Extensions.Options;
 using Moq;
 using GaClosureRegistry = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureRegistry;
@@ -303,6 +304,58 @@ public class FallbackChatApplicationServiceTests
         Assert.That(
             async () => await decorator.ChatAsync(new ChatRequest("hi"), cts.Token),
             Throws.InstanceOf<OperationCanceledException>());
+    }
+
+    // ── Fallback timeout feeds the generation health (Codex P2 on #900) ──────
+
+    private static FallbackChatApplicationService MakeHangingFallbackDecorator(ChatGenerationHealth health)
+    {
+        var inner = new Mock<IChatApplicationService>();
+        inner.Setup(s => s.ChatAsync(It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatResponse("low", [], Routing: new AgentRoutingMetadata("agent-x", 0.1f, "agent-x-routing")));
+        var fallback = new Mock<IFallbackChatHandler>();
+        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()))
+            .Returns(async (string _, IReadOnlyList<ConversationTurn>? _, CancellationToken ct) =>
+            {
+                await Task.Delay(Timeout.Infinite, ct);
+                return "never";
+            });
+
+        return new FallbackChatApplicationService(
+            inner.Object,
+            fallback.Object,
+            Options.Create(new FallbackOptions { Enabled = true, MinConfidence = 0.25f, TimeoutSeconds = 1 }),
+            new RecordingCapture(),
+            health);
+    }
+
+    [Test]
+    public async Task ChatAsync_FallbackTimesOut_RecordsAFailedGeneration()
+    {
+        // The generation wrapper ignores a cancelled token, so the host-owned
+        // timeout must record the failure itself, or status stays green.
+        var health = new ChatGenerationHealth();
+        health.RecordSuccess();
+
+        await MakeHangingFallbackDecorator(health).ChatAsync(new ChatRequest("hi"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(health.Latest?.Ok, Is.False);
+            Assert.That(health.Latest?.Diagnostic, Does.Contain("timed out"));
+        });
+    }
+
+    [Test]
+    public void ChatAsync_CallerCancelsDuringFallback_RecordsNothing()
+    {
+        var health = new ChatGenerationHealth();
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+
+        Assert.That(
+            async () => await MakeHangingFallbackDecorator(health).ChatAsync(new ChatRequest("hi"), cts.Token),
+            Throws.InstanceOf<OperationCanceledException>());
+        Assert.That(health.Latest, Is.Null);
     }
 
     /// <summary>

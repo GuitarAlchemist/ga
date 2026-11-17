@@ -224,7 +224,8 @@ public static class ChatbotOrchestrationExtensions
                 traceable,
                 sp.GetRequiredService<IFallbackChatHandler>(),
                 sp.GetRequiredService<IOptions<FallbackOptions>>(),
-                capture);
+                capture,
+                sp.GetService<GA.Business.ML.Providers.ChatGenerationHealth>());
             var probe     = sp.GetRequiredService<IChatReadinessProbe>();
             return new ReadinessGatedChatApplicationService(fallback, probe, capture);
         });

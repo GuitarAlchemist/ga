@@ -1,6 +1,7 @@
 namespace GaChatbot.Api.Tests.Services;
 
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.ML.Providers;
 using GaChatbot.Api.Controllers;
 using GaChatbot.Api.Services;
 using Microsoft.Extensions.AI;
