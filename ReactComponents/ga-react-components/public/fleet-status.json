@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "454c8304c73d32a0da72ecdf5f5167ce50d501fb",
-    "generatedAt": "2026-11-17T01:58:27.186936+00:00",
+    "commitSha": "d3dbaa4125c021b5c7fa8df505865441a5cd1fe5",
+    "generatedAt": "2026-11-17T03:03:09.071883+00:00",
     "repoCount": 5,
-    "totalPRs": 33
+    "totalPRs": 36
   },
   "repos": [
     {
@@ -113,19 +113,43 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 15,
+      "prCount": 17,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-11-17T01:58:14Z",
+          "createdAt": "2026-11-17T02:19:24Z",
           "failingChecks": 0,
-          "headRef": "fix/gaapi-chat-graceful-llm-failure",
+          "headRef": "fix/skills-decline-missing-argument",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 896,
-          "title": "fix(chat): answer gracefully instead of HTTP 500 when the LLM provider fails",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/896"
+          "mergeable": "UNKNOWN",
+          "number": 899,
+          "title": "fix(chat): decline skills whose required argument is absent",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/899"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T02:08:03Z",
+          "failingChecks": 0,
+          "headRef": "fix/anthropic-workspace-header",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 898,
+          "title": "fix(anthropic): send workspace header, floor max_tokens, hide thinking",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/898"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T02:01:35Z",
+          "failingChecks": 0,
+          "headRef": "fix/888-routing-parsing",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 897,
+          "title": "fix(chat): route and parse the four realistic questions of #888",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/897"
         },
         {
           "ageDays": 0,
@@ -170,7 +194,7 @@
           "failingChecks": 0,
           "headRef": "fix/889-progression-mood-key",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 891,
           "title": "fix(chatbot): honour the requested key in the progression-mood skill",
           "url": "https://github.com/GuitarAlchemist/ga/pull/891"
@@ -309,8 +333,20 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 7,
+      "prCount": 8,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T02:44:21Z",
+          "failingChecks": 0,
+          "headRef": "fix/ixctl-bookmark-test-stall",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 564,
+          "title": "test(ixctl): the bookmark test no longer queues its requests behind a full replay",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/564"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -318,7 +354,7 @@
           "failingChecks": 0,
           "headRef": "refactor/origami-verdict-check",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 563,
           "title": "refactor(ix-origami): assess() applies the verdict rules; Context private (5 slices)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/563"
@@ -330,7 +366,7 @@
           "failingChecks": 2,
           "headRef": "refactor/ixctl-minor-followups",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 562,
           "title": "refactor(ixctl): the re-verification's fourteen minor items, six fixed and eight refuted",
           "url": "https://github.com/GuitarAlchemist/ix/pull/562"
@@ -354,7 +390,7 @@
           "failingChecks": 2,
           "headRef": "feat/ixforge-workshop-r25",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 544,
           "title": "feat(workshop): import IxForge R14\u2013R25 onto main",
           "url": "https://github.com/GuitarAlchemist/ix/pull/544"
@@ -366,7 +402,7 @@
           "failingChecks": 0,
           "headRef": "codex/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 543,
           "title": "Document authorized remote path for IX Forge shared counter creation (no code/data mutation)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/543"
@@ -378,7 +414,7 @@
           "failingChecks": 0,
           "headRef": "claude/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 542,
           "title": "IXFORGE-COUNTER-ACCESS-R1: investigation \u2014 no authorized non-Desktop path to create the shared \u00ab Lectures \u00bb counter",
           "url": "https://github.com/GuitarAlchemist/ix/pull/542"
@@ -390,7 +426,7 @@
           "failingChecks": 0,
           "headRef": "docs/learnings-wasi-validator",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 538,
           "title": "docs(solutions): two learnings from the IXQL WASI validator prototype",
           "url": "https://github.com/GuitarAlchemist/ix/pull/538"
@@ -412,13 +448,13 @@
       "prCount": 5,
       "prs": [
         {
-          "ageDays": 34,
+          "ageDays": 35,
           "author": "spareilleux",
           "createdAt": "2026-10-13T02:09:29Z",
           "failingChecks": 0,
           "headRef": "feat/evolve-constraint-check",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 392,
           "title": "feat: check the constraints that name code against the code",
           "url": "https://github.com/GuitarAlchemist/tars/pull/392"
@@ -430,7 +466,7 @@
           "failingChecks": 0,
           "headRef": "feat/evolve-api-teacher",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 381,
           "title": "feat: let evolve's teacher run on a paid API with openai:, gemini: or anthropic:",
           "url": "https://github.com/GuitarAlchemist/tars/pull/381"
@@ -442,7 +478,7 @@
           "failingChecks": 0,
           "headRef": "docs/fsproj-not-a-one-way-door",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 346,
           "title": "docs: stop calling a project file a one-way door",
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
@@ -454,7 +490,7 @@
           "failingChecks": 0,
           "headRef": "fix/required-check-runs-on-stacked-prs",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 337,
           "title": "fix: let the required check run on a pull request that is not based on main",
           "url": "https://github.com/GuitarAlchemist/tars/pull/337"
@@ -466,7 +502,7 @@
           "failingChecks": 0,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 319,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/tars/pull/319"
@@ -502,7 +538,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
         },
         {
-          "ageDays": 56,
+          "ageDays": 57,
           "author": "spareilleux",
           "createdAt": "2026-09-21T03:02:23Z",
           "failingChecks": 1,
