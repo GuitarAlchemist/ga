@@ -134,7 +134,7 @@ public sealed class ChordSubstitutionSkill(
         // Single-chord path — original behaviour
         var parsed = ParseChord(message);
         if (parsed is null)
-            return Task.FromResult(CannotHelp("Could not identify a chord symbol in your message."));
+            return Task.FromResult(AgentResponse.Decline(AgentIds.Composer, "Could not identify a chord symbol in your message."));
 
         var (chordName, sourceSet) = parsed.Value;
 
