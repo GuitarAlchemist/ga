@@ -28,14 +28,19 @@ public class VoicingFilterService
         if (!_chordParser.TryParse(chordName, out var chord) || chord is null)
             throw new ArgumentException($"Cannot parse chord symbol: '{chordName}'");
 
+        var (essential, alterations) = EssentialPitchClasses(chord);
         var positions = _generator
-            .GetChordPositions(chord.PitchClassSet, requiredNotes: EssentialPitchClasses(chord))
+            .GetChordPositions(chord.PitchClassSet, requiredNotes: essential)
             .ToList();
         var results   = new List<VoicingWithAnalysis>();
 
         foreach (var posList in positions)
         {
             var playedPositions = posList.OfType<Position.Played>().ToList();
+
+            // ── Alternative alterations: an altered dominant sounds at least one ────
+            if (alterations.Count > 0 && !playedPositions.Any(p => alterations.Contains(p.MidiNote.PitchClass)))
+                continue;
 
             // ── Fret-range filter ───────────────────────────────────────────────
             if (minFret.HasValue && playedPositions.Any(p => p.Location.Fret.Value < minFret.Value))
@@ -82,8 +87,12 @@ public class VoicingFilterService
     ///     then a natural 11th when a 13th is present (it clashes with the major third), then the 9th.
     ///     The root, third, seventh and the defining extension always stay, so C13 keeps
     ///     <c>x-3-2-3-3-5</c> and C11 keeps its 11th.
+    ///     A chord that still has more than four tones lists alterations (b9, #9, #11, b13) as
+    ///     alternatives, as an altered dominant does: they leave the required set and a voicing
+    ///     sounds at least one of them, so C7alt keeps <c>x-3-2-3-2-4</c>.
     /// </summary>
-    private static PitchClassSet EssentialPitchClasses(GA.Domain.Core.Theory.Harmony.Chord chord)
+    private static (PitchClassSet Essential, IReadOnlySet<PitchClass> Alterations) EssentialPitchClasses(
+        GA.Domain.Core.Theory.Harmony.Chord chord)
     {
         var root = chord.Root.PitchClass.Value;
         var intervals = chord.PitchClassSet.Select(pc => (pc.Value - root + 12) % 12).ToHashSet();
@@ -95,6 +104,19 @@ public class VoicingFilterService
             intervals.Remove(interval);
         }
 
-        return new PitchClassSet([.. intervals.Select(i => PitchClass.FromValue((root + i) % 12))]);
+        HashSet<int> alterations = [];
+        if (intervals.Count > MaxRequiredPitchClasses)
+        {
+            // With both present, the major third is the third and the minor third is the #9.
+            var third = intervals.Contains(4) ? 4 : 3;
+            alterations = [.. intervals.Where(i => i is 1 or 3 or 6 or 8 && i != third)];
+            intervals.ExceptWith(alterations);
+        }
+
+        return (
+            new PitchClassSet([.. intervals.Select(ToPitchClass)]),
+            alterations.Select(ToPitchClass).ToHashSet());
+
+        PitchClass ToPitchClass(int interval) => PitchClass.FromValue((root + interval) % 12);
     }
 }

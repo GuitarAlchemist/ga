@@ -115,6 +115,33 @@ public class VoicingFilterServiceTests
         }
     }
 
+    // An altered dominant lists every alteration (b9, #9, #11, b13) as alternatives: a voicing
+    // sounds root, third and seventh plus at least one of them, never all four at once.
+    // { 4, 2, 3, 2, 3, -1 } is C7alt x-3-2-3-2-4 (C E Bb Db Ab).
+    [Test]
+    [TestCase("Calt")]
+    [TestCase("C7alt")]
+    public async Task GetVoicingsForChordAsync_AlteredDominant_KeepsShapesWithSomeAlterations(string chord)
+    {
+        var results = (await _sut.GetVoicingsForChordAsync(chord)).ToList();
+
+        Assert.That(results.Select(v => v.Frets), Has.Some.EqualTo(new[] { 4, 2, 3, 2, 3, -1 }),
+            $"{chord} must keep x-3-2-3-2-4");
+        int[] openStringPitchClasses = [4, 11, 7, 2, 9, 4];
+        int[] alterations = [1, 3, 6, 8];
+        foreach (var v in results)
+        {
+            var sounding = v.Frets
+                .Select((fret, i) => fret < 0 ? -1 : (openStringPitchClasses[i] + fret) % 12)
+                .Where(pc => pc >= 0)
+                .ToHashSet();
+            Assert.That(sounding, Is.SupersetOf(new[] { 0, 4, 10 }),
+                $"Voicing [{string.Join(",", v.Frets)}] lacks the root, third or seventh of {chord}");
+            Assert.That(sounding.Overlaps(alterations), Is.True,
+                $"Voicing [{string.Join(",", v.Frets)}] sounds no alteration of {chord}");
+        }
+    }
+
     // ── Invalid chord parsing ────────────────────────────────────────────────
 
     [Test]
