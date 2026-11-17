@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "0701d67204b6d805d1194cdfbda8974b771b9aa1",
-    "generatedAt": "2026-11-16T23:25:26.292909+00:00",
+    "commitSha": "f191fbf5d0266a2ec1835df0d964cf1bda3394b6",
+    "generatedAt": "2026-11-17T01:02:19.308197+00:00",
     "repoCount": 5,
-    "totalPRs": 27
+    "totalPRs": 29
   },
   "repos": [
     {
@@ -113,8 +113,20 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 10,
+      "prCount": 11,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T00:42:00Z",
+          "failingChecks": 0,
+          "headRef": "fix/cascade-on-ollama-error-response",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 890,
+          "title": "fix(ml): cascade to the secondary on an unsuccessful Ollama response",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/890"
+        },
         {
           "ageDays": 1,
           "author": "spareilleux",
@@ -164,7 +176,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/853"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-11-12T00:09:00Z",
           "failingChecks": 1,
@@ -212,7 +224,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/807"
         },
         {
-          "ageDays": 46,
+          "ageDays": 47,
           "author": "spareilleux",
           "createdAt": "2026-09-30T23:34:07Z",
           "failingChecks": 0,
@@ -249,19 +261,31 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 6,
+      "prCount": 7,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-11-16T14:03:21Z",
+          "createdAt": "2026-11-17T00:36:49Z",
           "failingChecks": 0,
-          "headRef": "refactor/ixctl-exact-cursor",
+          "headRef": "refactor/origami-verdict-check",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 563,
+          "title": "refactor(ix-origami): assess() applies the verdict rules; Context private (5 slices)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/563"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T00:36:47Z",
+          "failingChecks": 1,
+          "headRef": "refactor/ixctl-minor-followups",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 560,
-          "title": "refactor(ixctl): one way to make a cursor exact, and ask it where it is",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/560"
+          "number": 562,
+          "title": "refactor(ixctl): the re-verification's fourteen minor items, six fixed and eight refuted",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/562"
         },
         {
           "ageDays": 1,
@@ -270,7 +294,7 @@
           "failingChecks": 3,
           "headRef": "feat/ixforge-mobile-catalog",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 546,
           "title": "feat(ixforge): mobile catalog, tool states, pinning, optional names and widget traits (stacked on #544)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/546"
@@ -282,13 +306,13 @@
           "failingChecks": 2,
           "headRef": "feat/ixforge-workshop-r25",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 544,
           "title": "feat(workshop): import IxForge R14\u2013R25 onto main",
           "url": "https://github.com/GuitarAlchemist/ix/pull/544"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "app/openai-code-agent",
           "createdAt": "2026-11-15T00:44:38Z",
           "failingChecks": 0,
@@ -300,7 +324,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/543"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "app/anthropic-code-agent",
           "createdAt": "2026-11-15T00:44:33Z",
           "failingChecks": 0,
@@ -312,7 +336,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/542"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-11-14T23:55:54Z",
           "failingChecks": 0,
