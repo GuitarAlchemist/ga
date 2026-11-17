@@ -8,7 +8,7 @@ using Moq;
 public class CascadingChatClientTests
 {
     private static ChatMessage SystemMessage(string content) => new(ChatRole.System, content);
-    private static ChatMessage UserMessage(string content)   => new(ChatRole.User, content);
+    private static ChatMessage UserMessage(string content) => new(ChatRole.User, content);
 
     private static ChatResponse FakeResponse(string text, string modelId = "primary-model") =>
         new([new ChatMessage(ChatRole.Assistant, text)]) { ModelId = modelId };
@@ -16,7 +16,7 @@ public class CascadingChatClientTests
     [Test]
     public async Task GetResponseAsync_PrimarySucceeds_SecondaryNeverCalled()
     {
-        var primary   = new Mock<IChatClient>(MockBehavior.Strict);
+        var primary = new Mock<IChatClient>(MockBehavior.Strict);
         var secondary = new Mock<IChatClient>(MockBehavior.Strict);
 
         primary
@@ -33,7 +33,7 @@ public class CascadingChatClientTests
     [Test]
     public async Task GetResponseAsync_PrimaryTimesOut_FallsBackToSecondary()
     {
-        var primary   = new Mock<IChatClient>(MockBehavior.Strict);
+        var primary = new Mock<IChatClient>(MockBehavior.Strict);
         var secondary = new Mock<IChatClient>(MockBehavior.Strict);
 
         // Primary cancels via its own inner CTS (not the caller's token).
@@ -49,13 +49,13 @@ public class CascadingChatClientTests
         var response = await cascade.GetResponseAsync([UserMessage("hi")]);
 
         Assert.That(response.Messages[0].Text, Is.EqualTo("recovered by secondary"));
-        Assert.That(response.ModelId,          Is.EqualTo("secondary-model"));
+        Assert.That(response.ModelId, Is.EqualTo("secondary-model"));
     }
 
     [Test]
     public async Task GetResponseAsync_PrimaryHttpFailure_FallsBackToSecondary()
     {
-        var primary   = new Mock<IChatClient>();
+        var primary = new Mock<IChatClient>();
         var secondary = new Mock<IChatClient>();
 
         primary
@@ -75,7 +75,7 @@ public class CascadingChatClientTests
     [Test]
     public void GetResponseAsync_CallerCancels_DoesNotCascade()
     {
-        var primary   = new Mock<IChatClient>();
+        var primary = new Mock<IChatClient>();
         var secondary = new Mock<IChatClient>(MockBehavior.Strict);
 
         primary
@@ -98,7 +98,7 @@ public class CascadingChatClientTests
     [Test]
     public async Task GetResponseAsync_NonRecoverableException_PropagatesWithoutCascade()
     {
-        var primary   = new Mock<IChatClient>();
+        var primary = new Mock<IChatClient>();
         var secondary = new Mock<IChatClient>(MockBehavior.Strict);
 
         primary
@@ -118,7 +118,7 @@ public class CascadingChatClientTests
     [Test]
     public async Task GetResponseAsync_MaterializesMessagesOnce_AllowsCascadeReplay()
     {
-        var primary   = new Mock<IChatClient>();
+        var primary = new Mock<IChatClient>();
         var secondary = new Mock<IChatClient>();
 
         primary
@@ -149,7 +149,7 @@ public class CascadingChatClientTests
     [Test]
     public async Task GetStreamingResponseAsync_PrimaryYieldsTokens_DoesNotCascadeOnLaterFailure()
     {
-        var primary   = new Mock<IChatClient>();
+        var primary = new Mock<IChatClient>();
         var secondary = new Mock<IChatClient>(MockBehavior.Strict);
 
         primary
@@ -179,7 +179,7 @@ public class CascadingChatClientTests
         // Codex P1 review on PR #225: the pre-enumerator catch must distinguish
         // caller-driven cancellation from primary-internal failures. Otherwise
         // a cancelled caller still gets a wasted outbound request to secondary.
-        var primary   = new Mock<IChatClient>();
+        var primary = new Mock<IChatClient>();
         var secondary = new Mock<IChatClient>(MockBehavior.Strict);
 
         primary
@@ -205,7 +205,7 @@ public class CascadingChatClientTests
     [Test]
     public async Task GetStreamingResponseAsync_PrimaryFailsBeforeFirstToken_CascadesToSecondary()
     {
-        var primary   = new Mock<IChatClient>();
+        var primary = new Mock<IChatClient>();
         var secondary = new Mock<IChatClient>();
 
         primary
@@ -225,6 +225,124 @@ public class CascadingChatClientTests
         }
 
         Assert.That(string.Concat(collected), Is.EqualTo("from mistral"));
+    }
+
+    // Microsoft.Extensions.AI.Ollama reports a non-2xx Ollama response as an
+    // InvalidOperationException whose message starts with "Ollama error: "
+    // (OllamaUtilities.ThrowUnsuccessfulOllamaResponseAsync). Ollama Cloud sends
+    // exactly that when the account is out of credits, so it must cascade.
+    private const string OllamaCreditsError =
+        "Ollama error: Add usage credits or subscribe to continue using cloud models.";
+
+    [Test]
+    public async Task GetResponseAsync_PrimaryOllamaErrorResponse_FallsBackToSecondary()
+    {
+        var primary = new Mock<IChatClient>();
+        var secondary = new Mock<IChatClient>();
+
+        primary
+            .Setup(c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException(OllamaCreditsError));
+
+        secondary
+            .Setup(c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(FakeResponse("from mistral", "secondary-model"));
+
+        var cascade = new CascadingChatClient(primary.Object, secondary.Object);
+        var response = await cascade.GetResponseAsync([UserMessage("hi")]);
+
+        Assert.That(response.Messages[0].Text, Is.EqualTo("from mistral"));
+        Assert.That(response.ModelId, Is.EqualTo("secondary-model"));
+    }
+
+    [Test]
+    public async Task GetResponseAsync_PrimaryWrapsHttpFailure_FallsBackToSecondary()
+    {
+        var primary = new Mock<IChatClient>();
+        var secondary = new Mock<IChatClient>();
+
+        primary
+            .Setup(c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("provider call failed", new HttpRequestException("502 Bad Gateway")));
+
+        secondary
+            .Setup(c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(FakeResponse("from secondary"));
+
+        var cascade = new CascadingChatClient(primary.Object, secondary.Object);
+        var response = await cascade.GetResponseAsync([UserMessage("hi")]);
+
+        Assert.That(response.Messages[0].Text, Is.EqualTo("from secondary"));
+    }
+
+    [Test]
+    public void GetResponseAsync_CallerCancelledWhilePrimaryReportsOllamaError_DoesNotCascade()
+    {
+        var primary = new Mock<IChatClient>();
+        var secondary = new Mock<IChatClient>(MockBehavior.Strict);
+
+        primary
+            .Setup(c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException(OllamaCreditsError));
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        var cascade = new CascadingChatClient(primary.Object, secondary.Object);
+
+        Assert.That(
+            async () => await cascade.GetResponseAsync([UserMessage("hi")], cancellationToken: cts.Token),
+            Throws.InstanceOf<InvalidOperationException>());
+
+        secondary.VerifyNoOtherCalls();
+    }
+
+    [Test]
+    public async Task GetStreamingResponseAsync_PrimaryOllamaErrorBeforeFirstToken_CascadesToSecondary()
+    {
+        var primary = new Mock<IChatClient>();
+        var secondary = new Mock<IChatClient>();
+
+        primary
+            .Setup(c => c.GetStreamingResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .Returns(FailBeforeYielding(new InvalidOperationException(OllamaCreditsError)));
+
+        secondary
+            .Setup(c => c.GetStreamingResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .Returns(YieldThenComplete("from ", "mistral"));
+
+        var cascade = new CascadingChatClient(primary.Object, secondary.Object);
+
+        var collected = new List<string>();
+        await foreach (var update in cascade.GetStreamingResponseAsync([UserMessage("hi")]))
+        {
+            if (!string.IsNullOrEmpty(update.Text)) collected.Add(update.Text);
+        }
+
+        Assert.That(string.Concat(collected), Is.EqualTo("from mistral"));
+    }
+
+    [Test]
+    public void GetStreamingResponseAsync_ArbitraryInvalidOperationBeforeFirstToken_DoesNotCascade()
+    {
+        var primary = new Mock<IChatClient>();
+        var secondary = new Mock<IChatClient>(MockBehavior.Strict);
+
+        primary
+            .Setup(c => c.GetStreamingResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .Returns(FailBeforeYielding(new InvalidOperationException("bug in primary, not network")));
+
+        var cascade = new CascadingChatClient(primary.Object, secondary.Object);
+
+        Assert.That(async () =>
+        {
+            await foreach (var _ in cascade.GetStreamingResponseAsync([UserMessage("hi")]))
+            {
+                // empty
+            }
+        }, Throws.InstanceOf<InvalidOperationException>());
+
+        secondary.VerifyNoOtherCalls();
     }
 
     private static async IAsyncEnumerable<ChatResponseUpdate> YieldThenFail(string a, string b, Exception throwAfter)

@@ -72,7 +72,10 @@ public sealed class DefaultEmbeddingGeneratorFactory(
             _logger.LogInformation(
                 "Embedding purpose '{Purpose}' uses override model '{Model}' at {BaseUrl} (decoupled from the default embedder).",
                 purpose, model, baseUrl);
-            return OllamaProvider.CreateEmbeddingGenerator(baseUrl, model);
+            // Same Cloudflare Access client as the default embedder
+            // (CreateEmbeddingGeneratorFromConfig): an HTTPS gated Ollama rejects a header-less override.
+            return OllamaProvider.CreateEmbeddingGenerator(
+                baseUrl, model, httpClient: OllamaProvider.BuildAccessHttpClient(configuration, baseUrl));
         });
     }
 }

@@ -35,12 +35,12 @@ public static class AiServiceExtensions
                 options.ModelName = configuration["Ollama:EmbeddingModel"] ?? "nomic-embed-text";
             });
 
-            // 3. Register MEAI Embedding Generator (used by SemanticRouter) — respects AI:EmbeddingProvider
+            // 3. Register the MEAI embedding generator (AI:EmbeddingProvider) and the
+            //    purpose-aware IEmbeddingGeneratorFactory through the same shared registration
+            //    as GaChatbot.Api, so AI:Embedding:Routing:Model (e.g. bge-large) reaches the
+            //    semantic intent router together with AI:Routing:MinConfidence.
             var embeddingProvider = configuration["AI:EmbeddingProvider"] ?? "ollama";
-            services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
-                string.Equals(embeddingProvider, "docker", StringComparison.OrdinalIgnoreCase)
-                    ? DockerModelRunnerProvider.CreateEmbeddingGeneratorFromConfig(configuration, sp.GetService<ILogger<DockerModelRunnerChatService>>())
-                    : OllamaProvider.CreateEmbeddingGeneratorFromConfig(configuration, sp.GetService<ILogger<OllamaEmbeddingGenerator>>()));
+            services.AddTextEmbeddings(embeddingProvider, configuration);
 
             // 4. Register Repository
             services.AddSingleton<ITabCorpusRepository, InMemoryTabCorpusRepository>();
@@ -63,7 +63,7 @@ public static class AiServiceExtensions
         private void AddLlmServices(IConfiguration configuration)
         {
             // Configure the "Ollama" named HttpClient with BaseAddress and timeout here
-            // so that OllamaChatService (singleton) does not mutate BaseAddress after construction.
+            // so that consumers (the Ollama IChatClient, ChatProviderAvailability) never mutate BaseAddress.
             var ollamaBaseUrl = configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
             services.AddHttpClient("Ollama", client =>
             {
@@ -96,42 +96,94 @@ public static class AiServiceExtensions
             if (configuration.GetValue<bool>("Chatbot:Readiness:ProviderCheck"))
                 services.AddSingleton<IChatReadinessProbe, GaApiChatReadinessProbe>();
             services.AddSingleton<IFallbackChatHandler, GaApiFallbackChatHandler>();
+            // One snapshot of the provider settings, shared by the IChatClient and the
+            // availability check so status always describes what requests use.
+            var selection = ChatProviderSelection.FromConfiguration(configuration);
+            services.AddSingleton(selection);
+            services.AddSingleton<IChatProviderAvailability, ChatProviderAvailability>();
+            // Outcome of the last real generation, read by GET /api/chatbot/status.
+            services.AddSingleton<ChatGenerationHealth>();
 
-            var chatProvider = configuration["AI:ChatProvider"] ?? "ollama";
-
-            if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))
-                services.AddSingleton<IChatService, ClaudeChatService>();
-            else if (string.Equals(chatProvider, "docker", StringComparison.OrdinalIgnoreCase))
-                services.AddSingleton<IChatService, DockerModelRunnerChatService>();
-            else
-                services.AddSingleton<IChatService, OllamaChatService>();
-
-            // Register Adapter for IChatClient (used by Agents). Provider-aware
-            // so AI:ChatProvider=claude routes the chatbot's main loop through
+            // Register the IChatClient every chat path uses (agents, skills, the
+            // direct-chat fallback). Provider-aware so AI:ChatProvider=claude
+            // routes the chatbot's main loop through
             // Anthropic (model from Anthropic:Model — defaults to Haiku 4.5 in
             // appsettings.Development.json). Anthropic costs ~$0.10–0.20 per
             // soak run vs Ollama's hosting requirements; for the public demo
             // and Phase 3 measurement Haiku 4.5 wins on tool-use reliability.
             // Falls back to Ollama for offline / cost-sensitive setups.
             //
-            // EAGER: build the client now, not via a Singleton lambda. The
+            // EAGER (claude): build the client now, not via a Singleton lambda. The
             // lambda variant deferred CreateChatClient until first request,
             // which meant a missing ANTHROPIC_API_KEY booted cleanly,
             // /api/health passed, and the failure only surfaced as an opaque
             // 500 on the first user prompt — invisible to operators. See PR
             // #151 review (correctness corr-1, reliability rel-001). Eager
             // construction surfaces the error at startup.
-            if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))
+            //
+            // AI:CascadeProvider wraps the primary in the same CascadingChatClient as
+            // GaChatbot.Api (shared GA.Business.ML registration), so e.g. mistral takes
+            // over when the primary times out or is unreachable.
+            if (selection.IsClaude)
             {
                 var anthropicClient = GA.Providers.Anthropic.AnthropicProvider.CreateChatClient(
                     configuration,
                     configuration["Anthropic:Model"]);
-                services.AddSingleton<IChatClient>(anthropicClient);
+                services.AddSingleton<IChatClient>(sp =>
+                    RecordingGenerationOutcomes(WithCascadeFallback(anthropicClient, selection, configuration, sp), sp));
             }
             else
             {
-                services.AddSingleton<IChatClient, OllamaChatClientAdapter>();
+                // Local providers (Docker Model Runner, Ollama): the same function-invocation
+                // pipeline as the Anthropic client, so tool-calling skills behave the same on
+                // every provider. Requests stream under the hood so the transport timeout
+                // bounds only the wait for the first bytes, as with the former services.
+                services.AddSingleton<IChatClient>(sp =>
+                    RecordingGenerationOutcomes(
+                        WithCascadeFallback(
+                                new StreamingAggregationChatClient(CreateLocalChatClient(selection, ollamaBaseUrl, sp)),
+                                selection,
+                                configuration,
+                                sp)
+                            .AsBuilder()
+                            .UseFunctionInvocation()
+                            .Build(sp),
+                        sp));
             }
+        }
+
+        /// <summary>
+        ///     Outermost wrapper: every generation, whichever provider in the cascade
+        ///     served it, updates <see cref="ChatGenerationHealth"/>.
+        /// </summary>
+        private static IChatClient RecordingGenerationOutcomes(IChatClient client, IServiceProvider sp) =>
+            new GenerationHealthChatClient(client, sp.GetRequiredService<ChatGenerationHealth>());
+
+        private static IChatClient WithCascadeFallback(
+            IChatClient primary,
+            ChatProviderSelection selection,
+            IConfiguration configuration,
+            IServiceProvider sp) =>
+            GA.Business.ML.Extensions.AiServiceExtensions.WithCascadeFallback(
+                primary,
+                selection.CascadeProvider,
+                configuration,
+                sp.GetService<ILogger<CascadingChatClient>>());
+
+        private static IChatClient CreateLocalChatClient(ChatProviderSelection selection, string ollamaBaseUrl, IServiceProvider sp)
+        {
+            var logger = sp.GetService<ILoggerFactory>()?.CreateLogger("GaApi.ChatClient");
+            if (selection.IsDocker)
+            {
+                // 60 s: the timeout of the former DockerModelRunnerChatService client.
+                return DockerModelRunnerProvider.CreateChatClient(
+                    selection.DockerBaseUrl, selection.DockerModel, logger, TimeSpan.FromSeconds(60));
+            }
+
+            // The named "Ollama" client carries the base address and the Cloudflare Access headers.
+            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("Ollama");
+            httpClient.Timeout = selection.OllamaTimeout;
+            return OllamaProvider.CreateChatClient(ollamaBaseUrl, selection.OllamaModel, logger, httpClient);
         }
         /// <summary>
         ///     Add vector search application services

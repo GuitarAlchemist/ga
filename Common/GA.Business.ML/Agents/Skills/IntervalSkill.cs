@@ -83,7 +83,7 @@ public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestrator
     {
         var match = IntervalPattern.Match(message);
         if (!match.Success)
-            return Task.FromResult(CannotHelp("Could not parse two note names from your question."));
+            return Task.FromResult(AgentResponse.Decline(AgentIds.Theory, "Could not parse two note names from your question."));
 
         if (!IntervalNaming.TryParseNote(match.Groups[1].Value, out var note1) ||
             !IntervalNaming.TryParseNote(match.Groups[2].Value, out var note2))

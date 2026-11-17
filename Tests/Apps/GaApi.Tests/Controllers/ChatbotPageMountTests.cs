@@ -37,13 +37,13 @@ public class ChatbotPageMountTests
         _intake = new Mock<IChatIntake>();
         _intake.Setup(service => service.IntakeAsync(It.IsAny<ChatIntakeRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<ChatResponse, ChatIntakeError>.Success(new ChatResponse(MultiLineAnswer, [])));
-        var provider = new Mock<IChatService>();
+        var provider = new Mock<IChatProviderAvailability>();
         provider.Setup(service => service.IsAvailableAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _factory = new TestWebApplicationFactory().WithWebHostBuilder(builder => builder.ConfigureServices(services =>
         {
             services.RemoveAll<IChatIntake>();
             services.AddSingleton(_intake.Object);
-            services.RemoveAll<IChatService>();
+            services.RemoveAll<IChatProviderAvailability>();
             services.AddSingleton(provider.Object);
         }));
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = false });
@@ -204,7 +204,7 @@ public class ChatbotPageMountProductionTests
         var intake = new Mock<IChatIntake>();
         intake.Setup(service => service.IntakeAsync(It.IsAny<ChatIntakeRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<ChatResponse, ChatIntakeError>.Success(new ChatResponse("A major triad.", [])));
-        var provider = new Mock<IChatService>();
+        var provider = new Mock<IChatProviderAvailability>();
         provider.Setup(service => service.IsAvailableAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _factory = new TestWebApplicationFactory().WithWebHostBuilder(builder =>
         {
@@ -213,7 +213,7 @@ public class ChatbotPageMountProductionTests
             {
                 services.RemoveAll<IChatIntake>();
                 services.AddSingleton(intake.Object);
-                services.RemoveAll<IChatService>();
+                services.RemoveAll<IChatProviderAvailability>();
                 services.AddSingleton(provider.Object);
             });
         });
@@ -295,7 +295,7 @@ public class ChatbotStatusBoundTests
     [Test]
     public async Task Status_WhenTheProviderHangs_AnswersUnavailableWithinTwoSeconds()
     {
-        var provider = new Mock<IChatService>();
+        var provider = new Mock<IChatProviderAvailability>();
         provider.Setup(service => service.IsAvailableAsync(It.IsAny<CancellationToken>()))
             .Returns<CancellationToken>(async ct =>
             {
@@ -307,7 +307,7 @@ public class ChatbotStatusBoundTests
             builder.UseEnvironment("Production");
             builder.ConfigureServices(services =>
             {
-                services.RemoveAll<IChatService>();
+                services.RemoveAll<IChatProviderAvailability>();
                 services.AddSingleton(provider.Object);
             });
         });

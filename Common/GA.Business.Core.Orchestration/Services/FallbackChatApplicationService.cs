@@ -5,6 +5,7 @@ using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
+using GA.Business.ML.Providers;
 using Microsoft.Extensions.Options;
 
 /// <summary>
@@ -44,6 +45,12 @@ using Microsoft.Extensions.Options;
 ///   .EmptyModelResponse) — those are P1 #5 silent-degradation surfaces
 ///   and must be surfaced as confidence 0 with the original failure
 ///   reason intact, not papered over with an LLM guess.</item>
+///   <item>When the inner pipeline throws before any text was streamed
+///   (typically the LLM provider refusing to generate: Ollama Cloud's 402
+///   or "Ollama error: …"), the caller gets an honest "reasoning service
+///   unavailable" answer with confidence 0 and an <c>orchestration.error</c>
+///   trace step, whatever <see cref="FallbackOptions.Enabled"/> says, instead
+///   of an HTTP 500. Caller cancellation still propagates.</item>
 ///   <item>Bounded by <see cref="FallbackOptions.TimeoutSeconds"/>; on
 ///   timeout the orchestrator's original (low-confidence) response is
 ///   returned as-is with a <c>fallback.timeout</c> trace step rather than
@@ -56,12 +63,14 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
     private readonly IFallbackChatHandler _fallback;
     private readonly IOptions<FallbackOptions> _options;
     private readonly IAgenticTraceCapture _capture;
+    private readonly ChatGenerationHealth? _generationHealth;
 
     public FallbackChatApplicationService(
         IChatApplicationService inner,
         IFallbackChatHandler fallback,
         IOptions<FallbackOptions> options,
-        IAgenticTraceCapture capture)
+        IAgenticTraceCapture capture,
+        ChatGenerationHealth? generationHealth = null)
     {
         // Validate options eagerly — codex CLI 2026-05-08 P1 QA: bad config
         // (negative timeout, out-of-range confidence) used to silently turn
@@ -88,6 +97,7 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
         _fallback = fallback;
         _options = options;
         _capture = capture;
+        _generationHealth = generationHealth;
     }
 
     /// <summary>
@@ -152,9 +162,17 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
             await onToken!(token);
             emittedText = true;
         }
-        var response = onToken is null
-            ? await _inner.ChatAsync(request, cancellationToken)
-            : await _inner.ChatStreamingAsync(request, EmitAsync, cancellationToken);
+        ChatResponse response;
+        try
+        {
+            response = onToken is null
+                ? await _inner.ChatAsync(request, cancellationToken)
+                : await _inner.ChatStreamingAsync(request, EmitAsync, cancellationToken);
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested && !emittedText)
+        {
+            return Unavailable(exception);
+        }
 
         // Gate 1: master switch. Always emit a step so observability shows
         // the fallback decision even when nothing fires.
@@ -278,6 +296,9 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             sw.Stop();
+            // Our own timeout, not the caller's: the generation wrapper skips a
+            // cancelled token, so record the failed generation here.
+            _generationHealth?.RecordFailure($"direct-chat generation timed out after {opts.TimeoutSeconds}s");
             _capture.AddStep(
                 "orchestration.fallback",
                 "error",
@@ -297,6 +318,34 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
                     : response.Routing with { Confidence = 0f, RoutingMethod = "fallback-timeout" },
             };
         }
+    }
+
+    /// <summary>
+    /// Answer given when the pipeline failed before producing any text. Same
+    /// wording as the retiring GaChatbot.Api host. The direct-chat fallback is
+    /// not tried: it calls the same provider that just failed.
+    /// </summary>
+    internal const string UnavailableAnswer =
+        "Our reasoning service is currently unavailable, so this question could not be answered. " +
+        "This is on our side, not your prompt. Try again in a moment, or use a deterministic music-theory query " +
+        "(e.g. \"modes of C major\", \"relative minor of G major\", \"transpose C E G to D\") which doesn't depend on the LLM.";
+
+    private ChatResponse Unavailable(Exception exception)
+    {
+        _capture.AddStep(
+            "orchestration.error",
+            "error",
+            0,
+            new Dictionary<string, object?>
+            {
+                ["exception.type"] = exception.GetType().Name,
+                ["exception.message"] = exception.Message,
+            });
+        return new ChatResponse(
+            NaturalLanguageAnswer: UnavailableAnswer,
+            Candidates: [],
+            Routing: new AgentRoutingMetadata("unavailable", 0f, "error-unavailable"),
+            Grounding: null);
     }
 
     private static string? FindDeterministicFailure(ChatResponse response, AgenticTrace trace)

@@ -6,6 +6,7 @@ using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents.Intents;
+using GA.Business.ML.Providers;
 using Services;
 
 /// <summary>
@@ -29,7 +30,8 @@ public class ChatbotController(
     ILogger<ChatbotController> logger,
     IChatIntake chatIntake,
     IAgenticTraceCapture traceCapture,
-    IChatService statusService)
+    IChatProviderAvailability statusService,
+    ChatGenerationHealth generationHealth)
     : ControllerBase
 {
     private static readonly JsonSerializerOptions _jsonOptions =
@@ -209,6 +211,7 @@ public class ChatbotController(
 
     /// <summary>
     ///     Check whether the Ollama service is reachable and the chatbot is ready to respond.
+    ///     A failed last generation (see <see cref="ChatGenerationHealth"/>) reports unavailable.
     /// </summary>
     /// <remarks>
     ///     The check is bounded: an unreachable provider counts as unavailable after
@@ -232,14 +235,30 @@ public class ChatbotController(
             isAvailable = false;
         }
 
-        return Ok(new ChatbotStatus
+        var status = new ChatbotStatus
         {
             IsAvailable = isAvailable,
             Message = isAvailable
                 ? "Chatbot is ready"
                 : "Chatbot is not available. Please ensure Ollama is running.",
             Timestamp = DateTime.UtcNow
-        });
+        };
+
+        // The availability check never generates, so a provider that answers it but
+        // refuses to generate (Ollama Cloud without credits) looked ready. Report the
+        // last real generation instead of running paid inference here.
+        if (generationHealth.Latest is { } generation)
+        {
+            status.GenerationOk = generation.Ok;
+            if (!generation.Ok)
+            {
+                status.IsAvailable = false;
+                status.Message =
+                    $"Chatbot is not available: last generation failed {generation.Age.TotalSeconds:F0}s ago: {generation.Diagnostic}";
+            }
+        }
+
+        return Ok(status);
     }
 
     /// <summary>

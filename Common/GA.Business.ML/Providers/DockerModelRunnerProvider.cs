@@ -32,23 +32,29 @@ public static class DockerModelRunnerProvider
     public const string DefaultEmbeddingModel = "docker.io/ai/mxbai-embed-large:latest";
 
     /// <summary>Creates an <see cref="IChatClient"/> backed by Docker Model Runner.</summary>
+    /// <remarks><c>networkTimeout</c> sets the OpenAI SDK network timeout; the SDK default applies when null.</remarks>
     public static IChatClient CreateChatClient(
         string? baseUrl = null,
         string? model = null,
-        ILogger? logger = null)
+        ILogger? logger = null,
+        TimeSpan? networkTimeout = null)
     {
         var url = baseUrl ?? DefaultBaseUrl;
         var modelId = model ?? DefaultChatModel;
         logger?.LogInformation("Creating Docker Model Runner chat client at {Url} for model: {Model}", url, modelId);
-        return new DockerModelRunnerChatClient(url, modelId);
+        return new DockerModelRunnerChatClient(url, modelId, networkTimeout);
     }
 
     /// <summary>Creates a chat client from <c>DockerModelRunner:*</c> config keys.</summary>
-    public static IChatClient CreateChatClientFromConfig(IConfiguration configuration, ILogger? logger = null)
+    /// <remarks><c>networkTimeout</c> sets the OpenAI SDK network timeout; the SDK default applies when null.</remarks>
+    public static IChatClient CreateChatClientFromConfig(
+        IConfiguration configuration,
+        ILogger? logger = null,
+        TimeSpan? networkTimeout = null)
     {
         var baseUrl = configuration.GetValue<string>("DockerModelRunner:BaseUrl") ?? DefaultBaseUrl;
         var model = configuration.GetValue<string>("DockerModelRunner:ChatModel") ?? DefaultChatModel;
-        return CreateChatClient(baseUrl, model, logger);
+        return CreateChatClient(baseUrl, model, logger, networkTimeout);
     }
 
     /// <summary>Creates an <see cref="IEmbeddingGenerator{TInput,TEmbedding}"/> backed by Docker Model Runner.</summary>
@@ -98,13 +104,14 @@ public static class DockerModelRunnerProvider
         private readonly string _baseUrl;
         private readonly string _model;
 
-        public DockerModelRunnerChatClient(string baseUrl, string model)
+        public DockerModelRunnerChatClient(string baseUrl, string model, TimeSpan? networkTimeout)
         {
             _baseUrl = baseUrl;
             _model = model;
-            var openAiClient = new OpenAIClient(
-                new ApiKeyCredential("no-key"),
-                new OpenAIClientOptions { Endpoint = new Uri(baseUrl) });
+            var clientOptions = new OpenAIClientOptions { Endpoint = new Uri(baseUrl) };
+            if (networkTimeout is { } timeout)
+                clientOptions.NetworkTimeout = timeout;
+            var openAiClient = new OpenAIClient(new ApiKeyCredential("no-key"), clientOptions);
             _chatClient = openAiClient.GetChatClient(model);
         }
 
