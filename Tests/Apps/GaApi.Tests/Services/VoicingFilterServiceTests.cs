@@ -75,6 +75,73 @@ public class VoicingFilterServiceTests
                 $"Voicing {string.Join(",", v.Frets)} contains an open string");
     }
 
+    // ── Chord identity: complete triads, essential tones for extended chords (#886) ─────────
+
+    // Frets hold string 1 (high E) first: { 5, 3, 3, 2, 3, -1 } is C13 x-3-2-3-3-5,
+    // { 3, 3, 3, 2, 3, -1 } is C9 x-3-2-3-3-3.
+    [Test]
+    [TestCase("C13", new[] { 5, 3, 3, 2, 3, -1 })]
+    [TestCase("C9", new[] { 3, 3, 3, 2, 3, -1 })]
+    public async Task GetVoicingsForChordAsync_KeepsTheStandardShape_ForExtendedChords(string chord, int[] frets)
+    {
+        var results = await _sut.GetVoicingsForChordAsync(chord);
+
+        Assert.That(results.Select(v => v.Frets), Has.Some.EqualTo(frets),
+            $"{chord} must keep its standard shape [{string.Join(",", frets)}]");
+    }
+
+    // Root, third, seventh and the defining extension must always sound; only the perfect fifth,
+    // then a natural 11th under a 13th, then the 9th may be left out.
+    [Test]
+    [TestCase("F", new[] { 5, 9, 0 })]
+    [TestCase("G7", new[] { 7, 11, 2, 5 })]
+    [TestCase("C9", new[] { 0, 4, 10, 2 })]
+    [TestCase("C11", new[] { 0, 4, 10, 5 })]
+    [TestCase("C13", new[] { 0, 4, 10, 9 })]
+    public async Task GetVoicingsForChordAsync_EveryVoicingSoundsTheEssentialTones(string chord, int[] essential)
+    {
+        var results = (await _sut.GetVoicingsForChordAsync(chord)).ToList();
+
+        Assert.That(results, Is.Not.Empty, $"Expected voicings for '{chord}'");
+        int[] openStringPitchClasses = [4, 11, 7, 2, 9, 4];
+        foreach (var v in results)
+        {
+            var sounding = v.Frets
+                .Select((fret, i) => fret < 0 ? -1 : (openStringPitchClasses[i] + fret) % 12)
+                .Where(pc => pc >= 0)
+                .ToHashSet();
+            Assert.That(sounding, Is.SupersetOf(essential),
+                $"Voicing [{string.Join(",", v.Frets)}] lacks an essential tone of {chord}");
+        }
+    }
+
+    // An altered dominant lists every alteration (b9, #9, #11, b13) as alternatives: a voicing
+    // sounds root, third and seventh plus at least one of them, never all four at once.
+    // { 4, 2, 3, 2, 3, -1 } is C7alt x-3-2-3-2-4 (C E Bb Db Ab).
+    [Test]
+    [TestCase("Calt")]
+    [TestCase("C7alt")]
+    public async Task GetVoicingsForChordAsync_AlteredDominant_KeepsShapesWithSomeAlterations(string chord)
+    {
+        var results = (await _sut.GetVoicingsForChordAsync(chord)).ToList();
+
+        Assert.That(results.Select(v => v.Frets), Has.Some.EqualTo(new[] { 4, 2, 3, 2, 3, -1 }),
+            $"{chord} must keep x-3-2-3-2-4");
+        int[] openStringPitchClasses = [4, 11, 7, 2, 9, 4];
+        int[] alterations = [1, 3, 6, 8];
+        foreach (var v in results)
+        {
+            var sounding = v.Frets
+                .Select((fret, i) => fret < 0 ? -1 : (openStringPitchClasses[i] + fret) % 12)
+                .Where(pc => pc >= 0)
+                .ToHashSet();
+            Assert.That(sounding, Is.SupersetOf(new[] { 0, 4, 10 }),
+                $"Voicing [{string.Join(",", v.Frets)}] lacks the root, third or seventh of {chord}");
+            Assert.That(sounding.Overlaps(alterations), Is.True,
+                $"Voicing [{string.Join(",", v.Frets)}] sounds no alteration of {chord}");
+        }
+    }
+
     // ── Invalid chord parsing ────────────────────────────────────────────────
 
     [Test]
