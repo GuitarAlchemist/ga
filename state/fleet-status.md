@@ -18,7 +18,7 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#890](https://github.com/GuitarAlchemist/ga/pull/890) | fix(ml): cascade to the secondary on an unsuccessful Ollama response | 0d | UNKNOWN | 0 | spareilleux |
+| [#891](https://github.com/GuitarAlchemist/ga/pull/891) | fix(chatbot): honour the requested key in the progression-mood skill | 0d | MERGEABLE | 0 | spareilleux |
 | [#859](https://github.com/GuitarAlchemist/ga/pull/859) | feat(agent-tree-r1): minimal GitHub comment sender for live dispatch ( (draft) | 1d | MERGEABLE | 0 | spareilleux |
 | [#858](https://github.com/GuitarAlchemist/ga/pull/858) | feat(scripts): agent-tree-r1 bounded supervision slice (draft, #855) (draft) | 2d | UNKNOWN | 1 | spareilleux |
 | [#854](https://github.com/GuitarAlchemist/ga/pull/854) | fix(chatbot): no invented frets, allow user-supplied ones (replaces #8 (draft) | 2d | UNKNOWN | 0 | app/claude |
@@ -35,12 +35,12 @@ _No open PRs._
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
 | [#563](https://github.com/GuitarAlchemist/ix/pull/563) | refactor(ix-origami): assess() applies the verdict rules; Context priv (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#562](https://github.com/GuitarAlchemist/ix/pull/562) | refactor(ixctl): the re-verification's fourteen minor items, six fixed | 0d | MERGEABLE | 1 | spareilleux |
-| [#546](https://github.com/GuitarAlchemist/ix/pull/546) | feat(ixforge): mobile catalog, tool states, pinning, optional names an (draft) | 1d | UNKNOWN | 3 | spareilleux |
+| [#562](https://github.com/GuitarAlchemist/ix/pull/562) | refactor(ixctl): the re-verification's fourteen minor items, six fixed | 0d | MERGEABLE | 2 | spareilleux |
+| [#546](https://github.com/GuitarAlchemist/ix/pull/546) | feat(ixforge): mobile catalog, tool states, pinning, optional names an (draft) | 1d | MERGEABLE | 3 | spareilleux |
 | [#544](https://github.com/GuitarAlchemist/ix/pull/544) | feat(workshop): import IxForge R14–R25 onto main (draft) | 1d | MERGEABLE | 2 | spareilleux |
-| [#543](https://github.com/GuitarAlchemist/ix/pull/543) | Document authorized remote path for IX Forge shared counter creation ( (draft) | 2d | UNKNOWN | 0 | app/openai-code-agent |
-| [#542](https://github.com/GuitarAlchemist/ix/pull/542) | IXFORGE-COUNTER-ACCESS-R1: investigation — no authorized non-Desktop p (draft) | 2d | UNKNOWN | 0 | app/anthropic-code-agent |
-| [#538](https://github.com/GuitarAlchemist/ix/pull/538) | docs(solutions): two learnings from the IXQL WASI validator prototype (draft) | 2d | UNKNOWN | 0 | spareilleux |
+| [#543](https://github.com/GuitarAlchemist/ix/pull/543) | Document authorized remote path for IX Forge shared counter creation ( (draft) | 2d | MERGEABLE | 0 | app/openai-code-agent |
+| [#542](https://github.com/GuitarAlchemist/ix/pull/542) | IXFORGE-COUNTER-ACCESS-R1: investigation — no authorized non-Desktop p (draft) | 2d | MERGEABLE | 0 | app/anthropic-code-agent |
+| [#538](https://github.com/GuitarAlchemist/ix/pull/538) | docs(solutions): two learnings from the IXQL WASI validator prototype (draft) | 2d | MERGEABLE | 0 | spareilleux |
 
 ### tars (5 open)
 
@@ -95,6 +95,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-11-17T01:02:19.308197+00:00 UTC_
+_Generated: 2026-11-17T01:14:12.598077+00:00 UTC_
 
-_Commit: `f191fbf5d026`_
+_Commit: `9cfa861537d6`_
