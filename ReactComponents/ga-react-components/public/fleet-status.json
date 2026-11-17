@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "19996c052cbbec0ebf2857d8355503619ffcece9",
-    "generatedAt": "2026-11-17T03:14:00.205691+00:00",
+    "commitSha": "c00252b92c618e4ceea016672b96a027d076b167",
+    "generatedAt": "2026-11-17T05:04:55.590122+00:00",
     "repoCount": 5,
-    "totalPRs": 32
+    "totalPRs": 31
   },
   "repos": [
     {
@@ -113,8 +113,20 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 13,
+      "prCount": 14,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-17T04:43:23Z",
+          "failingChecks": 1,
+          "headRef": "chore/864-dead-naming-leftovers",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 902,
+          "title": "chore: delete the chord-naming stack's dead leftovers (#864 cleanup)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/902"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -176,7 +188,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/858"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "app/claude",
           "createdAt": "2026-11-14T03:15:28Z",
           "failingChecks": 0,
@@ -224,7 +236,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/840"
         },
         {
-          "ageDays": 27,
+          "ageDays": 28,
           "author": "spareilleux",
           "createdAt": "2026-10-20T03:36:58Z",
           "failingChecks": 1,
@@ -236,7 +248,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/839"
         },
         {
-          "ageDays": 43,
+          "ageDays": 44,
           "author": "spareilleux",
           "createdAt": "2026-10-04T03:41:20Z",
           "failingChecks": 0,
@@ -285,20 +297,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 8,
+      "prCount": 6,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T02:44:21Z",
-          "failingChecks": 0,
-          "headRef": "fix/ixctl-bookmark-test-stall",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 564,
-          "title": "test(ixctl): the bookmark test no longer queues its requests behind a full replay",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/564"
-        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -312,25 +312,13 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/563"
         },
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T00:36:47Z",
-          "failingChecks": 2,
-          "headRef": "refactor/ixctl-minor-followups",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 562,
-          "title": "refactor(ixctl): the re-verification's fourteen minor items, six fixed and eight refuted",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/562"
-        },
-        {
           "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-11-15T15:29:51Z",
           "failingChecks": 3,
           "headRef": "feat/ixforge-mobile-catalog",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 546,
           "title": "feat(ixforge): mobile catalog, tool states, pinning, optional names and widget traits (stacked on #544)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/546"
@@ -339,10 +327,10 @@
           "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-11-15T05:33:50Z",
-          "failingChecks": 2,
+          "failingChecks": 0,
           "headRef": "feat/ixforge-workshop-r25",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 544,
           "title": "feat(workshop): import IxForge R14\u2013R25 onto main",
           "url": "https://github.com/GuitarAlchemist/ix/pull/544"
@@ -354,7 +342,7 @@
           "failingChecks": 0,
           "headRef": "codex/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 543,
           "title": "Document authorized remote path for IX Forge shared counter creation (no code/data mutation)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/543"
@@ -366,7 +354,7 @@
           "failingChecks": 0,
           "headRef": "claude/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 542,
           "title": "IXFORGE-COUNTER-ACCESS-R1: investigation \u2014 no authorized non-Desktop path to create the shared \u00ab Lectures \u00bb counter",
           "url": "https://github.com/GuitarAlchemist/ix/pull/542"
@@ -378,7 +366,7 @@
           "failingChecks": 0,
           "headRef": "docs/learnings-wasi-validator",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 538,
           "title": "docs(solutions): two learnings from the IXQL WASI validator prototype",
           "url": "https://github.com/GuitarAlchemist/ix/pull/538"
@@ -424,7 +412,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/381"
         },
         {
-          "ageDays": 48,
+          "ageDays": 49,
           "author": "spareilleux",
           "createdAt": "2026-09-29T03:17:50Z",
           "failingChecks": 0,
