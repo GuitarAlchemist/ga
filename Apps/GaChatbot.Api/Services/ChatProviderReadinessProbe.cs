@@ -27,7 +27,8 @@ public sealed class ChatProviderReadinessProbe(
     IConfiguration configuration,
     IHttpClientFactory httpClientFactory,
     IServiceProvider serviceProvider,
-    ILogger<ChatProviderReadinessProbe> logger) : IChatProviderReadinessProbe
+    ILogger<ChatProviderReadinessProbe> logger,
+    ChatGenerationHealth? generationHealth = null) : IChatProviderReadinessProbe
 {
     /// <summary>
     /// Synthetic query for the orchestrator round-trip probe. Routes to a
@@ -120,6 +121,24 @@ public sealed class ChatProviderReadinessProbe(
             providerStatus.Message = string.IsNullOrEmpty(providerStatus.Message)
                 ? failed.Diagnostic
                 : $"{providerStatus.Message} | Embedding: {failed.Diagnostic}";
+        }
+
+        // Generation outcome: none of the checks above generates, so a provider
+        // that lists its models and embeds but refuses to generate (Ollama Cloud
+        // without credits, 2026-11-16) still reported ready. Report the outcome
+        // of the last real generation instead of running paid inference here.
+        if (generationHealth?.Latest is { } generation)
+        {
+            providerStatus.GenerationOk = generation.Ok;
+            if (!generation.Ok)
+            {
+                var diagnostic =
+                    $"last generation failed {generation.Age.TotalSeconds:F0}s ago: {generation.Diagnostic}";
+                providerStatus.IsAvailable = false;
+                providerStatus.Message = string.IsNullOrEmpty(providerStatus.Message)
+                    ? diagnostic
+                    : $"{providerStatus.Message} | Generation: {diagnostic}";
+            }
         }
 
         return providerStatus;

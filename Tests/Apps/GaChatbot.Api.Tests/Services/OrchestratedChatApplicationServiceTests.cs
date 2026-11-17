@@ -235,13 +235,85 @@ public sealed class OrchestratedChatApplicationServiceTests
         });
     }
 
+    [Test]
+    public async Task ChatAsync_UnreachableFallback_RecordsFailedGeneration()
+    {
+        var health = new ChatGenerationHealth();
+        var service = CreateService(
+            new StubOrchestrator(Exception: new InvalidOperationException("boom")),
+            directChatClient: new UnreachableChatClient(),
+            generationHealth: health);
+
+        await service.ChatAsync(new ChatExecutionRequest("Explain C major."));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(health.Latest?.Ok, Is.False);
+            Assert.That(health.Latest?.Diagnostic, Does.Contain("Connection refused"));
+        });
+    }
+
+    [Test]
+    public async Task ChatAsync_FallbackTimesOut_RecordsFailedGeneration()
+    {
+        var health = new ChatGenerationHealth();
+        var service = CreateService(
+            new StubOrchestrator(Exception: new InvalidOperationException("boom")),
+            directChatClient: new BlockingChatClient(),
+            configurationOverrides: new Dictionary<string, string?>
+            {
+                ["Chatbot:FallbackTimeoutSeconds"] = "1"
+            },
+            generationHealth: health);
+
+        await service.ChatAsync(new ChatExecutionRequest("Explain C major."));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(health.Latest?.Ok, Is.False);
+            Assert.That(health.Latest?.Diagnostic, Does.Contain("timed out"));
+        });
+    }
+
+    [Test]
+    public async Task ChatAsync_FallbackAnswers_RecordsSuccessfulGeneration()
+    {
+        var health = new ChatGenerationHealth();
+        health.RecordFailure("earlier failure");
+        var service = CreateService(
+            new StubOrchestrator(Exception: new InvalidOperationException("boom")),
+            generationHealth: health);
+
+        await service.ChatAsync(new ChatExecutionRequest("Explain C major."));
+
+        Assert.That(health.Latest?.Ok, Is.True);
+    }
+
+    [Test]
+    public void ChatAsync_CallerCancelsFallback_DoesNotRecordFailure()
+    {
+        var health = new ChatGenerationHealth();
+        var service = CreateService(
+            new StubOrchestrator(Exception: new InvalidOperationException("boom")),
+            directChatClient: new BlockingChatClient(),
+            generationHealth: health);
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+
+        Assert.That(
+            async () => await service.ChatAsync(new ChatExecutionRequest("Explain C major."), cts.Token),
+            Throws.InstanceOf<OperationCanceledException>());
+        Assert.That(health.Latest, Is.Null);
+    }
+
     private static OrchestratedChatApplicationService CreateService(
         StubOrchestrator orchestrator,
         IChatClient? directChatClient = null,
-        Dictionary<string, string?>? configurationOverrides = null)
+        Dictionary<string, string?>? configurationOverrides = null,
+        ChatGenerationHealth? generationHealth = null)
     {
+        directChatClient ??= new StubChatClient("direct fallback answer");
         var directChat = new DirectChatApplicationService(
-            directChatClient ?? new StubChatClient("direct fallback answer"),
+            generationHealth is null ? directChatClient : new GenerationHealthChatClient(directChatClient, generationHealth),
             new ReadyProbe());
         var configurationValues = new Dictionary<string, string?>
         {
@@ -265,7 +337,8 @@ public sealed class OrchestratedChatApplicationServiceTests
             new ReadyProbe(),
             directChat,
             configuration,
-            NullLogger<OrchestratedChatApplicationService>.Instance);
+            NullLogger<OrchestratedChatApplicationService>.Instance,
+            generationHealth);
     }
 
     private static void AssertFallback(ChatExecutionResult result, string expectedRoutingMethod) =>
