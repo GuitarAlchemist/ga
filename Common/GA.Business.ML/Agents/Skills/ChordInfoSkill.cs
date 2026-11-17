@@ -114,7 +114,7 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         var parsed = TryParse(message) ?? TryIdentifyNoteSet(message);
         if (parsed is null)
         {
-            return Task.FromResult(AgentResponse.CannotHelp(AgentIds.Theory, "Could not parse a chord name from your question."));
+            return Task.FromResult(AgentResponse.Decline(AgentIds.Theory, "Could not parse a chord name from your question."));
         }
 
         var (root, quality) = parsed.Value;
