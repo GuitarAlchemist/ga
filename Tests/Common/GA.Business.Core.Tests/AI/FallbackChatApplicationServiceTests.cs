@@ -221,6 +221,90 @@ public class FallbackChatApplicationServiceTests
             "fallback handler MUST NOT be invoked when a deterministic tool failure is in the trace");
     }
 
+    // ── Inner pipeline throws (provider refuses to generate) ──────────────────
+
+    private static FallbackChatApplicationService MakeThrowingDecorator(
+        Exception toThrow,
+        bool fallbackEnabled,
+        IAgenticTraceCapture? capture = null,
+        bool emitTokenFirst = false)
+    {
+        var inner = new Mock<IChatApplicationService>();
+        inner.Setup(s => s.ChatAsync(It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(toThrow);
+        inner.Setup(s => s.ChatStreamingAsync(It.IsAny<ChatRequest>(), It.IsAny<Func<string, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns(async (ChatRequest _, Func<string, Task> onToken, CancellationToken _) =>
+            {
+                if (emitTokenFirst) await onToken("partial ");
+                throw toThrow;
+            });
+
+        return new FallbackChatApplicationService(
+            inner.Object,
+            new NoOpFallbackChatHandler(),
+            Options.Create(new FallbackOptions { Enabled = fallbackEnabled, MinConfidence = 0.25f, TimeoutSeconds = 5 }),
+            capture ?? new RecordingCapture());
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ChatAsync_InnerThrows_ReturnsUnavailableAnswer(bool fallbackEnabled)
+    {
+        var capture = new RecordingCapture();
+        var decorator = MakeThrowingDecorator(
+            new HttpRequestException("402 (Payment Required)", null, System.Net.HttpStatusCode.PaymentRequired),
+            fallbackEnabled,
+            capture);
+
+        var response = await decorator.ChatAsync(new ChatRequest("What is the weather in Paris today?"));
+
+        var step = capture.Build().Steps.Single(s => s.Name == "orchestration.error");
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.NaturalLanguageAnswer, Does.Contain("reasoning service is currently unavailable"));
+            Assert.That(response.Routing!.Confidence, Is.EqualTo(0f));
+            Assert.That(response.Routing!.RoutingMethod, Is.EqualTo("error-unavailable"));
+            Assert.That(response.Grounding, Is.Null);
+            Assert.That(step.Status, Is.EqualTo("error"));
+            Assert.That(step.Attributes["exception.type"], Is.EqualTo(nameof(HttpRequestException)));
+        });
+    }
+
+    [Test]
+    public async Task ChatStreamingAsync_InnerThrowsBeforeAnyToken_ReturnsUnavailableAnswer()
+    {
+        var decorator = MakeThrowingDecorator(
+            new InvalidOperationException("Ollama error: Add usage credits or subscribe to continue using cloud models."),
+            fallbackEnabled: false);
+
+        var response = await decorator.ChatStreamingAsync(new ChatRequest("hi"), _ => Task.CompletedTask);
+
+        Assert.That(response.NaturalLanguageAnswer, Does.Contain("reasoning service is currently unavailable"));
+    }
+
+    [Test]
+    public void ChatStreamingAsync_InnerThrowsAfterAToken_Rethrows()
+    {
+        // Streamed text cannot be retracted; the transport reports the failure.
+        var decorator = MakeThrowingDecorator(new HttpRequestException("dropped"), fallbackEnabled: false, emitTokenFirst: true);
+
+        Assert.That(
+            async () => await decorator.ChatStreamingAsync(new ChatRequest("hi"), _ => Task.CompletedTask),
+            Throws.InstanceOf<HttpRequestException>());
+    }
+
+    [Test]
+    public void ChatAsync_CallerCancels_Propagates()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        var decorator = MakeThrowingDecorator(new OperationCanceledException(cts.Token), fallbackEnabled: true);
+
+        Assert.That(
+            async () => await decorator.ChatAsync(new ChatRequest("hi"), cts.Token),
+            Throws.InstanceOf<OperationCanceledException>());
+    }
+
     /// <summary>
     /// Real capture impl for tests that need to seed steps before the
     /// decorator inspects them. The production
