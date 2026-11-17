@@ -91,23 +91,60 @@ internal static class AgentResponseParser
     }
 
     /// <summary>
-    /// Returns the prose of <paramref name="responseText"/> with any fenced block
-    /// (closed or not) and any JSON object (balanced or cut off) removed, so a
-    /// failed parse never shows raw JSON to the user. Empty when nothing is left.
+    /// Returns the prose of <paramref name="responseText"/> with the JSON removed,
+    /// so a failed parse never shows raw JSON to the user: a fenced block (closed
+    /// or not) that holds JSON is dropped, and so is any JSON object (balanced or
+    /// cut off) outside a fence. Other fenced blocks, such as a <c>```vextab</c>
+    /// example, are kept verbatim. Empty when nothing is left.
     /// </summary>
     public static string ProseOutsideJson(string responseText)
     {
         if (string.IsNullOrEmpty(responseText))
             return string.Empty;
 
-        var text = responseText;
-        int fence;
-        while ((fence = text.IndexOf("```", StringComparison.Ordinal)) >= 0)
+        var kept = new System.Text.StringBuilder();
+        var position = 0;
+        while (position < responseText.Length)
         {
-            var close = text.IndexOf("```", fence + 3, StringComparison.Ordinal);
-            text = close < 0 ? text[..fence] : text[..fence] + text[(close + 3)..];
+            var fence = responseText.IndexOf("```", position, StringComparison.Ordinal);
+            if (fence < 0)
+            {
+                kept.Append(WithoutJsonObjects(responseText[position..]));
+                break;
+            }
+
+            kept.Append(WithoutJsonObjects(responseText[position..fence]));
+            var close = responseText.IndexOf("```", fence + 3, StringComparison.Ordinal);
+            var end = close < 0 ? responseText.Length : close + 3;
+            var block = responseText[fence..end];
+            if (!IsJsonFence(block))
+                kept.Append(block);
+            position = end;
         }
 
+        return kept.ToString().Trim();
+    }
+
+    /// <summary>
+    /// A fenced block holds JSON when its info string is <c>json</c> or its body
+    /// starts with <c>{</c> or <c>[</c>.
+    /// </summary>
+    private static bool IsJsonFence(string block)
+    {
+        var body = block[3..];
+        if (body.EndsWith("```", StringComparison.Ordinal))
+            body = body[..^3];
+        var newline = body.IndexOf('\n');
+        var info = newline < 0 ? string.Empty : body[..newline].Trim();
+        if (info.Equals("json", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        var content = (newline < 0 ? body : body[(newline + 1)..]).TrimStart();
+        return content.StartsWith('{') || content.StartsWith('[') || info.StartsWith('{');
+    }
+
+    private static string WithoutJsonObjects(string text)
+    {
         int brace;
         while ((brace = text.IndexOf('{')) >= 0)
         {
@@ -115,7 +152,7 @@ internal static class AgentResponseParser
             text = end < 0 ? text[..brace] : text[..brace] + text[(end + 1)..];
         }
 
-        return text.Trim();
+        return text;
     }
 
     /// <summary>

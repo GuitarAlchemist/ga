@@ -103,4 +103,49 @@ public class AgentStructuredResponseFallbackTests
         AssertNoRawJson(response.Result);
         Assert.That(response.Result, Does.Not.Contain("failed"));
     }
+
+    private const string VexTabExample = """
+        ```vextab
+        tabstave notation=true
+        notes :q 3/5 2/4 0/3 1/2
+        ```
+        """;
+
+    [Test]
+    public async Task ProseWithFencedTab_KeepsTheTab()
+    {
+        // A usable plain-text answer with a fenced musical example must survive
+        // the fallback intact (Codex P2 on #903).
+        var response = await TheoryAnswerFor("Here is a C major arpeggio:\n" + VexTabExample);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Result, Does.Contain("Here is a C major arpeggio:"));
+            Assert.That(response.Result, Does.Contain("```vextab"));
+            Assert.That(response.Result, Does.Contain("notes :q 3/5 2/4 0/3 1/2"));
+        });
+    }
+
+    [Test]
+    public async Task EntirelyFencedTab_IsKept()
+    {
+        var response = await TheoryAnswerFor(VexTabExample);
+
+        Assert.That(response.Result, Does.Contain("notes :q 3/5 2/4 0/3 1/2"));
+    }
+
+    [Test]
+    public async Task ProseTabAndBrokenJson_DropsOnlyTheJson()
+    {
+        var response = await TheoryAnswerFor(
+            "Here is a C major arpeggio:\n" + VexTabExample + "\n```json\n{\"confidence\": 0.9, \"evidence\": [\"tri");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Result, Does.Contain("Here is a C major arpeggio:"));
+            Assert.That(response.Result, Does.Contain("notes :q 3/5 2/4 0/3 1/2"));
+            Assert.That(response.Result, Does.Not.Contain("```json"));
+            Assert.That(response.Result, Does.Not.Contain("\"confidence\""));
+        });
+    }
 }
