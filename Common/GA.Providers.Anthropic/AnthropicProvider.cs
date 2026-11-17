@@ -28,12 +28,12 @@ using Microsoft.Extensions.Configuration;
 /// when <c>Anthropic:WorkspaceId</c> is set (a key that is not scoped to a
 /// workspace gets 400 on every request without it), raises
 /// <c>max_tokens</c> to at least <c>Anthropic:MaxOutputTokens</c> (thinking
-/// shares that budget), sends <c>output_config.effort</c> from
+/// shares that budget), sends <c>output_config.effort</c> (to models that accept it) from
 /// <c>Anthropic:Effort</c>, marks the system prompt (and so the tool list
 /// before it) for prompt caching, and never returns thinking blocks to the
 /// caller.</para>
 /// </remarks>
-public static class AnthropicProvider
+public static partial class AnthropicProvider
 {
     public const string DefaultModel = "claude-sonnet-5-5";
 
@@ -244,6 +244,40 @@ public static class AnthropicProvider
             .Build();
     }
 
+    /// <summary>
+    /// Whether <paramref name="model"/> accepts <c>output_config.effort</c>: Opus 4.5
+    /// and later, Sonnet 4.6 and later, Haiku 5 and later, and every Fable or Mythos
+    /// model. Haiku 4.5 and Sonnet 4.5 reject the field with a 400, and an unknown
+    /// id gets no effort rather than a rejected request. Platform prefixes
+    /// (<c>us.anthropic.</c>) and date suffixes (<c>-20251001</c>) are ignored.
+    /// </summary>
+    internal static bool SupportsEffort(string model)
+    {
+        var match = ModelVersionPattern().Match(model);
+        if (!match.Success)
+        {
+            return false;
+        }
+
+        var major = int.Parse(match.Groups["major"].Value, System.Globalization.CultureInfo.InvariantCulture);
+        var minor = match.Groups["minor"].Success
+            ? int.Parse(match.Groups["minor"].Value, System.Globalization.CultureInfo.InvariantCulture)
+            : 0;
+        var version = (major, minor);
+        return match.Groups["family"].Value switch
+        {
+            "fable" or "mythos" => true,
+            "opus" => version.CompareTo((4, 5)) >= 0,
+            "sonnet" => version.CompareTo((4, 6)) >= 0,
+            "haiku" => major >= 5,
+            _ => false,
+        };
+    }
+
+    // A one- or two-digit minor; an eight-digit date suffix is not a minor version.
+    [System.Text.RegularExpressions.GeneratedRegex(@"claude-(?<family>opus|sonnet|haiku|fable|mythos)-(?<major>\d+)(?:-(?<minor>\d{1,2})(?!\d))?")]
+    private static partial System.Text.RegularExpressions.Regex ModelVersionPattern();
+
     private static Effort ResolveEffort(IConfiguration configuration)
     {
         var configured = configuration[EffortConfigKey];
@@ -413,8 +447,12 @@ public static class AnthropicProvider
                     Model = model,
                     MaxTokens = maxTokens,
                     Messages = [],
-                    OutputConfig = new OutputConfig { Effort = effort },
                 };
+                if (SupportsEffort(model))
+                {
+                    request = request with { OutputConfig = new OutputConfig { Effort = effort } };
+                }
+
                 return system.Count > 0 ? request with { System = system.ToList() } : request;
             };
 

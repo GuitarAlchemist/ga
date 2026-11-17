@@ -145,6 +145,32 @@ public class AnthropicProviderHttpTests
         Assert.That(handler.Body.RootElement.GetProperty("output_config").GetProperty("effort").GetString(), Is.EqualTo(expected));
     }
 
+    [TestCase("claude-haiku-5-5", true)]
+    [TestCase("claude-sonnet-5", true)]
+    [TestCase("claude-sonnet-5-5", true)]
+    [TestCase("claude-sonnet-4-6", true)]
+    [TestCase("claude-opus-4-5-20251101", true)]
+    [TestCase("claude-opus-4-8", true)]
+    [TestCase("claude-opus-5-5", true)]
+    [TestCase("claude-fable-5-2", true)]
+    [TestCase("claude-haiku-4-5-20251001", false)]   // appsettings.Development.json: rejects effort (Codex P1 on #903)
+    [TestCase("claude-haiku-4-5", false)]
+    [TestCase("claude-sonnet-4-5", false)]
+    [TestCase("claude-opus-4-1", false)]
+    [TestCase("claude-opus-4-20250514", false)]
+    [TestCase("claude-3-5-sonnet-20241022", false)]
+    public async Task Request_SendsEffort_OnlyToModelsThatSupportIt(string model, bool expectEffort)
+    {
+        var handler = new RecordingHandler(ThinkingThenTextResponse);
+        var client = AnthropicProvider.CreateChatClientFromConfig(Config(("Anthropic:Model", model)), handler);
+
+        await client.GetResponseAsync("hi");
+
+        var hasEffort = handler.Body.RootElement.TryGetProperty("output_config", out var outputConfig)
+            && outputConfig.TryGetProperty("effort", out _);
+        Assert.That(hasEffort, Is.EqualTo(expectEffort));
+    }
+
     [Test]
     public void InvalidEffort_FailsAtConstruction() =>
         Assert.That(
