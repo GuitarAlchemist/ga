@@ -64,11 +64,9 @@
     <Compile Remove="Invariants/IconicChordInvariantsTests.cs"/>
     <Compile Remove="Fretboard/FretboardTests.cs"/>
     <Compile Remove="Microservices/MonadicServiceTests.cs"/>
-    <Compile Remove="Chords/IconicChordRegistryYamlTests.cs"/>
     <Compile Remove="Atonal/Grothendieck/MarkovWalkerTests.cs"/>
     <Compile Remove="Tonal/ModalFamilyTests.cs"/>
     <Compile Remove="Tonal/ModalFamilyScaleModeTests.cs"/>
-    <Compile Remove="Chords/IconicChordTests.cs"/>
     <Compile Remove="Examples/SimpleBSPDemoTests.cs"/>
     <Compile Remove="Config/ModesConfigTests.cs"/>
     <Compile Remove="Config/ScalesConfigTests.cs"/>
