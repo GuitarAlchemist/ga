@@ -128,11 +128,12 @@ public sealed class IntervalClassVectorSkill(
 
         if (ChordTypePattern.Match(msg) is { Success: true } typeMatch)
         {
-            var quality = ChordTypeQuality(
+            var suffix = ChordTypeSuffix(
                 typeMatch.Groups["quality"].Value.ToLowerInvariant(),
                 typeMatch.Groups["seventh"].Success);
-            var pcs = ChordVocabulary.GetFormula(quality).Intervals.Select(i => i % 12).Distinct().ToList();
             var label = Regex.Replace(typeMatch.Groups["type"].Value.ToLowerInvariant(), @"\s+", " ");
+            if (!ChordVocabulary.TryGetPitchClassesStrict("C" + suffix, out var pcs))
+                return Task.FromResult(CannotParse(label));
             return Task.FromResult(AnswerPcSet(label, pcs,
                 $"Shown on C: the interval-class vector does not depend on the root, so every {label[(label.IndexOf(' ') + 1)..]} has this one."));
         }
@@ -155,17 +156,23 @@ public sealed class IntervalClassVectorSkill(
         return Task.FromResult(CannotHandle());
     }
 
-    // Canonical ChordVocabulary quality for a chord type named in words.
-    private static string ChordTypeQuality(string quality, bool seventh) => (quality.Replace('-', ' '), seventh) switch
+    // Chord-symbol suffix for a chord type named in words; the symbol is read by the same parser
+    // as chord symbols, so a seventh is never dropped ("a suspended seventh chord" is 7sus4).
+    private static string ChordTypeSuffix(string quality, bool seventh) => (quality.Replace('-', ' '), seventh) switch
     {
-        ("major", true)           => "major 7",
-        ("minor", true)           => "minor 7",
-        ("diminished", true)      => "diminished 7",
-        ("augmented", true)       => "dominant 7 sharp 5",
-        ("dominant", _)           => "dominant 7",
-        ("half diminished", _)    => "half-diminished",
-        ("suspended", _)          => "sus4",
-        var (triad, _)            => triad,
+        ("major", false)          => "",
+        ("minor", false)          => "m",
+        ("diminished", false)     => "dim",
+        ("augmented", false)      => "aug",
+        ("suspended", false)      => "sus4",
+        ("major", true)           => "maj7",
+        ("minor", true)           => "m7",
+        ("diminished", true)      => "dim7",
+        ("augmented", true)       => "7#5",
+        ("suspended", true)       => "7sus4",
+        ("dominant", _)           => "7",
+        ("half diminished", _)    => "m7b5",
+        _                         => "?",
     };
 
     private AgentResponse AnswerPcSet(string label, IReadOnlyList<int> pcs, string? note = null)

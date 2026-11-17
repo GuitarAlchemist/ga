@@ -19,6 +19,9 @@ public class IntervalClassVectorSkillTests
     [TestCase("interval-class vector of a minor triad", "a minor triad", "{0, 3, 7}", "<0 0 1 1 1 0>")]
     [TestCase("what is the ICV of a dominant seventh chord", "a dominant seventh chord", "{0, 4, 7, 10}", "<0 1 2 1 1 1>")]
     [TestCase("ICV of a diminished seventh chord", "a diminished seventh chord", "{0, 3, 6, 9}", "<0 0 4 0 0 2>")]
+    [TestCase("ICV of a suspended chord", "a suspended chord", "{0, 5, 7}", "<0 1 0 0 2 0>")]
+    [TestCase("ICV of a suspended seventh chord", "a suspended seventh chord", "{0, 5, 7, 10}", "<0 2 1 0 3 0>")]
+    [TestCase("ICV of a half-diminished seventh chord", "a half-diminished seventh chord", "{0, 3, 6, 10}", "<0 1 2 1 1 1>")]
     public async Task ChordQualityWithArticle_IsReadAsAChordType(string prompt, string label, string pcs, string icv)
     {
         var response = await Skill.ExecuteAsync(prompt);

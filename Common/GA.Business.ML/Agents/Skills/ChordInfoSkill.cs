@@ -112,14 +112,15 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
         var parsed = TryParse(message);
-        if (parsed is null && ReadQuestionNotes(message) is { } questionNotes)
+        if (parsed is null && ReadQuestionNotes(message) is { } question)
         {
-            // A full note set names one chord; a partial one ("which chords contain both E and
-            // G#?") asks for every common chord that holds it (issue #888).
-            parsed = TryIdentifyNoteSet(questionNotes);
-            if (parsed is null && questionNotes.Count >= 2)
+            // A singular question with a full note set names one chord ("what chord is C E G?").
+            // A plural question ("which chords contain C E G?") or a partial note set ("which
+            // chord has both E and G#?") asks for every common chord that holds the notes (issue #888).
+            parsed = question.Plural ? null : TryIdentifyNoteSet(question.Notes);
+            if (parsed is null && question.Notes.Count >= 2)
             {
-                return Task.FromResult(ListChordsContaining(questionNotes));
+                return Task.FromResult(ListChordsContaining(question.Notes));
             }
         }
 
@@ -181,10 +182,11 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
 
     /// <summary>
     /// The notes named after the verb of a note-set question ("which chords contain both E and
-    /// G#?" → E, G#), or null when the message is not one. A lowercase "a" among capitalised note
-    /// names is the article ("a C and an E"), not the note A.
+    /// G#?" → E, G#) and whether it asks about chords in the plural, or null when the message is
+    /// not one. A lowercase "a" among capitalised note names is the article ("a C and an E"), not
+    /// the note A.
     /// </summary>
-    private static IReadOnlyList<string>? ReadQuestionNotes(string message)
+    private static (IReadOnlyList<string> Notes, bool Plural)? ReadQuestionNotes(string message)
     {
         var question = NoteSetQuestionRegex().Match(message);
         if (!question.Success)
@@ -198,12 +200,14 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
             .ToList();
         var hasCapitalisedNote = tokens.Any(token => char.IsUpper(token[0]));
 
-        return tokens
+        var notes = tokens
             .Where(token => !(hasCapitalisedNote && token == "a"))
             .Select(ChordVocabulary.NormalizeRoot)
             .Where(ChordVocabulary.PitchClasses.ContainsKey)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+        return (notes, question.Groups["plural"].Success);
     }
 
     private static (string Root, string Quality)? TryIdentifyNoteSet(IReadOnlyList<string> notes)
@@ -287,7 +291,9 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
             foreach (var rootPc in rootOrder)
             {
                 var chordPcs = formula.Intervals.Select(interval => (rootPc + interval) % 12).ToHashSet();
-                if (!wanted.IsSubsetOf(chordPcs) || !seen.Add(string.Join(",", chordPcs.Order())))
+                // Same quality and same notes is the same chord under another root (Caug = Eaug);
+                // Fsus2 and Csus4 share notes but are different chords, so both are listed.
+                if (!wanted.IsSubsetOf(chordPcs) || !seen.Add($"{quality}:{string.Join(",", chordPcs.Order())}"))
                 {
                     continue;
                 }
@@ -418,7 +424,7 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
     // Issue #888: also the plural and qualified forms ("which common chords contain both E and
     // G#?", "what chords have a C and an E"). "Are" stays out: "what chords are in C major" asks
     // for a key's chords, not for the chords holding some notes.
-    [GeneratedRegex(@"\b(?:which|what)\s+(?:[a-z]+\s+){0,2}?chords?\s+(?:is|contains?|containing|has|have|uses?|includes?)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"\b(?:which|what)\s+(?:[a-z]+\s+){0,2}?chord(?<plural>s)?\s+(?:is|contains?|containing|has|have|uses?|includes?)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex NoteSetQuestionRegex();
 
     [GeneratedRegex(@"(?<![A-Za-z])(?<note>[A-Ga-g][#b]?)(?![A-Za-z])", RegexOptions.CultureInvariant)]

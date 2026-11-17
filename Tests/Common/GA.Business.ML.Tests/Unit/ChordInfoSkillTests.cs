@@ -60,4 +60,41 @@ public class ChordInfoSkillTests
 
         Assert.That(response.Result, Is.EqualTo(expected));
     }
+
+    // A plural question asks for every chord holding the notes, even when they also spell one chord.
+    [Test]
+    public async Task PluralQuestion_ListsEveryChordHoldingAFullNoteSet()
+    {
+        var response = await Skill.ExecuteAsync("Which common chords contain C E G?");
+
+        Assert.Multiple(() =>
+        {
+            foreach (var chord in new[] { "**C**", "**C7**", "**Cmaj7**", "**Am7**" })
+            {
+                Assert.That(response.Result, Does.Contain(chord));
+            }
+        });
+    }
+
+    // Fsus2 and Csus4 share the notes C, F and G, but they are different chords; only the
+    // symmetric chords (augmented, diminished seventh) are one chord under several roots.
+    [Test]
+    public async Task SuspendedChordsSharingNotes_AreBothListed()
+    {
+        var response = await Skill.ExecuteAsync("Which chords contain C and F?");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Result, Does.Contain("**Fsus2**"));
+            Assert.That(response.Result, Does.Contain("**Csus4**"));
+        });
+    }
+
+    [Test]
+    public async Task SymmetricChords_AreListedOnce()
+    {
+        var response = await Skill.ExecuteAsync("Which chords contain both E and G#?");
+
+        Assert.That(response.Result.Split("aug**").Length - 1, Is.EqualTo(1), response.Result);
+    }
 }
