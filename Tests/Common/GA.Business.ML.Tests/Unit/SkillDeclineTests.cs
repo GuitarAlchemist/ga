@@ -94,6 +94,21 @@ public sealed class SkillDeclineTests
         });
     }
 
+    // A key is major or minor, so a seventh-chord symbol after "in" still names a chord
+    // (Codex review on #911).
+    [Test]
+    public async Task ChordSubstitution_SeventhChordAfterIn_KeepsComparison()
+    {
+        var response = await new ChordSubstitutionSkill(new GrothendieckService(), NullLogger<ChordSubstitutionSkill>.Instance)
+            .ExecuteAsync("Are the notes in G7 and Db7 related by a tritone substitution?");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Declined, Is.False, response.Result);
+            Assert.That(response.Result, Does.StartWith("**G7** → **Db7** relationship analysis"));
+        });
+    }
+
     [Test]
     public async Task ChordInfo_MessageWithoutChordName_Declines()
     {

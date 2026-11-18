@@ -73,12 +73,16 @@ public sealed class ChordSubstitutionSkill(
             RegexOptions.Compiled);
 
     // A root named after "in" or "key of" is the key of the question ("in C major", "in the key
-    // of G"), not a chord to substitute.
+    // of G"), not a chord to substitute. A key is major or minor, so a symbol with any other
+    // quality ("in G7") still names a chord.
     private static readonly Regex KeyContextBefore =
         new(@"\b(?:in|key\s+of)\s+$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    private static bool IsKeyContext(string message, Match m) =>
+        m.Groups["qual"].Value is "" or "m" or "min" && KeyContextBefore.IsMatch(message.AsSpan(0, m.Index));
+
     private static List<Match> ChordMatches(string message) =>
-        [.. ExtendedChordSymbol.Matches(message).Where(m => !KeyContextBefore.IsMatch(message.AsSpan(0, m.Index)))];
+        [.. ExtendedChordSymbol.Matches(message).Where(m => !IsKeyContext(message, m))];
 
     public bool CanHandle(string message) =>
         ExtendedChordSymbol.IsMatch(message) &&
