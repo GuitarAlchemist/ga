@@ -69,6 +69,18 @@ public class SkillRoutabilityTests
             "or add them to UnroutableSkills with a reason.");
     }
 
+    // Open questions ("Why does a minor chord sound sad?") need a routing target of their own,
+    // or the nearest skill claims them and answers a different question.
+    [Test]
+    public void OpenQuestionIntent_IsScoredByTheSemanticRouter()
+    {
+        using var scope = _factory!.Services.CreateScope();
+        var intent = scope.ServiceProvider.GetServices<IIntent>()
+            .SingleOrDefault(i => i.Id == OpenQuestionIntent.IntentId);
+
+        Assert.That(intent?.ExamplePrompts, Is.Not.Null.And.Not.Empty);
+    }
+
     [Test]
     public void EverySkillMdWithTriggers_IsServedByARoutedWrapper()
     {

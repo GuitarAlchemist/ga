@@ -166,6 +166,10 @@ public static class ChatbotOrchestrationExtensions
         services.AddScoped<VoicingIntent>();
         services.AddScoped<IIntent>(sp => sp.GetRequiredService<VoicingIntent>());
 
+        // Open questions ("Why does a minor chord sound sad?") route here instead of to the
+        // nearest skill; the intent declines, so the LLM agent path answers with history.
+        services.AddSingleton<IIntent, OpenQuestionIntent>();
+
         // Orchestrators — Scoped because they transitively depend on
         // SemanticRouter (Scoped) and SpectralRetrievalService (Scoped).
         services.AddScoped<SpectralRagOrchestrator>();
