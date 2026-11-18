@@ -395,7 +395,8 @@ public class ProductionOrchestrator(
             return blocked;
         }
 
-        var intentResult = await pick.Intent.ExecuteAsync(turn.Message, ct);
+        // The prior turns let an LLM-backed skill resolve a follow-up ("Now transpose it to F.").
+        var intentResult = await pick.Intent.ExecuteAsync(turn.Message, turn.AgentHistory, ct);
 
         // Map IntentResult back to AgentResponse for hook compatibility.
         // PR #185 (2026-05-12): forward Data so structured payloads

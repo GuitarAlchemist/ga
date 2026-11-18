@@ -2,6 +2,7 @@ namespace GaApi.Tests.Services;
 
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Services;
+using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Extensions;
 using Microsoft.AspNetCore.TestHost;
@@ -70,6 +71,64 @@ public class DeclinedIntentFallThroughTests
             Assert.That(chat.Prompts.Any(prompt => prompt.Contains(PriorTurn, StringComparison.Ordinal)), Is.True,
                 "the fall-through agent call must carry the prior turn");
         });
+    }
+
+    // A dispatched intent gets the turns before the message, so a follow-up such as
+    // "Now transpose it to F." can resolve "it".
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task DispatchedIntent_ReceivesConversationHistory(bool streaming)
+    {
+        var intent = new HistoryRecordingIntent();
+        using var factory = new TestWebApplicationFactory().WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("Ollama:Endpoint", "http://127.0.0.1:9");
+            builder.UseSetting("Ollama:BaseUrl", "http://127.0.0.1:9");
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<IIntent>();
+                services.AddSingleton<IIntent>(intent);
+                var embeddings = new ConstantEmbeddingGenerator();
+                services.RemoveAll<IEmbeddingGenerator<string, Embedding<float>>>();
+                services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(embeddings);
+                services.RemoveAll<IEmbeddingGeneratorFactory>();
+                services.AddSingleton<IEmbeddingGeneratorFactory>(new ConstantEmbeddingGeneratorFactory(embeddings));
+                services.RemoveAll<IChatClient>();
+                services.AddSingleton<IChatClient>(new RecordingChatClient());
+            });
+        });
+        using var scope = factory.Services.CreateScope();
+        var orchestrator = scope.ServiceProvider.GetRequiredService<ProductionOrchestrator>();
+        var request = new ChatRequest(
+            "Describe his playing style.",
+            History: [new ConversationTurn("user", PriorTurn, DateTimeOffset.UnixEpoch)]);
+
+        if (streaming)
+            await orchestrator.AnswerStreamingAsync(request, _ => Task.CompletedTask);
+        else
+            await orchestrator.AnswerAsync(request);
+
+        Assert.That(intent.ReceivedHistory, Is.EqualTo(new[] { new ChatHistoryTurn("user", PriorTurn) }));
+    }
+
+    private sealed class HistoryRecordingIntent : IIntent
+    {
+        public IReadOnlyList<ChatHistoryTurn>? ReceivedHistory { get; private set; }
+        public string Id => "skill.recording";
+        public string Description => "Records the history it receives";
+        public IReadOnlyList<string> ExamplePrompts => ["Describe his playing style."];
+
+        public Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default) =>
+            ExecuteAsync(query, [], cancellationToken);
+
+        public Task<IntentResult> ExecuteAsync(
+            string query,
+            IReadOnlyList<ChatHistoryTurn> history,
+            CancellationToken cancellationToken = default)
+        {
+            ReceivedHistory = history;
+            return Task.FromResult(new IntentResult("ok"));
+        }
     }
 
     private sealed class FixedIntent(bool declined) : IIntent

@@ -9,7 +9,7 @@ namespace GA.Business.ML.Agents;
 /// Mirrors the Claude Code skill pattern at the top of the processing chain:
 /// <list type="bullet">
 ///   <item><see cref="CanHandle"/> declares when the skill applies (no side effects).</item>
-///   <item><see cref="ExecuteAsync"/> computes the answer from domain logic, then optionally
+///   <item><see cref="ExecuteAsync(string, CancellationToken)"/> computes the answer from domain logic, then optionally
 ///     calls the LLM only for explanation — never for computation.</item>
 /// </list>
 /// Skills are checked in registration order; first match wins.
@@ -44,4 +44,15 @@ public interface IOrchestratorSkill
     /// Executes the skill: compute with domain logic, optionally explain via LLM.
     /// </summary>
     Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes the skill with the conversation turns that precede <paramref name="message"/>,
+    /// oldest first. LLM-backed skills pass them to the model so a follow-up such as "Now
+    /// transpose it to F." resolves "it"; deterministic skills ignore them (the default).
+    /// </summary>
+    Task<AgentResponse> ExecuteAsync(
+        string message,
+        IReadOnlyList<ChatHistoryTurn> history,
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync(message, cancellationToken);
 }

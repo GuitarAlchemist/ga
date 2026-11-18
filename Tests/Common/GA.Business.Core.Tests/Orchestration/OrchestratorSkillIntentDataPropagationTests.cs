@@ -16,7 +16,7 @@ using GA.Business.ML.Agents.Intents;
 /// <para>
 /// <b>Production bug fix lock-in (2026-05-12).</b> Discovered while
 /// designing the live-orchestrator e2e: the route through
-/// <see cref="OrchestratorSkillIntent.ExecuteAsync"/> dropped
+/// <see cref="OrchestratorSkillIntent.ExecuteAsync(string, CancellationToken)"/> dropped
 /// <see cref="AgentResponse.Data"/>, so MemoryWriteHook's
 /// <c>ctx.Response?.Data is MemoryWriteRequest</c> guard never matched
 /// in real chats. The component-level test in PR #180 bypassed the

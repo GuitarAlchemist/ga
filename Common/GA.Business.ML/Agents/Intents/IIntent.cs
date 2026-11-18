@@ -42,6 +42,15 @@ public interface IIntent
     /// errors (e.g. unparseable input) so the chatbot pipeline can degrade
     /// gracefully.</summary>
     Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default);
+
+    /// <summary>Run the intent with the conversation turns that precede
+    /// <paramref name="query"/>, oldest first, so a follow-up such as "Now transpose it
+    /// to F." can resolve what "it" refers to. Default: ignore the history.</summary>
+    Task<IntentResult> ExecuteAsync(
+        string query,
+        IReadOnlyList<ChatHistoryTurn> history,
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync(query, cancellationToken);
 }
 
 /// <summary>
@@ -69,7 +78,7 @@ public sealed record IntentGroundingEvidence(
     string? QueryType = null,
     IReadOnlyDictionary<string, string>? Facts = null);
 
-/// <summary>Result returned from <see cref="IIntent.ExecuteAsync"/>.</summary>
+/// <summary>Result returned from <see cref="IIntent.ExecuteAsync(string, CancellationToken)"/>.</summary>
 /// <param name="Answer">Natural-language answer.</param>
 /// <param name="Confidence">0.0 to 1.0. The router's match score is combined
 /// with this via <c>min</c> when surfacing the final routing confidence.</param>

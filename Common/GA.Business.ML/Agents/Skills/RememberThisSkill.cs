@@ -32,7 +32,7 @@ using Microsoft.Extensions.Logging;
 /// </para>
 /// <para>
 /// <b>Session attribution:</b> the skill does not (and cannot) know the
-/// caller's SessionId — <see cref="IOrchestratorSkill.ExecuteAsync"/> is
+/// caller's SessionId — <see cref="IOrchestratorSkill.ExecuteAsync(string, CancellationToken)"/> is
 /// session-agnostic by interface design. The skill emits the request,
 /// the hook owns the write with the correct session. If <c>MemoryWriteHook</c>
 /// is not registered in DI, the request is harmlessly ignored and the

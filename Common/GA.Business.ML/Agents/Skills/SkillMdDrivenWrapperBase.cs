@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 /// wrapper owns routing metadata (<see cref="Name"/>,
 /// <see cref="Description"/>, <see cref="ExamplePrompts"/>) so the
 /// <c>SemanticIntentRouter</c> can dispatch via the <c>IIntent</c>
-/// registry, then delegates <see cref="ExecuteAsync"/> to a lazily-
+/// registry, then delegates <see cref="ExecuteAsync(string, CancellationToken)"/> to a lazily-
 /// constructed <see cref="SkillMdDrivenSkill"/> built from
 /// <c>skills/{SkillFolderName}/SKILL.md</c>.
 /// </summary>
@@ -101,13 +101,20 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
             : [$"Source: skills/{SkillFolderName}/SKILL.md", $"Closure: {ClosureName} (via ga_dsl_eval)"];
 
     /// <inheritdoc />
-    public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
+    public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(message, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<AgentResponse> ExecuteAsync(
+        string message,
+        IReadOnlyList<ChatHistoryTurn> history,
+        CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("{Skill}: delegating to SkillMdDrivenSkill (LLM + ga_dsl_eval)", GetType().Name);
 
         try
         {
-            var inner = await _inner.Value.ExecuteAsync(message, cancellationToken).ConfigureAwait(false);
+            var inner = await _inner.Value.ExecuteAsync(message, history, cancellationToken).ConfigureAwait(false);
 
             // The inner skill records every tool call as a "tools.invoked: <name>"
             // entry in Evidence. Path B should always go through ga_dsl_eval —

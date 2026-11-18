@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 /// <remarks>
 /// <para>
 /// <b>Why a hook rather than skill-side writes:</b>
-/// <see cref="IOrchestratorSkill.ExecuteAsync"/> is session-agnostic — the
+/// <see cref="IOrchestratorSkill.ExecuteAsync(string, CancellationToken)"/> is session-agnostic — the
 /// skill cannot see <see cref="ChatHookContext.SessionId"/>. Routing every
 /// durable-write through this hook keeps session-scoping enforced
 /// centrally: the storage write happens in exactly one place, with one
