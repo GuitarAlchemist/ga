@@ -73,4 +73,34 @@ public sealed class ModesSkillTests
 
         Assert.That(response.Result, Does.Contain($"(formula {formula})"));
     }
+
+    // A follow-up that names no mode and does not ask about modes ("Which chord does it fit
+    // best?" after "What is the Mixolydian mode?") is not a modes request: the skill declines so
+    // an agent with the conversation answers, instead of listing the major-scale modes.
+    [TestCase("Which chord does it fit best?")]
+    [TestCase("How many flats does it have?")]
+    public async Task MessageNamingNoModeAndNotAboutModes_Declines(string question)
+    {
+        var response = await MakeSkill().ExecuteAsync(question);
+
+        Assert.That(response.Declined, Is.True, response.Result);
+    }
+
+    [TestCase("What are the modes of the major scale")]
+    [TestCase("List the diatonic modes")]
+    public async Task ModesQuestionWithoutAModeName_StillListsTheMajorScaleModes(string question)
+    {
+        var response = await MakeSkill().ExecuteAsync(question);
+
+        Assert.That(response.Declined, Is.False);
+        Assert.That(response.Result, Does.Contain("Mixolydian"));
+    }
+
+    [Test]
+    public async Task EveryExamplePrompt_IsAnswered()
+    {
+        var skill = MakeSkill();
+        foreach (var prompt in skill.ExamplePrompts)
+            Assert.That((await skill.ExecuteAsync(prompt)).Declined, Is.False, prompt);
+    }
 }

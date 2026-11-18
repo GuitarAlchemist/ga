@@ -86,7 +86,68 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
     private static readonly string[] FlatNames =
         ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 
-    public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
+    public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Answer(message));
+
+    /// <summary>
+    /// Answers an elliptical follow-up ("And a C shape?", "What about capo 4?") by taking the
+    /// argument it leaves out from the previous capo question in <paramref name="history"/>.
+    /// A message that is neither a capo question nor such a follow-up still declines.
+    /// </summary>
+    public Task<AgentResponse> ExecuteAsync(
+        string message,
+        IReadOnlyList<ChatHistoryTurn> history,
+        CancellationToken cancellationToken = default)
+    {
+        var direct = Answer(message);
+        if (!direct.Declined) return Task.FromResult(direct);
+
+        return Task.FromResult(
+            LastCapoQuestion(history) is { } previous && Complete(message ?? string.Empty, previous) is { } completed
+                ? Answer(completed)
+                : direct);
+    }
+
+    // The latest complete capo question of the conversation. Earlier follow-ups are resolved in
+    // order, so "What about capo 4?" then "And a C shape?" asks about a C shape on fret 4.
+    private string? LastCapoQuestion(IReadOnlyList<ChatHistoryTurn> history)
+    {
+        string? question = null;
+        foreach (var turn in history)
+        {
+            if (!string.Equals(turn.Role, "user", StringComparison.OrdinalIgnoreCase)) continue;
+            if (!Answer(turn.Content).Declined) question = turn.Content;
+            else if (question is not null && Complete(turn.Content, question) is { } completed) question = completed;
+        }
+
+        return question;
+    }
+
+    // Rewrites a follow-up that names only a shape or only a capo fret as a complete question,
+    // taking the other argument from the previous question. Null when it names neither or both.
+    private static string? Complete(string followUp, string previous)
+    {
+        var fret = FretOnly.Match(followUp);
+        var shape = ShapeOnly.Match(followUp);
+        if (shape.Success == fret.Success) return null;
+
+        if (shape.Success)
+        {
+            var previousFret = FretOnly.Match(previous);
+            return previousFret.Success
+                ? $"{shape.Groups["shape"].Value} shape with capo {previousFret.Groups["n"].Value}"
+                : null;
+        }
+
+        return FretOnly.Replace(previous, $"capo {fret.Groups["n"].Value}", 1);
+    }
+
+    private static readonly Regex FretOnly = new(CapoFret("n"), RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex ShapeOnly =
+        new(@"\b(?<shape>[A-Ga-g][b#♭♯]?m?)\s+shape\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private AgentResponse Answer(string? message)
     {
         var msg = message ?? string.Empty;
 
@@ -95,7 +156,7 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
         {
             var shapeRaw = (mShape.Groups["shape"].Success ? mShape.Groups["shape"].Value : mShape.Groups["shape2"].Value).Trim();
             var nRaw = mShape.Groups["n"].Success ? mShape.Groups["n"].Value : mShape.Groups["n2"].Value;
-            return Task.FromResult(AnswerShapeToSounding(shapeRaw, ParseFret(nRaw), ShapeSpelling(shapeRaw, msg)));
+            return AnswerShapeToSounding(shapeRaw, ParseFret(nRaw), ShapeSpelling(shapeRaw, msg));
         }
         if (SoundingToShape.Match(msg) is { Success: true } mSound)
         {
@@ -105,10 +166,10 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
                         : mSound.Groups["qual2"].Success ? mSound.Groups["qual2"].Value
                         : string.Empty;
             var isMinor = qualRaw.StartsWith("min", StringComparison.OrdinalIgnoreCase);
-            return Task.FromResult(AnswerSoundingToShape(NormalizeKey(keyRaw), ParseFret(nRaw), isMinor, KeySpelling(keyRaw)));
+            return AnswerSoundingToShape(NormalizeKey(keyRaw), ParseFret(nRaw), isMinor, KeySpelling(keyRaw));
         }
 
-        return Task.FromResult(CannotHandle());
+        return CannotHandle();
     }
 
     private AgentResponse AnswerSoundingToShape(string soundingKey, int capoFret, bool isMinor, Spelling spelling)
