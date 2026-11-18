@@ -79,6 +79,9 @@ public sealed class SkillDeclineTests
     [TestCase("Alternative chord for F major in C", "**F**")]
     [TestCase("Suggest substitutions for G7 in a ii-V-I", "**G7**")]
     [TestCase("Tritone substitution for G7", "**G7**")]
+    [TestCase("Substitutes for G7", "**G7**")]
+    [TestCase("What can I play instead of Dm7?", "**Dm7**")]
+    [TestCase("What can I play instead of Dm7 in C major?", "**Dm7**")]
     public async Task ChordSubstitution_ChordBesideKeyContext_Answers(string message, string source)
     {
         var response = await new ChordSubstitutionSkill(new GrothendieckService(), NullLogger<ChordSubstitutionSkill>.Instance)
