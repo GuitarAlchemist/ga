@@ -158,14 +158,16 @@ public class ProductionOrchestrator(
     /// <param name="req">The chat request.</param>
     /// <param name="onToken">Callback invoked for each token of the answer.</param>
     /// <param name="ct">Cancellation token.</param>
+    /// <param name="onRouting">Receives the routing decision before the answer's first token.</param>
     /// <returns>The complete <see cref="ChatResponse"/> once the stream is finished.</returns>
     public Task<ChatResponse> AnswerStreamingAsync(
         ChatRequest req,
         Func<string, Task> onToken,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null)
     {
         ArgumentNullException.ThrowIfNull(onToken);
-        return RunCascadeAsync(req, onToken, ct);
+        return RunCascadeAsync(req, new AnswerSink(onToken, onRouting), ct);
     }
 
     /// <remarks>
@@ -178,12 +180,12 @@ public class ProductionOrchestrator(
     /// whole suite still green. See <c>ProductionChatOrchestratorClientTests</c>.
     /// </remarks>
     public virtual Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default) =>
-        RunCascadeAsync(req, onToken: null, ct);
+        RunCascadeAsync(req, sink: null, ct);
 
     /// <summary>
     /// One request's pass through the cascade: the hook-processed message, the identifiers
     /// every hook context carries, the agent history, and how the answer is emitted
-    /// (<see cref="OnToken"/> is null on the non-streaming path).
+    /// (<see cref="Sink"/> is null on the non-streaming path).
     /// </summary>
     private sealed record CascadeTurn(
         ChatRequest Request,
@@ -191,9 +193,26 @@ public class ProductionOrchestrator(
         string SessionId,
         Guid CorrelationId,
         IReadOnlyList<ChatHistoryTurn> AgentHistory,
-        Func<string, Task>? OnToken,
+        AnswerSink? Sink,
         Activity? Activity,
         Stopwatch Stopwatch);
+
+    /// <summary>Where a streamed answer goes: its routing first, then its tokens.</summary>
+    private sealed record AnswerSink(
+        Func<string, Task> OnToken,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? OnRouting)
+    {
+        public Task RouteAsync(AgentRoutingMetadata? routing, GroundingMetadata? grounding) =>
+            routing is null || OnRouting is null ? Task.CompletedTask : OnRouting(routing, grounding);
+
+        /// <summary>Reports the response's routing, then emits its finished text word by word.</summary>
+        public async Task EmitAsync(ChatResponse response)
+        {
+            await RouteAsync(response.Routing, response.Grounding);
+            foreach (var word in response.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                await OnToken(word + " ");
+        }
+    }
 
     /// <summary>
     /// The single routing cascade behind both entry points. Order: request hooks →
@@ -204,7 +223,7 @@ public class ProductionOrchestrator(
     /// </summary>
     private async Task<ChatResponse> RunCascadeAsync(
         ChatRequest req,
-        Func<string, Task>? onToken,
+        AnswerSink? sink,
         CancellationToken ct)
     {
         using var activity = ChatbotActivitySource.StartActivity(ChatbotActivitySource.OrchestratorAnswer, req.Message);
@@ -246,12 +265,12 @@ public class ProductionOrchestrator(
                 NaturalLanguageAnswer: hookResult.BlockedResponse?.Result ?? "Request blocked.",
                 Candidates: [],
                 Routing: new AgentRoutingMetadata("hook", 1f, "hook-blocked"));
-            await EmitWordsAsync(onToken, blocked.NaturalLanguageAnswer);
+            if (sink is not null) await sink.EmitAsync(blocked);
             return blocked;
         }
 
         var turn = new CascadeTurn(
-            req, hookCtx.CurrentMessage, sessionId, correlationId, agentHistory, onToken, activity, sw);
+            req, hookCtx.CurrentMessage, sessionId, correlationId, agentHistory, sink, activity, sw);
 
         // ── Deterministic voicing guard runs BEFORE semantic intent routing ──
         // The semantic embedding router can mis-rank an explicit voicing query
@@ -372,7 +391,7 @@ public class ProductionOrchestrator(
                 NaturalLanguageAnswer: r.BlockedResponse?.Result ?? "Intent blocked.",
                 Candidates: [],
                 Routing: new AgentRoutingMetadata($"hook.{pick.Intent.Id}", 1f, "hook-blocked"));
-            await EmitWordsAsync(turn.OnToken, blocked.NaturalLanguageAnswer);
+            if (turn.Sink is not null) await turn.Sink.EmitAsync(blocked);
             return blocked;
         }
 
@@ -435,8 +454,18 @@ public class ProductionOrchestrator(
         // Parallelise — both calls consume req.Message with no mutual dependency
         var filtersTask = queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
         var routingTask = router.RouteAsync(req.Message, ct);
-        await Task.WhenAll(filtersTask, routingTask);
-        var filters = filtersTask.Result;
+
+        // The filters only steer the tab branches, which need tab notation in the
+        // message. A streamed answer without it starts as soon as routing is known:
+        // the filter call (an LLM round trip, with retries) used to hold back the first
+        // token. Its result is still attached below when it is ready by then.
+        var hasTabContent  = HasTabContent(req.Message);
+        var waitForFilters = hasTabContent || turn.Sink is null;
+        if (waitForFilters)
+            await Task.WhenAll(filtersTask, routingTask);
+        else
+            await routingTask;
+        var filters = waitForFilters ? filtersTask.Result : null;
         var routing = routingTask.Result;
 
         var routingMetadata = new AgentRoutingMetadata(
@@ -460,7 +489,6 @@ public class ProductionOrchestrator(
         // theory prose ("Explain voice leading in jazz") as AnalyzeTab. Never
         // enter the tab branch when there is literally no tab notation in the
         // message — falls through to the agent path.
-        var hasTabContent      = HasTabContent(req.Message);
         var shouldOptimizePath = filters?.Intent == "OptimizePath" && hasTabContent;
         var shouldAnalyzeTab   = (routing.SelectedAgent.AgentId == AgentIds.Tab ||
                                   filters?.Intent == "AnalyzeTab")
@@ -483,13 +511,14 @@ public class ProductionOrchestrator(
             turn.Activity?.SetTag("orchestration.branch", $"agent.{selectedAgent.AgentId}");
 
             string answer;
-            if (turn.OnToken is { } onToken)
+            if (turn.Sink is { } sink)
             {
+                await sink.RouteAsync(routingMetadata, grounding: null);
                 var fullText = new StringBuilder();
                 await foreach (var token in selectedAgent.ProcessStreamingAsync(
                     turn.Message, conversationHistory: turn.AgentHistory, cancellationToken: ct))
                 {
-                    await onToken(token);
+                    await sink.OnToken(token);
                     fullText.Append(token);
                 }
 
@@ -532,6 +561,9 @@ public class ProductionOrchestrator(
             var response = await tabOrchestrator.AnswerAsync(req, ct);
             result = response with { Routing = routingMetadata, QueryFilters = filters };
         }
+
+        if (!waitForFilters && filtersTask.IsCompletedSuccessfully)
+            result = result with { QueryFilters = filtersTask.Result };
 
         return await DeliverAsync(
             turn,
@@ -685,8 +717,8 @@ public class ProductionOrchestrator(
         turn.Stopwatch.Stop();
         turn.Activity?.SetTag("orchestration.elapsed_ms", turn.Stopwatch.ElapsedMilliseconds);
 
-        if (!alreadyEmitted)
-            await EmitWordsAsync(turn.OnToken, response.NaturalLanguageAnswer);
+        if (!alreadyEmitted && turn.Sink is not null)
+            await turn.Sink.EmitAsync(response);
 
         historyStore.AddTurn(turn.SessionId, "assistant", response.NaturalLanguageAnswer);
 
@@ -695,17 +727,6 @@ public class ProductionOrchestrator(
             await hook.OnResponseSent(sentCtx, ct);
 
         return response;
-    }
-
-    /// <summary>
-    /// Emits a finished answer word by word on the streaming path; a no-op on the
-    /// non-streaming path.
-    /// </summary>
-    private static async Task EmitWordsAsync(Func<string, Task>? onToken, string text)
-    {
-        if (onToken is null) return;
-        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-            await onToken(word + " ");
     }
 
     /// <summary>

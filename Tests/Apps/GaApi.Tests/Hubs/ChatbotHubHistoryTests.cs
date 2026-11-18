@@ -7,6 +7,7 @@ using GA.Core.Functional;
 using GaApi.Configuration;
 using GaApi.Hubs;
 using GaApi.Services;
+using GaApi.Tests.Controllers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -67,7 +68,7 @@ public class ChatbotHubHistoryTests
 
     private static ChatbotHub CreateHub(List<ChatIntakeRequest> received, string connectionId, int? busyOnCall = null)
     {
-        var intake = new Mock<IChatIntake>();
+        var intake = new Mock<IChatIntake>().RunsLikeIntake();
         intake.Setup(x => x.IntakeAsync(It.IsAny<ChatIntakeRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ChatIntakeRequest request, CancellationToken _) =>
             {
@@ -93,7 +94,8 @@ public class ChatbotHubHistoryTests
             intake.Object,
             Mock.Of<IAgenticTraceCapture>(),
             new ChatbotSessionOrchestrator(options.Object),
-            Mock.Of<ISemanticKnowledgeSource>())
+            Mock.Of<ISemanticKnowledgeSource>(),
+            Options.Create(new ChatbotHubOptions()))
         {
             Context = context.Object,
             Clients = clients.Object

@@ -33,9 +33,12 @@ public class SpectralRagOrchestrator(
     public async Task<ChatResponse> AnswerStreamingAsync(
         ChatRequest req,
         Func<string, Task> onToken,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null)
     {
         var response = await AnswerAsync(req, ct);
+        if (onRouting is not null && response.Routing is not null)
+            await onRouting(response.Routing, response.Grounding);
         foreach (var word in response.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             await onToken(word + " ");
         return response;

@@ -147,11 +147,13 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
         ExecuteAsync(request, null, cancellationToken);
 
     public Task<ChatResponse> ChatStreamingAsync(
-        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default) =>
-        ExecuteAsync(request, onToken, cancellationToken);
+        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null) =>
+        ExecuteAsync(request, onToken, cancellationToken, onRouting);
 
     private async Task<ChatResponse> ExecuteAsync(
-        ChatRequest request, Func<string, Task>? onToken, CancellationToken cancellationToken)
+        ChatRequest request, Func<string, Task>? onToken, CancellationToken cancellationToken,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null)
     {
         var opts = _options.Value;
         var emittedText = false;
@@ -167,7 +169,7 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
         {
             response = onToken is null
                 ? await _inner.ChatAsync(request, cancellationToken)
-                : await _inner.ChatStreamingAsync(request, EmitAsync, cancellationToken);
+                : await _inner.ChatStreamingAsync(request, EmitAsync, cancellationToken, onRouting);
         }
         catch (Exception exception) when (!cancellationToken.IsCancellationRequested && !emittedText)
         {

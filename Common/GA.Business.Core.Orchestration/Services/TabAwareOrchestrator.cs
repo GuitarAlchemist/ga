@@ -29,19 +29,22 @@ public class TabAwareOrchestrator(
     public async Task<ChatResponse> AnswerStreamingAsync(
         ChatRequest req,
         Func<string, Task> onToken,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null)
     {
         // Delegate to the RAG orchestrator's streaming path when possible;
         // for tablature input we fall back to word-level simulation.
         if (IsTablature(req.Message))
         {
             var tabResponse = await AnalyzeTabAsync(req.Message);
+            if (onRouting is not null && tabResponse.Routing is not null)
+                await onRouting(tabResponse.Routing, tabResponse.Grounding);
             foreach (var word in tabResponse.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 await onToken(word + " ");
             return tabResponse;
         }
 
-        return await ragOrchestrator.AnswerStreamingAsync(req, onToken, ct);
+        return await ragOrchestrator.AnswerStreamingAsync(req, onToken, ct, onRouting);
     }
 
     private bool IsTablature(string message)

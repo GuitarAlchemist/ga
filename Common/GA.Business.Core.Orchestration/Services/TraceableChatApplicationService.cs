@@ -28,11 +28,13 @@ public sealed class TraceableChatApplicationService(
         ExecuteAsync(request, null, cancellationToken);
 
     public Task<ChatResponse> ChatStreamingAsync(
-        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default) =>
-        ExecuteAsync(request, onToken, cancellationToken);
+        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null) =>
+        ExecuteAsync(request, onToken, cancellationToken, onRouting);
 
     private async Task<ChatResponse> ExecuteAsync(
-        ChatRequest request, Func<string, Task>? onToken, CancellationToken cancellationToken)
+        ChatRequest request, Func<string, Task>? onToken, CancellationToken cancellationToken,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null)
     {
         capture.AddStep(
             "chat.request",
@@ -58,7 +60,7 @@ public sealed class TraceableChatApplicationService(
 
         try
         {
-            var response = onToken is null ? await inner.ChatAsync(request, cancellationToken) : await inner.ChatStreamingAsync(request, onToken, cancellationToken);
+            var response = onToken is null ? await inner.ChatAsync(request, cancellationToken) : await inner.ChatStreamingAsync(request, onToken, cancellationToken, onRouting);
 
             step.Complete(
                 finalAttributes: new Dictionary<string, object?>

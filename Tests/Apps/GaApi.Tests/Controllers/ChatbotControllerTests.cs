@@ -26,7 +26,7 @@ public class ChatbotControllerTests
     public void OneTimeSetUp()
     {
         // Transport/status contracts must not depend on a live model or embedding service.
-        var intake = new Mock<IChatIntake>();
+        var intake = new Mock<IChatIntake>().RunsLikeIntake();
         intake.Setup(service => service.IntakeAsync(It.IsAny<ChatIntakeRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<ChatResponse, ChatIntakeError>.Success(new ChatResponse("A major chord has a root, third, and fifth.", [])));
         var provider = new Mock<IChatProviderAvailability>();

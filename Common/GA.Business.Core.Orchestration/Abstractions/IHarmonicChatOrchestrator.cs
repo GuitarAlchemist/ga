@@ -20,9 +20,12 @@ public interface IHarmonicChatOrchestrator
     /// <summary>
     /// Streams the LLM response token-by-token via <paramref name="onToken"/>,
     /// then returns the full <see cref="ChatResponse"/> with routing metadata when done.
+    /// <paramref name="onRouting"/>, when given, receives the routing decision before the
+    /// first token of the answer it routed.
     /// </summary>
     Task<ChatResponse> AnswerStreamingAsync(
         ChatRequest req,
         Func<string, Task> onToken,
-        CancellationToken ct = default);
+        CancellationToken ct = default,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null);
 }
