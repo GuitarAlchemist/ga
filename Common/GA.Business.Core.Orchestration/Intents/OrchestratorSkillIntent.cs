@@ -28,9 +28,17 @@ public sealed class OrchestratorSkillIntent(IOrchestratorSkill skill) : IIntent
     /// predicate, consulted by <see cref="SemanticIntentRouter"/> only when embeddings are unavailable.</summary>
     public bool MatchesWithoutEmbeddings(string query) => skill.CanHandle(query);
 
-    public async Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default)
+    public Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(query, [], cancellationToken);
+
+    /// <summary>Runs the wrapped skill with the prior conversation turns, which an
+    /// LLM-backed skill passes to its model.</summary>
+    public async Task<IntentResult> ExecuteAsync(
+        string query,
+        IReadOnlyList<ChatHistoryTurn> history,
+        CancellationToken cancellationToken = default)
     {
-        var response = await skill.ExecuteAsync(query, cancellationToken);
+        var response = await skill.ExecuteAsync(query, history, cancellationToken);
 
         // SkillMdDrivenWrapperBase emits a sentinel evidence tag of the form
         // "grounding.source: ga.dsl@<closureName>" when the LLM successfully

@@ -8,7 +8,7 @@ namespace GA.Business.ML.Agents.Memory;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This indirection exists because <see cref="IOrchestratorSkill.ExecuteAsync"/>
+/// This indirection exists because <see cref="IOrchestratorSkill.ExecuteAsync(string, CancellationToken)"/>
 /// is intentionally session-agnostic (skills are pure-functional units
 /// that don't know which user is calling). The skill parses intent and
 /// emits a request; the hook owns the actual <see cref="MemoryStore"/>

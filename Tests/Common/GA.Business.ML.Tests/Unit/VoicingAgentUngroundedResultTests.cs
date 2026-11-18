@@ -39,7 +39,19 @@ public class VoicingAgentUngroundedResultTests
         });
     }
 
-    private static VoicingAgent Agent(double[] scores)
+    // A follow-up such as "Which chord does it fit best?" names no chord, mode or tag: the
+    // agent declines so an agent that reads the conversation history answers instead of
+    // replying "I couldn't find a chord name, mode, or style tag in your request".
+    [Test]
+    public async Task NoMusicalEntity_Declines()
+    {
+        var response = await Agent(scores: [0.9], extracted: new StructuredQuery(null, null, null, null, null))
+            .ProcessAsync(new AgentRequest { Query = "Which chord does it fit best?" });
+
+        Assert.That(response.Declined, Is.True, response.Result);
+    }
+
+    private static VoicingAgent Agent(double[] scores, StructuredQuery? extracted = null)
     {
         var results = scores
             .Select((score, i) => new VoicingSearchResult(Document($"v{i}"), score, "query"))
@@ -58,7 +70,7 @@ public class VoicingAgentUngroundedResultTests
 
         var extractor = new Mock<IMusicalQueryExtractor>();
         extractor.Setup(e => e.ExtractAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new StructuredQuery(null, null, null, null, ["finger", "vibrato"]));
+            .ReturnsAsync(extracted ?? new StructuredQuery(null, null, null, null, ["finger", "vibrato"]));
 
         return new VoicingAgent(
             new Mock<IChatClient>(MockBehavior.Strict).Object,

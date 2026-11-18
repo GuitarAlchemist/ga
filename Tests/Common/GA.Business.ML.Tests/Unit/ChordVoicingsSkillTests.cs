@@ -1,13 +1,30 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents.Skills;
+using GA.Business.ML.Search;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 [TestFixture]
 public class ChordVoicingsSkillTests
 {
     private static ChordVoicingsSkill MakeSkill() =>
         new(NullLogger<ChordVoicingsSkill>.Instance, null!, null!, null!);
+
+    // A message with no chord, mode or tag (often a follow-up whose chord is in the history)
+    // is declined so the agent path, which reads the conversation, answers it.
+    [Test]
+    public async Task ExecuteAsync_NoMusicalEntity_Declines()
+    {
+        var extractor = new Mock<IMusicalQueryExtractor>();
+        extractor.Setup(e => e.ExtractAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new StructuredQuery(null, null, null, null, null));
+        var skill = new ChordVoicingsSkill(NullLogger<ChordVoicingsSkill>.Instance, null!, extractor.Object, null!);
+
+        var response = await skill.ExecuteAsync("Which chord does it fit best?");
+
+        Assert.That(response.Declined, Is.True, response.Result);
+    }
 
     [Test]
     public void Metadata_ExposesExamplePrompts()

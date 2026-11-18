@@ -81,19 +81,15 @@ public sealed partial class ChordVoicingsSkill(
                         || structured.ModeName is not null
                         || structured.Tags is { Count: > 0 };
 
+        // Nothing to search by (e.g. a follow-up whose chord is in the history): decline so the
+        // agent path, which reads the conversation, answers.
         if (!hasIntent)
         {
-            return new AgentResponse
-            {
-                AgentId = $"skill.{Name.ToLowerInvariant()}",
-                Result =
-                    "I couldn't find a chord name, mode, or technique tag in your request. " +
-                    "Try naming a chord (e.g. 'Cmaj7'), a mode ('F# Lydian'), or a " +
-                    "technique ('drop2', 'shell', 'rootless').",
-                Confidence = 0.2f,
-                Evidence = [],
-                Assumptions = ["Query contained no musical entities recognizable by the typed parser."],
-            };
+            return AgentResponse.Decline(
+                $"skill.{Name.ToLowerInvariant()}",
+                "I couldn't find a chord name, mode, or technique tag in your request. " +
+                "Try naming a chord (e.g. 'Cmaj7'), a mode ('F# Lydian'), or a " +
+                "technique ('drop2', 'shell', 'rootless').");
         }
 
         var queryVector = encoder.Encode(structured);

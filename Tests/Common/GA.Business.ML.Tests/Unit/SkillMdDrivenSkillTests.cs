@@ -1,5 +1,6 @@
 namespace GA.Business.ML.Tests.Unit;
 
+using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Agents.Skills;
 using GA.Business.ML.Extensions;
@@ -547,5 +548,74 @@ public class SkillMdDrivenSkillTests
             Assert.That(captured!.Tools!, Has.Count.EqualTo(2), "fall back to the full provider set");
             Assert.That(captured.ToolMode, Is.Null, "absent tool → do NOT force; leave ToolMode unset");
         });
+    }
+
+    // ── Conversation history ─────────────────────────────────────────────────
+
+    // A follow-up such as "Now transpose it to F." names nothing itself: the model can
+    // resolve "it" only from the prior turns, so they precede the user message.
+    [Test]
+    public async Task ExecuteAsync_WithHistory_SendsPriorTurnsBetweenSystemPromptAndMessage()
+    {
+        List<ChatMessage>? sent = null;
+        var clientMock = new Mock<IChatClient>();
+        clientMock
+            .Setup(c => c.GetResponseAsync(
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<ChatOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<ChatMessage>, ChatOptions?, CancellationToken>((m, _, _) => sent = [.. m])
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Gm – C – F")));
+
+        IOrchestratorSkill skill = new SkillMdDrivenSkill(
+            MakeSkillMd(),
+            EmptyToolsProvider(),
+            FactoryFor(clientMock.Object),
+            NullLogger<SkillMdDrivenSkill>.Instance);
+
+        await skill.ExecuteAsync(
+            "Now transpose it to F.",
+            [new ChatHistoryTurn("user", "Give me a ii-V-I in C major."), new ChatHistoryTurn("assistant", "Dm – G – C")]);
+
+        Assert.That(sent, Is.Not.Null);
+        Assert.That(
+            sent!.Select(m => (m.Role, m.Role == ChatRole.System ? "<system>" : m.Text)),
+            Is.EqualTo(new[]
+            {
+                (ChatRole.System, "<system>"),
+                (ChatRole.User, "Give me a ii-V-I in C major."),
+                (ChatRole.Assistant, "Dm – G – C"),
+                (ChatRole.User, "Now transpose it to F."),
+            }));
+    }
+
+    // The Path B wrapper (TransposeSkill and peers) forwards the history to its inner skill.
+    [Test]
+    public async Task Wrapper_WithHistory_ForwardsPriorTurnsToTheModel()
+    {
+        List<ChatMessage>? sent = null;
+        var clientMock = new Mock<IChatClient>();
+        clientMock
+            .Setup(c => c.GetResponseAsync(
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<ChatOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<ChatMessage>, ChatOptions?, CancellationToken>((m, _, _) => sent = [.. m])
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Gm – C – F")));
+
+        IOrchestratorSkill skill = new TransposeSkill(
+            EmptyToolsProvider(),
+            FactoryFor(clientMock.Object),
+            NullLoggerFactory.Instance);
+
+        await skill.ExecuteAsync(
+            "Now transpose it to F.",
+            [new ChatHistoryTurn("assistant", "The ii–V–I in C major is Dm – G – C.")]);
+
+        Assert.That(sent, Is.Not.Null);
+        Assert.That(
+            sent!.Any(m => m.Role == ChatRole.Assistant && m.Text == "The ii–V–I in C major is Dm – G – C."),
+            Is.True,
+            "the prior assistant turn reaches the model");
     }
 }

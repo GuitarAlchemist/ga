@@ -119,14 +119,28 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
         };
     }
 
-    public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken ct = default)
+    public Task<AgentResponse> ExecuteAsync(string message, CancellationToken ct = default) =>
+        ExecuteAsync(message, [], ct);
+
+    /// <summary>
+    /// Runs the skill with the prior conversation turns placed between the system prompt and
+    /// <paramref name="message"/>, so the model resolves a follow-up such as "Now transpose
+    /// it to F." against what was said before.
+    /// </summary>
+    public async Task<AgentResponse> ExecuteAsync(
+        string message,
+        IReadOnlyList<ChatHistoryTurn> history,
+        CancellationToken ct = default)
     {
         var tools = await _toolsProvider.GetToolsAsync(ct).ConfigureAwait(false);
         var options = BuildChatOptions(tools);
 
-        ChatMessage[] messages =
+        List<ChatMessage> messages =
         [
             new(ChatRole.System, AssistantScopeRules.AppendTo(_skillMd.Body)),
+            .. history.Select(turn => new ChatMessage(
+                turn.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase) ? ChatRole.Assistant : ChatRole.User,
+                turn.Content)),
             new(ChatRole.User, message),
         ];
 

@@ -73,18 +73,16 @@ public sealed class VoicingAgent(
                         || structured.ModeName is not null
                         || (structured.Tags is { Count: > 0 });
 
+        // No chord, mode or tag to search by — often a follow-up whose referent is in the
+        // conversation ("Which chord does it fit best?"). Decline so the next agent, which
+        // reads the history, answers instead of this help text.
         if (!hasIntent)
         {
-            return new AgentResponse
-            {
-                AgentId = AgentId,
-                Result = "I couldn't find a chord name, mode, or style tag in your request. " +
-                         "Try naming a chord (e.g. 'Cmaj7'), a mode ('F# Lydian'), or a technique " +
-                         "('drop2', 'shell', 'rootless').",
-                Confidence = 0.2f,
-                Evidence = [],
-                Assumptions = ["Query contained no musical entities recognizable by the typed parser."]
-            };
+            return AgentResponse.Decline(
+                AgentId,
+                "I couldn't find a chord name, mode, or style tag in your request. " +
+                "Try naming a chord (e.g. 'Cmaj7'), a mode ('F# Lydian'), or a technique " +
+                "('drop2', 'shell', 'rootless').");
         }
 
         var limit = request.Metadata is { } md
