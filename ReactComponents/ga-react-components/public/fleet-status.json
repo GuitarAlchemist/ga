@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "1ac535361fcbf92c736e49d7f5809c00d39b7f7d",
-    "generatedAt": "2026-11-18T00:29:50.929927+00:00",
+    "commitSha": "3461543952de2af16dab881ec3ae4adb6c648f8b",
+    "generatedAt": "2026-11-18T00:30:57.176286+00:00",
     "repoCount": 5,
-    "totalPRs": 32
+    "totalPRs": 30
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 14,
+      "prCount": 12,
       "prs": [
         {
           "ageDays": 0,
@@ -126,30 +126,6 @@
           "number": 909,
           "title": "chore(apps): delete GA.WebBlazorApp, which cannot build (#864 cleanup, 3/3)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/909"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T23:10:58Z",
-          "failingChecks": 0,
-          "headRef": "chore/864-delete-iconic-test-files",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 908,
-          "title": "test(core): delete the never-compiled iconic-chord test files (#864 cleanup, 2/3)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/908"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T23:09:58Z",
-          "failingChecks": 0,
-          "headRef": "chore/864-delete-chord-naming-demo",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 907,
-          "title": "chore(demos): delete ChordNamingDemo (#864 cleanup, 1/3)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/907"
         },
         {
           "ageDays": 0,
