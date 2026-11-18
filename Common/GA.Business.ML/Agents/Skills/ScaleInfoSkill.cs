@@ -155,9 +155,11 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         if (UnsupportedScalePattern.IsMatch(message))
             return Task.FromResult(Decline("the question names a scale other than major, minor, pentatonic, blues, harmonic or melodic minor"));
 
+        var withTab = TabRequestPattern.IsMatch(message);
+
         var variantMatch = VariantPattern.Match(message);
         if (variantMatch.Success)
-            return Task.FromResult(DescribeVariant(variantMatch));
+            return Task.FromResult(DescribeVariant(variantMatch, withTab));
 
         var match = KeyPattern.Match(message);
         if (!match.Success)
@@ -187,7 +189,8 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         return Task.FromResult(new AgentResponse
         {
             AgentId    = AgentIds.Theory,
-            Result     = $"The {keyName} scale has 7 notes: **{string.Join(" – ", noteNames)}**. {relativeKey}.",
+            Result     = $"The {keyName} scale has 7 notes: **{string.Join(" – ", noteNames)}**. {relativeKey}." +
+                         (withTab ? OpenPositionTab(noteNames) : string.Empty),
             Confidence = 1.0f,
             Evidence   =
             [
@@ -200,7 +203,7 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         });
     }
 
-    private AgentResponse DescribeVariant(Match match)
+    private AgentResponse DescribeVariant(Match match, bool withTab)
     {
         var rootStr = match.Groups["root"].Value;
         var quality = (match.Groups["quality"].Success ? match.Groups["quality"] : match.Groups["quality2"]).Value
@@ -235,7 +238,8 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         return new AgentResponse
         {
             AgentId    = AgentIds.Theory,
-            Result     = $"The {scaleName} scale has {noteNames.Count} notes: **{string.Join(" – ", noteNames)}** (formula {variant.Formula}).",
+            Result     = $"The {scaleName} scale has {noteNames.Count} notes: **{string.Join(" – ", noteNames)}** (formula {variant.Formula})." +
+                         (withTab ? OpenPositionTab(noteNames) : string.Empty),
             Confidence = 1.0f,
             Evidence   =
             [
@@ -246,6 +250,54 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
             ],
             Assumptions = []
         };
+    }
+
+    // ── Tab ───────────────────────────────────────────────────────────────────
+
+    // "as guitar tab", "tab for", "in tablature" (issue #888: the scale came back as note names only).
+    private static readonly Regex TabRequestPattern =
+        new(@"\btab(?:s|lature)?\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    // Open position in standard tuning, low E first: string number, open-string MIDI note, and the
+    // highest fret the position reaches. The G string stops at fret 3 because its fret 4 is the open
+    // B string, so the windows tile E2..G#4 chromatically without overlap, in ascending pitch.
+    private static readonly (int String, int OpenMidi, int MaxFret)[] OpenPositionStrings =
+        [(6, 40, 4), (5, 45, 4), (4, 50, 4), (3, 55, 3), (2, 59, 4), (1, 64, 4)];
+
+    /// <summary>
+    /// The scale in open position as a fenced VexTab block, ascending from its lowest root to its
+    /// highest root within frets 0–4.
+    /// </summary>
+    private static string OpenPositionTab(IReadOnlyList<string> noteNames)
+    {
+        var scalePcs = noteNames.Select(PitchClassOf).ToHashSet();
+        var rootPc = PitchClassOf(noteNames[0]);
+        var positions = OpenPositionStrings
+            .SelectMany(s => Enumerable.Range(0, s.MaxFret + 1).Select(fret => (s.String, Fret: fret, Midi: s.OpenMidi + fret)))
+            .Where(p => scalePcs.Contains(p.Midi % 12))
+            .ToList();
+        var first = positions.FindIndex(p => p.Midi % 12 == rootPc);
+        var last = positions.FindLastIndex(p => p.Midi % 12 == rootPc);
+        var notes = string.Join(" ", positions[first..(last + 1)].Select(p => $"{p.Fret}/{p.String}"));
+        var nl = Environment.NewLine;
+
+        return $"{nl}{nl}In open position (frets 0–4, standard tuning), root to root:{nl}" +
+               $"```vextab{nl}tabstave{nl}notes :8 {notes}{nl}```";
+    }
+
+    /// <summary>Pitch class of a spelled note name: a letter, then #, x, b or bb.</summary>
+    private static int PitchClassOf(string name)
+    {
+        var pc = name[0] switch
+        {
+            'C' => 0, 'D' => 2, 'E' => 4, 'F' => 5, 'G' => 7, 'A' => 9, _ => 11,
+        };
+        foreach (var accidental in name[1..])
+        {
+            pc += accidental switch { '#' => 1, 'x' => 2, 'b' => -1, _ => 0 };
+        }
+
+        return ((pc % 12) + 12) % 12;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

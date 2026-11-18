@@ -111,7 +111,19 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
 
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
-        var parsed = TryParse(message) ?? TryIdentifyNoteSet(message);
+        var parsed = TryParse(message);
+        if (parsed is null && ReadQuestionNotes(message) is { } question)
+        {
+            // A singular question with a full note set names one chord ("what chord is C E G?").
+            // A plural question ("which chords contain C E G?") or a partial note set ("which
+            // chord has both E and G#?") asks for every common chord that holds the notes (issue #888).
+            parsed = question.Plural ? null : TryIdentifyNoteSet(question.Notes);
+            if (parsed is null && question.Notes.Count >= 2)
+            {
+                return Task.FromResult(ListChordsContaining(question.Notes));
+            }
+        }
+
         if (parsed is null)
         {
             return Task.FromResult(AgentResponse.Decline(AgentIds.Theory, "Could not parse a chord name from your question."));
@@ -175,20 +187,38 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
     private static bool IsArticle(string message, Group root) =>
         root.Value == "a" && root.Index + 1 < message.Length && char.IsWhiteSpace(message[root.Index + 1]);
 
-    private static (string Root, string Quality)? TryIdentifyNoteSet(string message)
+    /// <summary>
+    /// The notes named after the verb of a note-set question ("which chords contain both E and
+    /// G#?" → E, G#) and whether it asks about chords in the plural, or null when the message is
+    /// not one. A lowercase "a" among capitalised note names is the article ("a C and an E"), not
+    /// the note A.
+    /// </summary>
+    private static (IReadOnlyList<string> Notes, bool Plural)? ReadQuestionNotes(string message)
     {
-        if (!NoteSetQuestionRegex().IsMatch(message))
+        var question = NoteSetQuestionRegex().Match(message);
+        if (!question.Success)
         {
             return null;
         }
 
-        var notes = NoteTokenRegex()
-            .Matches(message)
-            .Select(match => ChordVocabulary.NormalizeRoot(match.Groups["note"].Value))
+        var tokens = NoteTokenRegex()
+            .Matches(message, question.Index + question.Length)
+            .Select(match => match.Groups["note"].Value)
+            .ToList();
+        var hasCapitalisedNote = tokens.Any(token => char.IsUpper(token[0]));
+
+        var notes = tokens
+            .Where(token => !(hasCapitalisedNote && token == "a"))
+            .Select(ChordVocabulary.NormalizeRoot)
             .Where(ChordVocabulary.PitchClasses.ContainsKey)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
+        return (notes, question.Groups["plural"].Success);
+    }
+
+    private static (string Root, string Quality)? TryIdentifyNoteSet(IReadOnlyList<string> notes)
+    {
         // Accept 3–5 note sets. 3 covers triads + sus, 4 covers 7th-family
         // and add9, 5 covers 9th-family (dominant/major/minor 9). Cap at 5
         // because 6+ note sets (11th/13th) have multiple legitimate
@@ -227,6 +257,78 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         }
 
         return null;
+    }
+
+    // Triads, then sevenths, with the symbol a chord chart uses.
+    private static readonly (string Quality, string Symbol)[] CommonChordQualities =
+    [
+        ("major", ""), ("minor", "m"), ("diminished", "dim"), ("augmented", "aug"),
+        ("sus2", "sus2"), ("sus4", "sus4"),
+        ("dominant 7", "7"), ("major 7", "maj7"), ("minor 7", "m7"),
+        ("half-diminished", "m7b5"), ("diminished 7", "dim7"),
+    ];
+
+    private static readonly string[] SharpRoots = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    private static readonly string[] FlatRoots = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+    private static readonly string[] ChartRoots = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+
+    /// <summary>
+    /// Every common triad and seventh chord holding all of <paramref name="notes"/>. Symmetric
+    /// chords (augmented, diminished seventh) are listed once, from the first root that reaches
+    /// the set. Roots the user named keep their spelling; other roots follow the accidentals the
+    /// user wrote, or the usual chart spelling when they wrote none.
+    /// </summary>
+    private static AgentResponse ListChordsContaining(IReadOnlyList<string> notes)
+    {
+        var wanted = notes.Select(note => ChordVocabulary.PitchClasses[note]).ToHashSet();
+        var roots = notes.Any(note => note.Length > 1 && note[1] == '#') ? SharpRoots
+            : notes.Any(note => note.Length > 1 && note[1] == 'b') ? FlatRoots
+            : ChartRoots;
+        var firstPc = ChordVocabulary.PitchClasses[notes[0]];
+        var rootOrder = notes.Select(note => ChordVocabulary.PitchClasses[note])
+            .Concat(Enumerable.Range(0, 12).Select(step => (firstPc + step) % 12))
+            .Distinct()
+            .ToList();
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var lines = new List<string>();
+        foreach (var (quality, symbol) in CommonChordQualities)
+        {
+            var formula = ChordVocabulary.GetFormula(quality);
+            foreach (var rootPc in rootOrder)
+            {
+                var chordPcs = formula.Intervals.Select(interval => (rootPc + interval) % 12).ToHashSet();
+                // Same quality and same notes is the same chord under another root (Caug = Eaug);
+                // Fsus2 and Csus4 share notes but are different chords, so both are listed.
+                if (!wanted.IsSubsetOf(chordPcs) || !seen.Add($"{quality}:{string.Join(",", chordPcs.Order())}"))
+                {
+                    continue;
+                }
+
+                var root = notes.FirstOrDefault(note => ChordVocabulary.PitchClasses[note] == rootPc) ?? roots[rootPc];
+                var tones = formula.Intervals.Zip(formula.LetterSteps, (interval, letterSteps) => Spell(root, rootPc + interval, letterSteps));
+                lines.Add($"- **{root}{symbol}** ({string.Join(" ", tones)}) — {QualityDisplayName(formula.Quality)}");
+            }
+        }
+
+        var named = JoinNotes(notes);
+        var result = lines.Count == 0
+            ? $"No common triad or seventh chord contains {named}."
+            : $"Common chords that contain {named}:{Environment.NewLine}{string.Join(Environment.NewLine, lines)}";
+
+        return new AgentResponse
+        {
+            AgentId = AgentIds.Theory,
+            Result = result,
+            Confidence = 1.0f,
+            Evidence =
+            [
+                $"Notes: {string.Join(", ", notes)}",
+                "Searched: major, minor, diminished, augmented, sus2 and sus4 triads; dominant, major, minor, half-diminished and diminished seventh chords",
+                $"Matches: {lines.Count}"
+            ],
+            Assumptions = []
+        };
     }
 
     // Presentation only: expand a terse canonical quality from ChordVocabulary to this skill's prose
@@ -326,7 +428,12 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
     // chord-identification phrasing and the prior "contains/has/uses"
     // patterns. The "is" branch was missing 2026-05-14 — caught by the
     // multi-LLM correctness review's testing-gap note on PR #210.
-    [GeneratedRegex(@"\b(?:which|what)\s+chord\s+(?:is|contains|has|uses)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    // Issue #888: also the plural and qualified forms ("which common chords contain both E and
+    // G#?", "what chords have a C and an E"). "Are" stays out: "what chords are in C major" asks
+    // for a key's chords, not for the chords holding some notes. Only neutral qualifiers are
+    // accepted: a quality word ("which minor chords contain C and E?") narrows the question in a
+    // way the list does not apply, so the skill leaves that question to another route.
+    [GeneratedRegex(@"\b(?:which|what)\s+(?:(?:common|possible|basic|simple|standard|the)\s+){0,2}chord(?<plural>s)?\s+(?:is|contains?|containing|has|have|uses?|includes?)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex NoteSetQuestionRegex();
 
     [GeneratedRegex(@"(?<![A-Za-z])(?<note>[A-Ga-g][#b]?)(?![A-Za-z])", RegexOptions.CultureInvariant)]

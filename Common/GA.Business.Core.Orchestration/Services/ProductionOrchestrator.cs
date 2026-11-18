@@ -2,7 +2,6 @@ namespace GA.Business.Core.Orchestration.Services;
 
 using System.Diagnostics;
 using System.Text;
-using System.Text.RegularExpressions;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Intents;
 using GA.Business.Core.Orchestration.Models;
@@ -794,14 +793,15 @@ public class ProductionOrchestrator(
         return false;
     }
 
+    // A chord name followed by "shape" ("a G shape", "the A shape") names what the hand frets, as
+    // capo and CAGED questions do, not a request for voicings. The guard used to match it and sent
+    // "with a capo on fret 3, what key does a G shape sound in?" to the voicing agent (issue #888);
+    // such questions now go to the semantic intent router. The chord-name form of the remaining
+    // nouns ("Cmaj7 voicing", "Am fingering") is covered by the keywords.
     private static bool IsExplicitVoicingRequest(string message)
     {
         var lower = message.ToLowerInvariant();
-        return ExplicitVoicingKeywords.Any(lower.Contains)
-               || Regex.IsMatch(
-                   message,
-                   @"\b[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|dom)?\d*(?:[#b]\d+)?(?:/[A-G](?:#|b)?)?\s+(?:voicing|voicings|shape|shapes|fingering|fingerings)\b",
-                   RegexOptions.IgnoreCase);
+        return ExplicitVoicingKeywords.Any(lower.Contains);
     }
 
     /// <summary>

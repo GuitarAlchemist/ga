@@ -66,8 +66,10 @@ public sealed class SkillDeclineTests
     [Test]
     public async Task ChordInfo_MessageWithoutChordName_Declines()
     {
+        // "Which common chords contain both E and G#?" used to decline here; issue #888 answers it
+        // with the chords holding both notes, so this prompt names no chord and no note.
         var response = await new ChordInfoSkill(NullLogger<ChordInfoSkill>.Instance)
-            .ExecuteAsync("Which common chords contain both E and G#?");
+            .ExecuteAsync("Which common chords sound the saddest?");
 
         Assert.That(response.Declined, Is.True, response.Result);
     }

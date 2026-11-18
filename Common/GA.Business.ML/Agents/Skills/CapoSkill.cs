@@ -50,18 +50,35 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
     // The "shape" keyword (or sounding-key + capo without a shape token) implies
     // the user wants the played-side answer.
     private static readonly Regex SoundingToShape =
-        new(@"(?:song\s+(?:is\s+)?in\s+|key\s+(?:is\s+|of\s+)?|in\s+)(?<key>[A-Ga-g][b#♭♯]?)(?:\s+(?<qual>major|minor|maj|min))?\b[^.?!]*?\bcapo\s+(?:on\s+|fret\s+|at\s+)?(?<n>\d{1,2})\b" +
+        new(@"(?:song\s+(?:is\s+)?in\s+|key\s+(?:is\s+|of\s+)?|in\s+)(?<key>[A-Ga-g][b#♭♯]?)(?:\s+(?<qual>major|minor|maj|min))?\b[^.?!]*?" + CapoFret("n") +
             @"|" +
-            @"\bcapo\s+(?:on\s+|fret\s+|at\s+)?(?<n2>\d{1,2})\b[^.?!]*?(?:song\s+(?:is\s+)?in\s+|key\s+(?:is\s+|of\s+)?|in\s+)(?<key2>[A-Ga-g][b#♭♯]?)(?:\s+(?<qual2>major|minor|maj|min))?\b",
+            CapoFret("n2") + @"[^.?!]*?(?:song\s+(?:is\s+)?in\s+|key\s+(?:is\s+|of\s+)?|in\s+)(?<key2>[A-Ga-g][b#♭♯]?)(?:\s+(?<qual2>major|minor|maj|min))?\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Pattern B: "<shape> shape with capo <N>" → SOUNDING
     // Shape-side anchor: "<note> shape" or "play a <note> shape" or "<note>m shape"
     private static readonly Regex ShapeToSounding =
-        new(@"\b(?:play(?:ing)?\s+(?:a\s+|an\s+)?)?(?<shape>[A-Ga-g][b#♭♯]?m?)\s+shape\b[^.?!]*?\bcapo\s+(?:on\s+|fret\s+|at\s+)?(?<n>\d{1,2})\b" +
+        new(@"\b(?:play(?:ing)?\s+(?:a\s+|an\s+)?)?(?<shape>[A-Ga-g][b#♭♯]?m?)\s+shape\b[^.?!]*?" + CapoFret("n") +
             @"|" +
-            @"\bcapo\s+(?:on\s+|fret\s+|at\s+)?(?<n2>\d{1,2})\b[^.?!]*?\b(?:play(?:ing)?\s+(?:a\s+|an\s+)?)?(?<shape2>[A-Ga-g][b#♭♯]?m?)\s+shape\b",
+            CapoFret("n2") + @"[^.?!]*?\b(?:play(?:ing)?\s+(?:a\s+|an\s+)?)?(?<shape2>[A-Ga-g][b#♭♯]?m?)\s+shape\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    // The capo fret as people write it: "capo 3", "capo on 3", "capo on fret 3", "capo at fret 5",
+    // "capo on the 2nd fret" (issue #888: "capo on fret 3" used to read as no fret at all).
+    private static string CapoFret(string group) =>
+        @"\bcapo\s+(?:(?:on|at)\s+)?(?:the\s+)?(?:fret\s+)?(?<" + group + @">\d{1,2})(?:st|nd|rd|th)?\b";
+
+    /// <summary>Which enharmonic spelling the user's own note names ask for, if any.</summary>
+    private enum Spelling { KeySignature, Sharps, Flats }
+
+    // A key named without an accidental preference gets the spelling of its key signature, the way
+    // a chart names it: Bb major (2 flats) rather than A# major (10 sharps). F# keeps sharps (6 vs 6),
+    // and the minor keys follow their own signatures (C#m, G#m, but Ebm and Bbm).
+    private static readonly string[] MajorKeyNames =
+        ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+
+    private static readonly string[] MinorKeyNames =
+        ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
 
     private static readonly string[] SharpNames =
         ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -78,7 +95,7 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
         {
             var shapeRaw = (mShape.Groups["shape"].Success ? mShape.Groups["shape"].Value : mShape.Groups["shape2"].Value).Trim();
             var nRaw = mShape.Groups["n"].Success ? mShape.Groups["n"].Value : mShape.Groups["n2"].Value;
-            return Task.FromResult(AnswerShapeToSounding(shapeRaw, ParseFret(nRaw), preferFlats: ShapeIsFlat(shapeRaw, msg)));
+            return Task.FromResult(AnswerShapeToSounding(shapeRaw, ParseFret(nRaw), ShapeSpelling(shapeRaw, msg)));
         }
         if (SoundingToShape.Match(msg) is { Success: true } mSound)
         {
@@ -88,13 +105,13 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
                         : mSound.Groups["qual2"].Success ? mSound.Groups["qual2"].Value
                         : string.Empty;
             var isMinor = qualRaw.StartsWith("min", StringComparison.OrdinalIgnoreCase);
-            return Task.FromResult(AnswerSoundingToShape(NormalizeKey(keyRaw), ParseFret(nRaw), isMinor, preferFlats: KeyIsFlat(keyRaw)));
+            return Task.FromResult(AnswerSoundingToShape(NormalizeKey(keyRaw), ParseFret(nRaw), isMinor, KeySpelling(keyRaw)));
         }
 
         return Task.FromResult(CannotHandle());
     }
 
-    private AgentResponse AnswerSoundingToShape(string soundingKey, int capoFret, bool isMinor, bool preferFlats)
+    private AgentResponse AnswerSoundingToShape(string soundingKey, int capoFret, bool isMinor, Spelling spelling)
     {
         if (!TryParseRoot(soundingKey, out var soundingPc, out _))
             return CannotParse(soundingKey);
@@ -102,7 +119,7 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
             return CannotParseFret(capoFret);
 
         var shapePc = ((soundingPc - capoFret) % 12 + 12) % 12;
-        var shape = SpellPc(shapePc, preferFlats);
+        var shape = SpellPc(shapePc, spelling, isMinor);
         // Match the shape's quality to the sounding-key's quality: if the
         // user said "B minor", the shape that produces B-minor at capo N is
         // the (B−N)-minor shape — e.g. capo 4 in B minor = G-minor shape, not
@@ -114,11 +131,11 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
         sb.AppendLine();
         // Educational example: how does an Am shape (PC=9) sound at this capo?
         var amSoundingPc = (9 + capoFret) % 12;
-        sb.AppendLine($"The capo raises every string by {capoFret} semitone{(capoFret == 1 ? "" : "s")}, so the shape you finger ({shapeLabel}) sounds {capoFret} fret{(capoFret == 1 ? "" : "s")} higher (= {soundingKey} {qualityWord}). All chord shapes shift the same way: an Am shape at capo {capoFret} would sound as {SpellPc(amSoundingPc, preferFlats)}m.");
+        sb.AppendLine($"The capo raises every string by {capoFret} semitone{(capoFret == 1 ? "" : "s")}, so the shape you finger ({shapeLabel}) sounds {capoFret} fret{(capoFret == 1 ? "" : "s")} higher (= {soundingKey} {qualityWord}). All chord shapes shift the same way: an Am shape at capo {capoFret} would sound as {SpellPc(amSoundingPc, spelling, minor: true)}m.");
         return Result(sb.ToString(), $"capo({soundingKey} {qualityWord} sounding, fret {capoFret} → {shapeLabel} shape)");
     }
 
-    private AgentResponse AnswerShapeToSounding(string shapeRaw, int capoFret, bool preferFlats)
+    private AgentResponse AnswerShapeToSounding(string shapeRaw, int capoFret, Spelling spelling)
     {
         var minorShape = shapeRaw.EndsWith("m", StringComparison.OrdinalIgnoreCase)
                          && shapeRaw.Length > 1
@@ -130,7 +147,7 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
             return CannotParseFret(capoFret);
 
         var soundingPc = (shapePc + capoFret) % 12;
-        var soundingRoot = SpellPc(soundingPc, preferFlats);
+        var soundingRoot = SpellPc(soundingPc, spelling, minorShape);
         var soundingChord = minorShape ? soundingRoot + "m" : soundingRoot;
         var qualityWord = minorShape ? "minor" : "major";
 
@@ -167,17 +184,31 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
     /// <summary>
     /// Pick the enharmonic spelling that matches the user's preferred side.
     /// If the user said "Eb major" → flats. If "F# major" → sharps.
-    /// Default: sharps (guitarist convention).
+    /// No preference: the key-signature spelling (Bb, not A#).
     /// </summary>
-    private static string SpellPc(int pc, bool preferFlats) =>
-        preferFlats ? FlatNames[((pc % 12) + 12) % 12] : SharpNames[((pc % 12) + 12) % 12];
+    private static string SpellPc(int pc, Spelling spelling, bool minor)
+    {
+        var index = ((pc % 12) + 12) % 12;
+        return spelling switch
+        {
+            Spelling.Flats  => FlatNames[index],
+            Spelling.Sharps => SharpNames[index],
+            _               => minor ? MinorKeyNames[index] : MajorKeyNames[index],
+        };
+    }
 
-    private static bool KeyIsFlat(string keyRaw) =>
-        keyRaw.IndexOf('b') >= 0 || keyRaw.IndexOf('♭') >= 0;
+    // The accidental follows the letter, so a lowercase "b" root ("b shape") is the note B, not a flat.
+    private static Spelling KeySpelling(string keyRaw) =>
+        keyRaw.Length < 2 ? Spelling.KeySignature
+        : keyRaw[1..].IndexOfAny(['b', '♭']) >= 0 ? Spelling.Flats
+        : keyRaw[1..].IndexOfAny(['#', '♯']) >= 0 ? Spelling.Sharps
+        : Spelling.KeySignature;
 
-    private static bool ShapeIsFlat(string shapeRaw, string fullMessage) =>
-        shapeRaw.IndexOf('b') >= 0 || shapeRaw.IndexOf('♭') >= 0
-        || fullMessage.Contains("flat", StringComparison.OrdinalIgnoreCase);
+    private static Spelling ShapeSpelling(string shapeRaw, string fullMessage) =>
+        KeySpelling(shapeRaw) is var fromShape && fromShape != Spelling.KeySignature ? fromShape
+        : fullMessage.Contains("flat", StringComparison.OrdinalIgnoreCase) ? Spelling.Flats
+        : fullMessage.Contains("sharp", StringComparison.OrdinalIgnoreCase) ? Spelling.Sharps
+        : Spelling.KeySignature;
 
     private AgentResponse Result(string text, string evidence)
     {
