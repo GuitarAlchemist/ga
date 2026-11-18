@@ -72,6 +72,14 @@ public sealed class ChordSubstitutionSkill(
         new(@"\b(?<root>[A-G])(?<acc>[b#]?)(?<qual>m7b5|dim7|maj7|M7|m7|7|min|m|dim|aug|\+)?(?!\w)",
             RegexOptions.Compiled);
 
+    // A root named after "in" or "key of" is the key of the question ("in C major", "in the key
+    // of G"), not a chord to substitute.
+    private static readonly Regex KeyContextBefore =
+        new(@"\b(?:in|key\s+of)\s+$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static List<Match> ChordMatches(string message) =>
+        [.. ExtendedChordSymbol.Matches(message).Where(m => !KeyContextBefore.IsMatch(message.AsSpan(0, m.Index)))];
+
     public bool CanHandle(string message) =>
         ExtendedChordSymbol.IsMatch(message) &&
         (SubstituteTrigger.IsMatch(message) || TwoChordTrigger.IsMatch(message));
@@ -121,7 +129,8 @@ public sealed class ChordSubstitutionSkill(
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
         // Try to extract up to two chord symbols (extended, includes 7th chords)
-        var chords = ExtendedChordSymbol.Matches(message)
+        var chordMatches = ChordMatches(message);
+        var chords = chordMatches
             .Select(TryParseChordMatch)
             .Where(c => c.HasValue)
             .Select(c => c!.Value)
@@ -132,7 +141,7 @@ public sealed class ChordSubstitutionSkill(
             return Task.FromResult(ExecuteComparison(chords[0], chords[1]));
 
         // Single-chord path — original behaviour
-        var parsed = ParseChord(message);
+        var parsed = chordMatches.Count == 0 ? null : ParseChord(chordMatches[0]);
         if (parsed is null)
             return Task.FromResult(AgentResponse.Decline(AgentIds.Composer, "Could not identify a chord symbol in your message."));
 
@@ -304,11 +313,8 @@ public sealed class ChordSubstitutionSkill(
         return ($"{rootStr}{suffix}", rootPc, intervals);
     }
 
-    private static (string Name, PitchClassSet Set)? ParseChord(string message)
+    private static (string Name, PitchClassSet Set)? ParseChord(Match match)
     {
-        var match = ExtendedChordSymbol.Match(message);
-        if (!match.Success) return null;
-
         var parsed = TryParseChordMatch(match);
         if (parsed is null) return null;
 
