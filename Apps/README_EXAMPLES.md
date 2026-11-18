@@ -105,14 +105,6 @@ Step-by-step interactive learning experience:
 
 ### 🎼 Specialized Examples
 
-#### **ChordNamingDemo** (Enhanced)
-Advanced chord naming and recognition:
-- Enhanced chord extensions
-- Slash chord analysis
-- Quartal harmony
-- Atonal analysis integration
-- Key-aware naming
-
 #### **BSPDemo** (Existing)
 Binary Space Partitioning for musical analysis
 
@@ -152,7 +144,6 @@ dotnet run
 **For Beginners:**
 1. Start with `InteractiveTutorial`
 2. Try `ComprehensiveMusicTheoryDemo`
-3. Explore `ChordNamingDemo`
 
 **For Intermediate Users:**
 1. `AdvancedFretboardAnalysisDemo`
