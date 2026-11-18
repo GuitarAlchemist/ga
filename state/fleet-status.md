@@ -18,16 +18,16 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#911](https://github.com/GuitarAlchemist/ga/pull/911) | fix(chat): decline chord substitution when the only root is the key | 0d | MERGEABLE | 0 | spareilleux |
+| [#912](https://github.com/GuitarAlchemist/ga/pull/912) | fix(chat): resolve follow-ups by passing history to skills and declini | 0d | UNKNOWN | 0 | spareilleux |
 | [#909](https://github.com/GuitarAlchemist/ga/pull/909) | chore(apps): delete GA.WebBlazorApp, which cannot build (#864 cleanup, | 0d | UNKNOWN | 1 | spareilleux |
 | [#859](https://github.com/GuitarAlchemist/ga/pull/859) | feat(agent-tree-r1): minimal GitHub comment sender for live dispatch ( (draft) | 2d | MERGEABLE | 0 | spareilleux |
 | [#858](https://github.com/GuitarAlchemist/ga/pull/858) | feat(scripts): agent-tree-r1 bounded supervision slice (draft, #855) (draft) | 3d | UNKNOWN | 1 | spareilleux |
-| [#854](https://github.com/GuitarAlchemist/ga/pull/854) | fix(chatbot): no invented frets, allow user-supplied ones (replaces #8 (draft) | 3d | UNKNOWN | 0 | app/claude |
-| [#853](https://github.com/GuitarAlchemist/ga/pull/853) | fix(skills): theoretical keys + parallel-major notes, reconciled with  (draft) | 3d | UNKNOWN | 0 | app/claude |
+| [#854](https://github.com/GuitarAlchemist/ga/pull/854) | fix(chatbot): no invented frets, allow user-supplied ones (replaces #8 (draft) | 4d | UNKNOWN | 0 | app/claude |
+| [#853](https://github.com/GuitarAlchemist/ga/pull/853) | fix(skills): theoretical keys + parallel-major notes, reconciled with  (draft) | 4d | UNKNOWN | 0 | app/claude |
 | [#851](https://github.com/GuitarAlchemist/ga/pull/851) | Experiments/Brutal: GeoTiles, OGC 3D Tiles in a BRUTAL window (draft) | 6d | MERGEABLE | 1 | spareilleux |
 | [#840](https://github.com/GuitarAlchemist/ga/pull/840) | Experiments/Brutal: Lego, composable scenes from typed nested blocks ( (draft) | 27d | CONFLICTING | 0 | spareilleux |
-| [#839](https://github.com/GuitarAlchemist/ga/pull/839) | Experiments/Brutal: BRUTAL evaluation prototype, M1 window lifecycle ( (draft) | 28d | UNKNOWN | 1 | spareilleux |
-| [#807](https://github.com/GuitarAlchemist/ga/pull/807) | fix(chatbot): stop ungrounded chat prompts from inviting invented fret | 44d | UNKNOWN | 0 | spareilleux |
+| [#839](https://github.com/GuitarAlchemist/ga/pull/839) | Experiments/Brutal: BRUTAL evaluation prototype, M1 window lifecycle ( (draft) | 29d | UNKNOWN | 1 | spareilleux |
+| [#807](https://github.com/GuitarAlchemist/ga/pull/807) | fix(chatbot): stop ungrounded chat prompts from inviting invented fret | 45d | UNKNOWN | 0 | spareilleux |
 | [#779](https://github.com/GuitarAlchemist/ga/pull/779) | fix(skills): name the relative key by key signature, and theoretical k | 48d | UNKNOWN | 0 | spareilleux |
 | [#738](https://github.com/GuitarAlchemist/ga/pull/738) | ci: push to main over the deploy key, and run CI under the merge queue | 53d | UNKNOWN | 2 | spareilleux |
 
@@ -36,33 +36,33 @@ _No open PRs._
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
 | [#565](https://github.com/GuitarAlchemist/ix/pull/565) | feat(ixforge): queries on the Desktop, automatic updates, LadybugDB gr (draft) | 0d | CONFLICTING | 0 | spareilleux |
-| [#563](https://github.com/GuitarAlchemist/ix/pull/563) | refactor(ix-origami): assess() applies the verdict rules; Context priv (draft) | 1d | UNKNOWN | 0 | spareilleux |
-| [#546](https://github.com/GuitarAlchemist/ix/pull/546) | feat(ixforge): mobile catalog, tool states, pinning, optional names an (draft) | 2d | UNKNOWN | 3 | spareilleux |
+| [#563](https://github.com/GuitarAlchemist/ix/pull/563) | refactor(ix-origami): assess() applies the verdict rules; Context priv (draft) | 1d | MERGEABLE | 0 | spareilleux |
+| [#546](https://github.com/GuitarAlchemist/ix/pull/546) | feat(ixforge): mobile catalog, tool states, pinning, optional names an (draft) | 2d | CONFLICTING | 3 | spareilleux |
 | [#544](https://github.com/GuitarAlchemist/ix/pull/544) | feat(workshop): import IxForge R14–R25 onto main | 2d | MERGEABLE | 0 | spareilleux |
-| [#543](https://github.com/GuitarAlchemist/ix/pull/543) | Document authorized remote path for IX Forge shared counter creation ( (draft) | 3d | UNKNOWN | 0 | app/openai-code-agent |
-| [#542](https://github.com/GuitarAlchemist/ix/pull/542) | IXFORGE-COUNTER-ACCESS-R1: investigation — no authorized non-Desktop p (draft) | 3d | UNKNOWN | 0 | app/anthropic-code-agent |
-| [#538](https://github.com/GuitarAlchemist/ix/pull/538) | docs(solutions): two learnings from the IXQL WASI validator prototype (draft) | 3d | UNKNOWN | 0 | spareilleux |
+| [#543](https://github.com/GuitarAlchemist/ix/pull/543) | Document authorized remote path for IX Forge shared counter creation ( (draft) | 3d | MERGEABLE | 0 | app/openai-code-agent |
+| [#542](https://github.com/GuitarAlchemist/ix/pull/542) | IXFORGE-COUNTER-ACCESS-R1: investigation — no authorized non-Desktop p (draft) | 3d | MERGEABLE | 0 | app/anthropic-code-agent |
+| [#538](https://github.com/GuitarAlchemist/ix/pull/538) | docs(solutions): two learnings from the IXQL WASI validator prototype (draft) | 3d | MERGEABLE | 0 | spareilleux |
 
 ### tars (5 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#392](https://github.com/GuitarAlchemist/tars/pull/392) | feat: check the constraints that name code against the code | 36d | UNKNOWN | 0 | spareilleux |
-| [#381](https://github.com/GuitarAlchemist/tars/pull/381) | feat: let evolve's teacher run on a paid API with openai:, gemini: or  | 44d | UNKNOWN | 0 | spareilleux |
-| [#346](https://github.com/GuitarAlchemist/tars/pull/346) | docs: stop calling a project file a one-way door | 49d | UNKNOWN | 0 | spareilleux |
-| [#337](https://github.com/GuitarAlchemist/tars/pull/337) | fix: let the required check run on a pull request that is not based on | 50d | UNKNOWN | 0 | spareilleux |
-| [#319](https://github.com/GuitarAlchemist/tars/pull/319) | ci: push to main over the deploy key, and run CI under the merge queue | 53d | UNKNOWN | 0 | spareilleux |
+| [#392](https://github.com/GuitarAlchemist/tars/pull/392) | feat: check the constraints that name code against the code | 36d | MERGEABLE | 0 | spareilleux |
+| [#381](https://github.com/GuitarAlchemist/tars/pull/381) | feat: let evolve's teacher run on a paid API with openai:, gemini: or  | 44d | MERGEABLE | 0 | spareilleux |
+| [#346](https://github.com/GuitarAlchemist/tars/pull/346) | docs: stop calling a project file a one-way door | 50d | MERGEABLE | 0 | spareilleux |
+| [#337](https://github.com/GuitarAlchemist/tars/pull/337) | fix: let the required check run on a pull request that is not based on | 50d | MERGEABLE | 0 | spareilleux |
+| [#319](https://github.com/GuitarAlchemist/tars/pull/319) | ci: push to main over the deploy key, and run CI under the merge queue | 53d | MERGEABLE | 0 | spareilleux |
 
 ### Demerzel (6 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#1126](https://github.com/GuitarAlchemist/Demerzel/pull/1126) | ci: run under the merge queue | 53d | UNKNOWN | 1 | spareilleux |
-| [#1114](https://github.com/GuitarAlchemist/Demerzel/pull/1114) | feat(contracts): validate Gaia continuity receipts | 57d | UNKNOWN | 1 | spareilleux |
-| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 64d | UNKNOWN | 1 | spareilleux |
-| [#1084](https://github.com/GuitarAlchemist/Demerzel/pull/1084) | ci(registry-check): gate capability-registry breaking changes with ix- | 64d | UNKNOWN | 1 | spareilleux |
-| [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 95d | UNKNOWN | 1 | spareilleux |
-| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 122d | UNKNOWN | 3 | spareilleux |
+| [#1126](https://github.com/GuitarAlchemist/Demerzel/pull/1126) | ci: run under the merge queue | 53d | MERGEABLE | 1 | spareilleux |
+| [#1114](https://github.com/GuitarAlchemist/Demerzel/pull/1114) | feat(contracts): validate Gaia continuity receipts | 58d | MERGEABLE | 1 | spareilleux |
+| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 64d | MERGEABLE | 1 | spareilleux |
+| [#1084](https://github.com/GuitarAlchemist/Demerzel/pull/1084) | ci(registry-check): gate capability-registry breaking changes with ix- | 64d | MERGEABLE | 1 | spareilleux |
+| [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 95d | MERGEABLE | 1 | spareilleux |
+| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 122d | MERGEABLE | 3 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -96,6 +96,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-11-18T02:42:01.366092+00:00 UTC_
+_Generated: 2026-11-18T04:01:18.227961+00:00 UTC_
 
-_Commit: `a4069836d5fa`_
+_Commit: `f1ec5f98deac`_
