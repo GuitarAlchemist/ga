@@ -3,6 +3,7 @@
 namespace GA.Providers.Anthropic;
 
 using System.Text.Json;
+using global::Anthropic.Models.Messages;
 using AnthropicSdk = global::Anthropic;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -27,9 +28,12 @@ using Microsoft.Extensions.Configuration;
 /// when <c>Anthropic:WorkspaceId</c> is set (a key that is not scoped to a
 /// workspace gets 400 on every request without it), raises
 /// <c>max_tokens</c> to at least <c>Anthropic:MaxOutputTokens</c> (thinking
-/// shares that budget), and never returns thinking blocks to the caller.</para>
+/// shares that budget), sends <c>output_config.effort</c> (to models that accept it) from
+/// <c>Anthropic:Effort</c>, marks the system prompt (and so the tool list
+/// before it) for prompt caching, and never returns thinking blocks to the
+/// caller.</para>
 /// </remarks>
-public static class AnthropicProvider
+public static partial class AnthropicProvider
 {
     public const string DefaultModel = "claude-sonnet-5-5";
 
@@ -43,11 +47,20 @@ public static class AnthropicProvider
     public const string MaxOutputTokensConfigKey = "Anthropic:MaxOutputTokens";
 
     /// <summary>
-    /// Default minimum <c>max_tokens</c>. Haiku 5.5 emits a thinking block before
-    /// the text; at 300 the thinking used the whole budget and the text came back
-    /// empty, and typical answers used 600–930 output tokens (measured 2026-11-17).
+    /// Default minimum <c>max_tokens</c>. Haiku 5.5 runs adaptive thinking by
+    /// default and the thinking counts inside <c>max_tokens</c>: at 300 the text
+    /// came back empty, and at 2048 the agents' structured JSON was cut off
+    /// mid-object (production, 2026-11-17). At $0.50/MTok output, 8192 costs at
+    /// most $0.004 per call; the model stops when it is done.
     /// </summary>
-    public const int DefaultMinOutputTokens = 2048;
+    public const int DefaultMinOutputTokens = 8192;
+
+    /// <summary>
+    /// Configuration key for <c>output_config.effort</c> (<c>low</c>, <c>medium</c>,
+    /// <c>high</c>); <c>low</c> when unset, which keeps the thinking short so the
+    /// answer fits the budget.
+    /// </summary>
+    public const string EffortConfigKey = "Anthropic:Effort";
 
     /// <summary>Header that selects the workspace for a key not scoped to one.</summary>
     public const string WorkspaceHeader = "anthropic-workspace-id";
@@ -211,6 +224,7 @@ public static class AnthropicProvider
         }
 
         var minOutputTokens = ResolveMinOutputTokens(configuration);
+        var effort = ResolveEffort(configuration);
         return anthropicClient
             .AsIChatClient(model)
             .AsBuilder()
@@ -225,7 +239,61 @@ public static class AnthropicProvider
                 }
             })
             .UseFunctionInvocation()
+            // Innermost, so every request of the tool loop is shaped.
+            .Use(inner => new RequestShapingChatClient(inner, model, minOutputTokens, effort))
             .Build();
+    }
+
+    /// <summary>
+    /// Whether <paramref name="model"/> accepts <c>output_config.effort</c>: Opus 4.5
+    /// and later, Sonnet 4.6 and later, Haiku 5 and later, and every Fable or Mythos
+    /// model. Haiku 4.5 and Sonnet 4.5 reject the field with a 400, and an unknown
+    /// id gets no effort rather than a rejected request. Platform prefixes
+    /// (<c>us.anthropic.</c>) and date suffixes (<c>-20251001</c>) are ignored.
+    /// </summary>
+    internal static bool SupportsEffort(string model)
+    {
+        var match = ModelVersionPattern().Match(model);
+        if (!match.Success)
+        {
+            return false;
+        }
+
+        var major = int.Parse(match.Groups["major"].Value, System.Globalization.CultureInfo.InvariantCulture);
+        var minor = match.Groups["minor"].Success
+            ? int.Parse(match.Groups["minor"].Value, System.Globalization.CultureInfo.InvariantCulture)
+            : 0;
+        var version = (major, minor);
+        return match.Groups["family"].Value switch
+        {
+            "fable" or "mythos" => true,
+            "opus" => version.CompareTo((4, 5)) >= 0,
+            "sonnet" => version.CompareTo((4, 6)) >= 0,
+            "haiku" => major >= 5,
+            _ => false,
+        };
+    }
+
+    // A one- or two-digit minor; an eight-digit date suffix is not a minor version.
+    [System.Text.RegularExpressions.GeneratedRegex(@"claude-(?<family>opus|sonnet|haiku|fable|mythos)-(?<major>\d+)(?:-(?<minor>\d{1,2})(?!\d))?")]
+    private static partial System.Text.RegularExpressions.Regex ModelVersionPattern();
+
+    private static Effort ResolveEffort(IConfiguration configuration)
+    {
+        var configured = configuration[EffortConfigKey];
+        if (string.IsNullOrWhiteSpace(configured))
+        {
+            return Effort.Low;
+        }
+
+        return configured.Trim().ToLowerInvariant() switch
+        {
+            "low" => Effort.Low,
+            "medium" => Effort.Medium,
+            "high" => Effort.High,
+            _ => throw new InvalidOperationException(
+                $"Invalid {EffortConfigKey} '{configured}'. Valid values: low, medium, high."),
+        };
     }
 
     private static string RequireApiKey(IConfiguration configuration)
@@ -290,6 +358,105 @@ public static class AnthropicProvider
         catch (JsonException)
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Sets the Anthropic-only request fields the MEAI adapter cannot express
+    /// through <see cref="ChatOptions"/>, via <see cref="ChatOptions.RawRepresentationFactory"/>
+    /// (the binding the SDK's <c>IChatClient</c> honours, SDK 12.8.0
+    /// <c>AnthropicClientExtensions.GetMessageCreateParams</c>):
+    /// <c>output_config.effort</c>, and the system prompt as text blocks whose
+    /// last one carries <c>cache_control</c>. The tool list precedes the system
+    /// prompt in the cache prefix, so that one breakpoint caches both. When the
+    /// factory supplies the params the adapter no longer fills <c>model</c> and
+    /// <c>max_tokens</c>, so they are set here too. A caller-supplied factory is
+    /// left untouched.
+    /// </summary>
+    private sealed class RequestShapingChatClient(
+        IChatClient inner,
+        string defaultModel,
+        int minOutputTokens,
+        Effort effort) : DelegatingChatClient(inner)
+    {
+        public override Task<ChatResponse> GetResponseAsync(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            var (shapedMessages, shapedOptions) = Shape(messages, options);
+            return base.GetResponseAsync(shapedMessages, shapedOptions, cancellationToken);
+        }
+
+        public override IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            var (shapedMessages, shapedOptions) = Shape(messages, options);
+            return base.GetStreamingResponseAsync(shapedMessages, shapedOptions, cancellationToken);
+        }
+
+        private (List<ChatMessage> Messages, ChatOptions Options) Shape(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options)
+        {
+            var shaped = options?.Clone() ?? new ChatOptions();
+            if (shaped.RawRepresentationFactory is not null)
+            {
+                return ([.. messages], shaped);
+            }
+
+            List<TextBlockParam> system = [];
+            List<ChatMessage> conversation = [];
+            foreach (var message in messages)
+            {
+                if (message.Role != ChatRole.System)
+                {
+                    conversation.Add(message);
+                    continue;
+                }
+
+                // The adapter keeps only the text of system messages; do the same.
+                foreach (var text in message.Contents.OfType<TextContent>())
+                {
+                    if (!string.IsNullOrWhiteSpace(text.Text))
+                    {
+                        system.Add(new TextBlockParam { Text = text.Text });
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(shaped.Instructions))
+            {
+                system.Add(new TextBlockParam { Text = shaped.Instructions });
+                shaped.Instructions = null;
+            }
+
+            if (system.Count > 0)
+            {
+                system[^1] = system[^1] with { CacheControl = new CacheControlEphemeral() };
+            }
+
+            var model = shaped.ModelId ?? defaultModel;
+            var maxTokens = shaped.MaxOutputTokens ?? minOutputTokens;
+            shaped.RawRepresentationFactory = _ =>
+            {
+                var request = new MessageCreateParams
+                {
+                    Model = model,
+                    MaxTokens = maxTokens,
+                    Messages = [],
+                };
+                if (SupportsEffort(model))
+                {
+                    request = request with { OutputConfig = new OutputConfig { Effort = effort } };
+                }
+
+                return system.Count > 0 ? request with { System = system.ToList() } : request;
+            };
+
+            return (conversation, shaped);
         }
     }
 

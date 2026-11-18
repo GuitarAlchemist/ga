@@ -60,7 +60,9 @@ Notes:
   - Key: `Anthropic__ApiKey` or `ANTHROPIC_API_KEY`.
   - Model: `Anthropic__Model` (default `claude-sonnet-5-5`; set `claude-haiku-5-5` for the cheapest).
   - `Anthropic__WorkspaceId`: required when the key is not scoped to a workspace. It is sent as `anthropic-workspace-id` on every request; without it the API answers 400.
-  - `Anthropic__MaxOutputTokens`: minimum `max_tokens` per request (default 2048). Haiku 5.5 thinks before answering and the thinking shares this budget. Thinking is never shown; only text blocks are returned.
+  - `Anthropic__MaxOutputTokens`: minimum `max_tokens` per request (default 8192). Haiku 5.5 thinks before answering and the thinking shares this budget. Thinking is never shown; only text blocks are returned.
+  - `Anthropic__Effort`: `output_config.effort`, one of `low`, `medium`, `high` (default `low`, which keeps thinking short). It applies to every Anthropic client, so a long-form job such as the memory curator may want `high`.
+  - The system prompt is sent with `cache_control`, which caches it together with the tool list placed before it.
   - `/status` calls `GET /v1/models` with the same headers (no inference cost). It reports ready when the call succeeds and the configured model is listed.
 - `AI__ChatProvider=mistral` reads `Mistral__ApiKey` or `MISTRAL_API_KEY`. `/status` reports it ready when the key is set.
 - Either provider can also be the fallback via `AI__CascadeProvider`. Embeddings still come from `AI__EmbeddingProvider` (Ollama by default).

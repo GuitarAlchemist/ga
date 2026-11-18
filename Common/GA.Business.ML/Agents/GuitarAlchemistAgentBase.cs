@@ -215,7 +215,17 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     }
 
     /// <summary>
+    /// User-facing answer when the model returned nothing usable. Shown to the
+    /// user, so it must not read like an internal error marker.
+    /// </summary>
+    protected const string IncompleteAnswerFallback =
+        "I couldn't finish that answer. Please try asking again, or rephrase the question.";
+
+    /// <summary>
     /// Parses a JSON response from the LLM into a structured agent response.
+    /// When the JSON cannot be parsed, the result is the <c>"result"</c> field of
+    /// a cut-off object, else the prose around the JSON, else
+    /// <paramref name="fallbackResult"/> — never the raw JSON.
     /// </summary>
     protected AgentResponse ParseStructuredResponse(string responseText, string fallbackResult)
     {
@@ -246,10 +256,18 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             Logger.LogWarning(ex, "Failed to parse structured JSON response from agent {AgentId}. Falling back to text.", AgentId);
         }
 
+        // Never show raw JSON: prefer the "result" of a cut-off object, then the
+        // prose around it, then the caller's user-facing fallback.
+        var answer = AgentResponseParser.TryReadPartialResult(responseText);
+        if (string.IsNullOrWhiteSpace(answer))
+        {
+            answer = AgentResponseParser.ProseOutsideJson(responseText);
+        }
+
         return new AgentResponse
         {
             AgentId = AgentId,
-            Result = responseText.Length > 0 ? responseText : fallbackResult,
+            Result = string.IsNullOrWhiteSpace(answer) ? fallbackResult : answer,
             Confidence = 0.5f,
             Evidence = ["Fallback logic used due to parsing failure"],
             Assumptions = ["The agent response was not in the expected JSON format"]
