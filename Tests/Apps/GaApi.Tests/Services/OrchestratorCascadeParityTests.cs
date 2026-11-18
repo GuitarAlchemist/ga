@@ -82,6 +82,25 @@ public class OrchestratorCascadeParityTests
         AssertStreamedAnswer(streaming, streamed, response);
     }
 
+    // Issue #888: the guard read "a G shape" in a capo question as a voicing request, so the capo
+    // skill never saw it. A chord name followed by "shape" names what the hand frets, not a request
+    // for voicings; the intent router decides where such a question goes.
+    [TestCase("With a capo on fret 3, what key does a G shape sound in?")]
+    [TestCase("What does an Em shape sound like with capo 2?")]
+    public async Task ChordShapeMention_GoesToIntentRouting_NotTheVoicingGuard(string prompt)
+    {
+        var intent = new FixedIntent(declined: false);
+        using var factory = CreateFactory(new FixedChatClient(), new RecordingHook(), intent);
+
+        var (response, _) = await AnswerAsync(factory, new ChatRequest(prompt, SessionId: "cascade-capo"), streaming: false);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Routing?.RoutingMethod, Is.Not.EqualTo("deterministic-voicing"));
+            Assert.That(intent.Executions, Is.EqualTo(1), "the question must reach intent routing");
+        });
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public async Task AlgebraPrompt_IsAnsweredByTheFastPath_BeforeIntentRouting(bool streaming)

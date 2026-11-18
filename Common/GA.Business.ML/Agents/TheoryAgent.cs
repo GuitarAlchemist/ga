@@ -48,7 +48,7 @@ public class TheoryAgent(IChatClient chatClient, ILogger<TheoryAgent> logger)
         var prompt = BuildTheoryPrompt(request);
         var responseText = await ChatWithCritiqueAsync(request.Query, prompt, cancellationToken, request.ConversationHistory);
 
-        return ParseStructuredResponse(responseText, "Analysis failed.");
+        return ParseStructuredResponse(responseText, IncompleteAnswerFallback);
     }
 
     private string BuildTheoryPrompt(AgentRequest request)

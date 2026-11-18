@@ -29,7 +29,7 @@ public class ChatbotHistoryContractTests
     public async Task Chat_PreservesHistoryAndWireContract(string route, string historyKind)
     {
         ChatIntakeRequest? received = null;
-        var intake = new Mock<IChatIntake>();
+        var intake = new Mock<IChatIntake>().RunsLikeIntake();
         intake.Setup(x => x.IntakeAsync(It.IsAny<ChatIntakeRequest>(), It.IsAny<CancellationToken>()))
             .Callback<ChatIntakeRequest, CancellationToken>((request, _) => received = request)
             .ReturnsAsync(Result<ChatResponse, ChatIntakeError>.Success(new ChatResponse("Try D Dorian.", [], Routing: new("theory", 0.9f, "deterministic"), Grounding: new("theory-library", "test-revision", "scale"))));

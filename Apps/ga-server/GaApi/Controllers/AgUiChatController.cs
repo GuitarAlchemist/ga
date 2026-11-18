@@ -138,27 +138,36 @@ public class AgUiChatController(
                 started = true;
             }
 
-            var result = await chatIntake.IntakeStreamingAsync(
-                new ChatIntakeRequest(userMessage, sessionId, history),
-                async token =>
-                {
-                    await StartTextAsync();
-                    await writer.WriteTextChunkAsync(msgId, token, cancellationToken);
-                },
-                cancellationToken);
-            if (result.IsFailure)
+            // Thin adapter over the chat run's events. Routing is not written early: AG-UI
+            // reports it as STEP_STARTED after the text, from the completed response.
+            ChatResponse? response = null;
+            await foreach (var chatEvent in chatIntake.RunAsync(
+                               new ChatIntakeRequest(userMessage, sessionId, history), cancellationToken))
             {
-                var (message, code) = result.GetErrorOrThrow() switch
+                switch (chatEvent)
                 {
-                    ChatIntakeError.Busy => ("Service is busy. Please try again.", "SERVICE_BUSY"),
-                    ChatIntakeError.Validation validation => (validation.Reason, "INVALID_REQUEST"),
-                    _ => ("Failed to process message. Please try again.", "INTERNAL_ERROR")
-                };
-                await writer.WriteRunErrorAsync(message, code, cancellationToken);
-                return;
+                    case ChatEvent.TextDelta delta:
+                        await StartTextAsync();
+                        await writer.WriteTextChunkAsync(msgId, delta.Text, cancellationToken);
+                        break;
+                    case ChatEvent.Completed completed:
+                        response = completed.Response;
+                        break;
+                    case ChatEvent.Failed failed:
+                        var (message, code) = failed.Rejection switch
+                        {
+                            ChatIntakeError.Busy => ("Service is busy. Please try again.", "SERVICE_BUSY"),
+                            ChatIntakeError.Validation validation => (validation.Reason, "INVALID_REQUEST"),
+                            _ => ("Failed to process message. Please try again.", "INTERNAL_ERROR")
+                        };
+                        if (failed.Rejection is null)
+                            logger.LogError("AG-UI run {RunId} failed: {Error}", runId, failed.Message);
+                        await writer.WriteRunErrorAsync(message, code, cancellationToken);
+                        return;
+                }
             }
 
-            var response = result.GetValueOrThrow();
+            if (response is null) throw new InvalidOperationException("The chat run ended without an outcome.");
             await StartTextAsync();
             await writer.WriteTextEndAsync(msgId, cancellationToken);
 

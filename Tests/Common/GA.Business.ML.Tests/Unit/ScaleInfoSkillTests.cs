@@ -1,6 +1,7 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents.Skills;
+using GA.Business.ML.Notation;
 using Microsoft.Extensions.Logging.Abstractions;
 
 [TestFixture]
@@ -94,5 +95,31 @@ public class ScaleInfoSkillTests
             .Or.Contain("minor").IgnoreCase
             .Or.Contain("key").IgnoreCase
             .Or.Contain("scale").IgnoreCase);
+    }
+
+    // Issue #888: "as guitar tab" was answered with note names only.
+    [TestCase("Show me the C major scale as guitar tab in open position", "notes :8 3/5 0/4 2/4 3/4 0/3 2/3 0/2 1/2")]
+    [TestCase("G major scale tab", "notes :8 3/6 0/5 2/5 3/5 0/4 2/4 4/4 0/3 2/3 0/2 1/2 3/2 0/1 2/1 3/1")]
+    [TestCase("tab for the E minor pentatonic scale", "notes :8 0/6 3/6 0/5 2/5 0/4 2/4 0/3 2/3 0/2 3/2 0/1")]
+    [TestCase("A harmonic minor scale as tab", "notes :8 0/5 2/5 3/5 0/4 2/4 3/4 1/3 2/3")]
+    public async Task ScaleAsTab_AddsAnOpenPositionVexTabBlock(string question, string notesLine)
+    {
+        var response = await MakeSkill().ExecuteAsync(question);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Result, Does.Contain(notesLine));
+            Assert.That(PlayableNotationFormatter.CountVexTabBlocks(response.Result), Is.EqualTo((1, 1)),
+                "one fenced vextab block that GA's VexTab parser reads");
+            Assert.That(response.Result, Does.Contain("open position"));
+        });
+    }
+
+    [Test]
+    public async Task ScaleWithoutTabRequest_HasNoTab()
+    {
+        var response = await MakeSkill().ExecuteAsync("Show me the C major scale");
+
+        Assert.That(PlayableNotationFormatter.CountVexTabBlocks(response.Result).Blocks, Is.Zero);
     }
 }

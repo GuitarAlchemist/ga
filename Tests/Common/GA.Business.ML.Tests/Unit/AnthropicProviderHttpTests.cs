@@ -98,7 +98,8 @@ public class AnthropicProviderHttpTests
         {
             Assert.That(handler.Header("anthropic-workspace-id"), Is.EqualTo("wrkspc_test"));
             Assert.That(handler.Body.RootElement.GetProperty("model").GetString(), Is.EqualTo("claude-haiku-5-5"));
-            Assert.That(handler.Body.RootElement.GetProperty("max_tokens").GetInt32(), Is.EqualTo(2048));
+            Assert.That(handler.Body.RootElement.GetProperty("max_tokens").GetInt32(), Is.EqualTo(8192));
+            Assert.That(handler.Body.RootElement.GetProperty("output_config").GetProperty("effort").GetString(), Is.EqualTo("low"));
             Assert.That(response.Text, Is.EqualTo("A C major chord is C, E and G."));
         });
     }
@@ -114,9 +115,9 @@ public class AnthropicProviderHttpTests
         Assert.That(handler.Header("anthropic-workspace-id"), Is.Null);
     }
 
-    [TestCase(null, null, 2048)]      // no caller cap: the default floor
-    [TestCase(512, null, 2048)]       // a small caller cap is raised: thinking shares max_tokens
-    [TestCase(8000, null, 8000)]      // a larger caller cap is kept
+    [TestCase(null, null, 8192)]      // no caller cap: the default floor
+    [TestCase(512, null, 8192)]       // a small caller cap is raised: thinking shares max_tokens
+    [TestCase(16000, null, 16000)]    // a larger caller cap is kept
     [TestCase(null, "4096", 4096)]    // the floor is configurable
     public async Task Request_MaxTokens_HasFloor(int? callerCap, string? configuredFloor, int expected)
     {
@@ -127,6 +128,110 @@ public class AnthropicProviderHttpTests
         await client.GetResponseAsync("hi", new ChatOptions { MaxOutputTokens = callerCap });
 
         Assert.That(handler.Body.RootElement.GetProperty("max_tokens").GetInt32(), Is.EqualTo(expected));
+    }
+
+    [TestCase(null, "low")]          // default for the chatbot paths
+    [TestCase("medium", "medium")]
+    [TestCase("High", "high")]
+    public async Task Request_SendsEffort(string? configured, string expected)
+    {
+        // Haiku 5.5 runs adaptive thinking at effort medium by default, and the
+        // thinking is counted inside max_tokens: effort low leaves room for the JSON.
+        var handler = new RecordingHandler(ThinkingThenTextResponse);
+        var client = AnthropicProvider.CreateChatClientFromConfig(Config(("Anthropic:Effort", configured)), handler);
+
+        await client.GetResponseAsync("hi");
+
+        Assert.That(handler.Body.RootElement.GetProperty("output_config").GetProperty("effort").GetString(), Is.EqualTo(expected));
+    }
+
+    [TestCase("claude-haiku-5-5", true)]
+    [TestCase("claude-sonnet-5", true)]
+    [TestCase("claude-sonnet-5-5", true)]
+    [TestCase("claude-sonnet-4-6", true)]
+    [TestCase("claude-opus-4-5-20251101", true)]
+    [TestCase("claude-opus-4-8", true)]
+    [TestCase("claude-opus-5-5", true)]
+    [TestCase("claude-fable-5-2", true)]
+    [TestCase("claude-haiku-4-5-20251001", false)]   // appsettings.Development.json: rejects effort (Codex P1 on #903)
+    [TestCase("claude-haiku-4-5", false)]
+    [TestCase("claude-sonnet-4-5", false)]
+    [TestCase("claude-opus-4-1", false)]
+    [TestCase("claude-opus-4-20250514", false)]
+    [TestCase("claude-3-5-sonnet-20241022", false)]
+    public async Task Request_SendsEffort_OnlyToModelsThatSupportIt(string model, bool expectEffort)
+    {
+        var handler = new RecordingHandler(ThinkingThenTextResponse);
+        var client = AnthropicProvider.CreateChatClientFromConfig(Config(("Anthropic:Model", model)), handler);
+
+        await client.GetResponseAsync("hi");
+
+        var hasEffort = handler.Body.RootElement.TryGetProperty("output_config", out var outputConfig)
+            && outputConfig.TryGetProperty("effort", out _);
+        Assert.That(hasEffort, Is.EqualTo(expectEffort));
+    }
+
+    [Test]
+    public void InvalidEffort_FailsAtConstruction() =>
+        Assert.That(
+            () => AnthropicProvider.CreateChatClientFromConfig(Config(("Anthropic:Effort", "turbo")), new RecordingHandler(ThinkingThenTextResponse)),
+            Throws.InvalidOperationException.With.Message.Contains("Anthropic:Effort"));
+
+    [Test]
+    public async Task Request_MarksSystemPrefixForCaching_AndKeepsToolsAndModel()
+    {
+        // Tools come before system in the cache prefix, so one breakpoint on the
+        // last system block caches the tool list and the system prompt together.
+        var handler = new RecordingHandler(ThinkingThenTextResponse);
+        var client = AnthropicProvider.CreateChatClientFromConfig(Config(("Anthropic:Model", "claude-haiku-5-5")), handler);
+        var tool = AIFunctionFactory.Create((string chord) => chord, "lookup_chord", "Looks up a chord.");
+
+        await client.GetResponseAsync(
+            [
+                new ChatMessage(ChatRole.System, "You are a music theory expert."),
+                new ChatMessage(ChatRole.User, "What is in C major?"),
+            ],
+            new ChatOptions { Instructions = "Answer in JSON.", Tools = [tool], ToolMode = ChatToolMode.None });
+
+        var body = handler.Body.RootElement;
+        var system = body.GetProperty("system").EnumerateArray().ToList();
+        Assert.Multiple(() =>
+        {
+            Assert.That(system.Select(b => b.GetProperty("text").GetString()),
+                Is.EqualTo(new[] { "You are a music theory expert.", "Answer in JSON." }));
+            Assert.That(system[^1].GetProperty("cache_control").GetProperty("type").GetString(), Is.EqualTo("ephemeral"));
+            Assert.That(system[0].TryGetProperty("cache_control", out _), Is.False, "one breakpoint, on the last system block");
+            Assert.That(body.GetProperty("messages").EnumerateArray().Select(m => m.GetProperty("role").GetString()),
+                Is.EqualTo(new[] { "user" }), "system text must not also be sent as a message");
+            Assert.That(body.GetProperty("tools").EnumerateArray().Single().GetProperty("name").GetString(), Is.EqualTo("lookup_chord"));
+            Assert.That(body.GetProperty("model").GetString(), Is.EqualTo("claude-haiku-5-5"));
+        });
+    }
+
+    [Test]
+    public async Task RepeatedCall_ReportsCacheReadTokens()
+    {
+        var first = ThinkingThenTextResponse.Replace(
+            "\"usage\":{\"input_tokens\":12,\"output_tokens\":40}",
+            "\"usage\":{\"input_tokens\":12,\"cache_creation_input_tokens\":3100,\"cache_read_input_tokens\":0,\"output_tokens\":40}");
+        var second = ThinkingThenTextResponse.Replace(
+            "\"usage\":{\"input_tokens\":12,\"output_tokens\":40}",
+            "\"usage\":{\"input_tokens\":12,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":3100,\"output_tokens\":40}");
+        Assert.That(second, Does.Contain("cache_read_input_tokens\":3100"), "fixture must carry cache usage");
+        var handler = new SequenceHandler(first, second);
+        var client = AnthropicProvider.CreateChatClientFromConfig(Config(), handler);
+        ChatMessage[] conversation = [new(ChatRole.System, "You are a music theory expert."), new(ChatRole.User, "hi")];
+
+        await client.GetResponseAsync(conversation);
+        var repeated = await client.GetResponseAsync(conversation);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(repeated.Usage?.CachedInputTokenCount, Is.GreaterThan(0));
+            Assert.That(handler.Bodies, Has.Count.EqualTo(2));
+            Assert.That(handler.Bodies.Select(b => b.RootElement.GetProperty("system")[0].GetProperty("cache_control").GetProperty("type").GetString()),
+                Is.All.EqualTo("ephemeral"));
+        });
     }
 
     [Test]
@@ -199,6 +304,22 @@ public class AnthropicProviderHttpTests
             AnthropicProvider.CreateModelsRequest(new ConfigurationBuilder().Build()));
 
     private static string Event(string name, string data) => $"event: {name}\ndata: {data}";
+
+    private sealed class SequenceHandler(params string[] responses) : HttpMessageHandler
+    {
+        private int _next;
+
+        public List<JsonDocument> Bodies { get; } = [];
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Bodies.Add(JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken)));
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(responses[Math.Min(_next++, responses.Length - 1)], Encoding.UTF8, "application/json"),
+            };
+        }
+    }
 
     private sealed class RecordingHandler(string responseBody, string mediaType = "application/json") : HttpMessageHandler
     {

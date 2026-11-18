@@ -156,41 +156,43 @@ public sealed class A2AController(
 
         try
         {
-            var result = await chatIntake.IntakeStreamingAsync(
-                new ChatIntakeRequest(message, SessionPrefix + contextId),
-                async token =>
-                {
-                    if (string.IsNullOrEmpty(token)) return;
-                    await OpenTaskAsync();
-                    await WriteSseResponseAsync(
-                        A2AJsonRpcResponse.Success(
-                            request.Id,
-                            new A2ATaskArtifactUpdateEvent(
-                                Kind: "artifact-update",
-                                TaskId: taskId,
-                                ContextId: contextId,
-                                Artifact: new A2AArtifact(artifactId, "answer", [new A2ATextPart("text", token)], chunkIndex),
-                                Append: chunkIndex > 0,
-                                LastChunk: false)),
-                        cancellationToken);
-                    chunkIndex++;
-                },
-                cancellationToken);
-
-            if (result.IsFailure)
+            await foreach (var chatEvent in chatIntake.RunAsync(
+                               new ChatIntakeRequest(message, SessionPrefix + contextId), cancellationToken))
             {
-                await WriteSseResponseAsync(
-                    A2AJsonRpcResponse.Fail(request.Id, ToJsonRpcError(result.GetErrorOrThrow())),
-                    cancellationToken);
-                return;
+                switch (chatEvent)
+                {
+                    case ChatEvent.TextDelta delta:
+                        await OpenTaskAsync();
+                        await WriteSseResponseAsync(
+                            A2AJsonRpcResponse.Success(
+                                request.Id,
+                                new A2ATaskArtifactUpdateEvent(
+                                    Kind: "artifact-update",
+                                    TaskId: taskId,
+                                    ContextId: contextId,
+                                    Artifact: new A2AArtifact(artifactId, "answer", [new A2ATextPart("text", delta.Text)], chunkIndex),
+                                    Append: chunkIndex > 0,
+                                    LastChunk: false)),
+                            cancellationToken);
+                        chunkIndex++;
+                        break;
+                    case ChatEvent.Completed:
+                        await OpenTaskAsync();
+                        await WriteSseResponseAsync(
+                            A2AJsonRpcResponse.Success(
+                                request.Id,
+                                new A2ATaskStatusUpdateEvent("status-update", taskId, contextId, new A2ATaskStatus("completed"), Final: true)),
+                            cancellationToken);
+                        return;
+                    case ChatEvent.Failed failed:
+                        await WriteSseResponseAsync(
+                            A2AJsonRpcResponse.Fail(
+                                request.Id,
+                                failed.Rejection is { } rejection ? ToJsonRpcError(rejection) : A2AJsonRpcError.InternalError()),
+                            cancellationToken);
+                        return;
+                }
             }
-
-            await OpenTaskAsync();
-            await WriteSseResponseAsync(
-                A2AJsonRpcResponse.Success(
-                    request.Id,
-                    new A2ATaskStatusUpdateEvent("status-update", taskId, contextId, new A2ATaskStatus("completed"), Final: true)),
-                cancellationToken);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {

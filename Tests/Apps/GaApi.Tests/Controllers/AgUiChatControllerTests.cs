@@ -549,11 +549,14 @@ file sealed class TestHarmonicChatOrchestrator : IHarmonicChatOrchestrator
     public async Task<ChatResponse> AnswerStreamingAsync(
         ChatRequest req,
         Func<string, Task> onToken,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Func<AgentRoutingMetadata, GroundingMetadata?, Task>? onRouting = null)
     {
         LastRequest = req;
+        var response = BuildResponse();
+        if (onRouting is not null) await onRouting(response.Routing!, response.Grounding);
         await onToken("Deterministic test response.");
-        return BuildResponse();
+        return response;
     }
 
     private static ChatResponse BuildResponse() =>

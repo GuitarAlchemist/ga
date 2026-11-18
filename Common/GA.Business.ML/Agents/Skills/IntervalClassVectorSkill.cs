@@ -61,9 +61,19 @@ public sealed class IntervalClassVectorSkill(
 
     public bool CanHandle(string message) => false;  // semantic-routing only
 
-    // Chord-anchored: "ICV of <chord>" / "interval-class vector of <chord>"
+    // Chord-anchored: "ICV of <chord>" / "interval-class vector of <chord>". A lowercase "a" followed
+    // by another word is the article, not the note A (issue #888: "ICV of a major triad" answered
+    // for A major); chord types named that way are read by ChordTypePattern.
     private static readonly Regex ChordPattern =
-        new(@"\b(?:icv|interval[\s-]*class[\s-]*vector|interval[\s-]*vector)\s+(?:of\s+|for\s+)?(?<chord>[A-Ga-g][b#♭♯]?(?:maj|min|m|dim|aug|sus|add|dom)?\d*(?:[b#♭♯]\d+)*°?)\b",
+        new(@"\b(?:icv|interval[\s-]*class[\s-]*vector|interval[\s-]*vector)\s+(?:of\s+|for\s+)?(?!(?-i:a\s+[a-z]))(?<chord>[A-Ga-g][b#♭♯]?(?:maj|min|m|dim|aug|sus|add|dom)?\d*(?:[b#♭♯]\d+)*°?)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    // Chord type without a root: "ICV of a major triad", "of an augmented triad", "of a dominant
+    // seventh chord". The interval-class vector does not depend on the root, so it is computed on C.
+    private static readonly Regex ChordTypePattern =
+        new(@"\b(?:icv|interval[\s-]*class[\s-]*vector|interval[\s-]*vector)\s+(?:of|for)\s+(?<type>(?:an?|the)\s+" +
+            @"(?<quality>major|minor|diminished|augmented|dominant|half[\s-]diminished|suspended)" +
+            @"(?:\s+(?<seventh>seventh|7th))?\s+(?:triad|chord))\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Pitch-class set anchored: "{0,1,4}" or "(0,1,4)" or "[0,1,4]"
@@ -116,6 +126,18 @@ public sealed class IntervalClassVectorSkill(
                 return Task.FromResult(AnswerPcSet($"{{{string.Join(",", pcs)}}}", pcs));
         }
 
+        if (ChordTypePattern.Match(msg) is { Success: true } typeMatch)
+        {
+            var suffix = ChordTypeSuffix(
+                typeMatch.Groups["quality"].Value.ToLowerInvariant(),
+                typeMatch.Groups["seventh"].Success);
+            var label = Regex.Replace(typeMatch.Groups["type"].Value.ToLowerInvariant(), @"\s+", " ");
+            if (!ChordVocabulary.TryGetPitchClassesStrict("C" + suffix, out var pcs))
+                return Task.FromResult(CannotParse(label));
+            return Task.FromResult(AnswerPcSet(label, pcs,
+                $"Shown on C: the interval-class vector does not depend on the root, so every {label[(label.IndexOf(' ') + 1)..]} has this one."));
+        }
+
         if (ChordPattern.Match(msg) is { Success: true } chordMatch)
         {
             var chordToken = chordMatch.Groups["chord"].Value;
@@ -134,7 +156,26 @@ public sealed class IntervalClassVectorSkill(
         return Task.FromResult(CannotHandle());
     }
 
-    private AgentResponse AnswerPcSet(string label, IReadOnlyList<int> pcs)
+    // Chord-symbol suffix for a chord type named in words; the symbol is read by the same parser
+    // as chord symbols, so a seventh is never dropped ("a suspended seventh chord" is 7sus4).
+    private static string ChordTypeSuffix(string quality, bool seventh) => (quality.Replace('-', ' '), seventh) switch
+    {
+        ("major", false)          => "",
+        ("minor", false)          => "m",
+        ("diminished", false)     => "dim",
+        ("augmented", false)      => "aug",
+        ("suspended", false)      => "sus4",
+        ("major", true)           => "maj7",
+        ("minor", true)           => "m7",
+        ("diminished", true)      => "dim7",
+        ("augmented", true)       => "7#5",
+        ("suspended", true)       => "7sus4",
+        ("dominant", _)           => "7",
+        ("half diminished", _)    => "m7b5",
+        _                         => "?",
+    };
+
+    private AgentResponse AnswerPcSet(string label, IReadOnlyList<int> pcs, string? note = null)
     {
         var icv = grothendieck.ComputeIcv(pcs);
         var ic1 = icv[IntervalClass.Hemitone];
@@ -149,6 +190,7 @@ public sealed class IntervalClassVectorSkill(
         sb.AppendLine($"**ICV of {label}**: `{icv}`  (`[{ic1}, {ic2}, {ic3}, {ic4}, {ic5}, {ic6}]`)");
         sb.AppendLine();
         sb.AppendLine($"- Pitch-class set: `{pcsStr}` ({pcs.Count} notes)");
+        if (note is not null) sb.AppendLine($"- {note}");
         sb.AppendLine();
         sb.AppendLine("| ic | Interval | Count |");
         sb.AppendLine("|----|----------|-------|");

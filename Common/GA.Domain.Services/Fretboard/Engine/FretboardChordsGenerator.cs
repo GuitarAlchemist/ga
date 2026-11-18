@@ -17,11 +17,17 @@ public class FretboardChordsGenerator(FretboardClass fretboard)
     /// <param name="notes">The set of pitch classes to form the chord.</param>
     /// <param name="minNotes">Minimum number of notes to play.</param>
     /// <param name="span">Maximum fret span (default 4).</param>
+    /// <param name="requiredNotes">
+    /// Pitch classes every voicing must sound (default: all of <paramref name="notes"/>). Pass a
+    /// subset to let a chord with more tones than strings drop its optional ones (e.g. a 13th
+    /// chord's fifth).
+    /// </param>
     /// <returns>A collection of voicings, each represented as a list of positions.</returns>
     public IEnumerable<ImmutableList<Position>> GetChordPositions(
-        PitchClassSet notes, 
-        int minNotes = 3, 
-        int span = 4)
+        PitchClassSet notes,
+        int minNotes = 3,
+        int span = 4,
+        PitchClassSet? requiredNotes = null)
     {
         // Naive implementation: 
         // 1. Find all locations for each pitch class on the fretboard.
@@ -57,7 +63,7 @@ public class FretboardChordsGenerator(FretboardClass fretboard)
             locationsPerString[s] = positions;
         }
 
-        return GenerateCombinations(locationsPerString, minNotes, span);
+        return GenerateCombinations(locationsPerString, requiredNotes ?? notes, minNotes, span);
     }
     
     /// <summary>
@@ -79,25 +85,28 @@ public class FretboardChordsGenerator(FretboardClass fretboard)
             .Select(v => v.Positions.ToImmutableList());
 
     private IEnumerable<ImmutableList<Position>> GenerateCombinations(
-        List<Position>[] locationsPerString, 
-        int minNotes, 
+        List<Position>[] locationsPerString,
+        PitchClassSet requiredNotes,
+        int minNotes,
         int span)
     {
         // Stack-based or recursive combination
         // Since string count is low (6-8), recursion is fine.
-        
+
         foreach (var combination in Recurse(0, locationsPerString))
         {
             // Validate Span & Note Count
             var playedCount = 0;
             var minFret = int.MaxValue;
             var maxFret = int.MinValue;
-            
+            var soundedPitchClasses = new HashSet<PitchClass>();
+
             foreach (var pos in combination)
             {
                 if (pos is Position.Played p)
                 {
                     playedCount++;
+                    soundedPitchClasses.Add(p.MidiNote.PitchClass);
                     var f = p.Location.Fret.Value;
                     if (f > 0) // Ignore open strings for span? Usually yes.
                     {
@@ -110,6 +119,10 @@ public class FretboardChordsGenerator(FretboardClass fretboard)
             if (playedCount < minNotes) continue;
             
             if (minFret != int.MaxValue && (maxFret - minFret) > span) continue;
+
+            // Every required pitch class must sound: a combination that covers only part of the
+            // chord (e.g. A-A-C for F major, no root) is a different chord, not a voicing of this one.
+            if (!requiredNotes.All(soundedPitchClasses.Contains)) continue;
 
             yield return combination.ToImmutableList();
         }
