@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "3461543952de2af16dab881ec3ae4adb6c648f8b",
-    "generatedAt": "2026-11-18T00:30:57.176286+00:00",
+    "commitSha": "a4069836d5fa6d5dc58467cb5f07e80742f3778d",
+    "generatedAt": "2026-11-18T02:42:01.366092+00:00",
     "repoCount": 5,
     "totalPRs": 30
   },
@@ -118,6 +118,18 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
+          "createdAt": "2026-11-18T02:04:17Z",
+          "failingChecks": 0,
+          "headRef": "fix/chat-modal-interchange-route",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 911,
+          "title": "fix(chat): decline chord substitution when the only root is the key",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/911"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
           "createdAt": "2026-11-17T23:11:44Z",
           "failingChecks": 1,
           "headRef": "chore/864-delete-webblazorapp",
@@ -126,18 +138,6 @@
           "number": 909,
           "title": "chore(apps): delete GA.WebBlazorApp, which cannot build (#864 cleanup, 3/3)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/909"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-11-17T14:05:25Z",
-          "failingChecks": 0,
-          "headRef": "fix/optick-retrieval-chord-identity",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 906,
-          "title": "fix(search): rank voicings of the parsed chord first in OPTIC-K retrieval",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/906"
         },
         {
           "ageDays": 2,
@@ -282,19 +282,19 @@
           "failingChecks": 0,
           "headRef": "feat/ixforge-ladybug",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "CONFLICTING",
           "number": 565,
           "title": "feat(ixforge): queries on the Desktop, automatic updates, LadybugDB graph (stacked on #544)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/565"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-11-17T00:36:49Z",
           "failingChecks": 0,
           "headRef": "refactor/origami-verdict-check",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 563,
           "title": "refactor(ix-origami): assess() applies the verdict rules; Context private (5 slices)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/563"
@@ -306,7 +306,7 @@
           "failingChecks": 3,
           "headRef": "feat/ixforge-mobile-catalog",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 546,
           "title": "feat(ixforge): mobile catalog, tool states, pinning, optional names and widget traits (stacked on #544)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/546"
@@ -324,25 +324,25 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/544"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "app/openai-code-agent",
           "createdAt": "2026-11-15T00:44:38Z",
           "failingChecks": 0,
           "headRef": "codex/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 543,
           "title": "Document authorized remote path for IX Forge shared counter creation (no code/data mutation)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/543"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "app/anthropic-code-agent",
           "createdAt": "2026-11-15T00:44:33Z",
           "failingChecks": 0,
           "headRef": "claude/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 542,
           "title": "IXFORGE-COUNTER-ACCESS-R1: investigation \u2014 no authorized non-Desktop path to create the shared \u00ab Lectures \u00bb counter",
           "url": "https://github.com/GuitarAlchemist/ix/pull/542"
@@ -354,7 +354,7 @@
           "failingChecks": 0,
           "headRef": "docs/learnings-wasi-validator",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 538,
           "title": "docs(solutions): two learnings from the IXQL WASI validator prototype",
           "url": "https://github.com/GuitarAlchemist/ix/pull/538"
@@ -376,13 +376,13 @@
       "prCount": 5,
       "prs": [
         {
-          "ageDays": 35,
+          "ageDays": 36,
           "author": "spareilleux",
           "createdAt": "2026-10-13T02:09:29Z",
           "failingChecks": 0,
           "headRef": "feat/evolve-constraint-check",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 392,
           "title": "feat: check the constraints that name code against the code",
           "url": "https://github.com/GuitarAlchemist/tars/pull/392"
@@ -394,7 +394,7 @@
           "failingChecks": 0,
           "headRef": "feat/evolve-api-teacher",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 381,
           "title": "feat: let evolve's teacher run on a paid API with openai:, gemini: or anthropic:",
           "url": "https://github.com/GuitarAlchemist/tars/pull/381"
@@ -406,7 +406,7 @@
           "failingChecks": 0,
           "headRef": "docs/fsproj-not-a-one-way-door",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 346,
           "title": "docs: stop calling a project file a one-way door",
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
@@ -418,7 +418,7 @@
           "failingChecks": 0,
           "headRef": "fix/required-check-runs-on-stacked-prs",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 337,
           "title": "fix: let the required check run on a pull request that is not based on main",
           "url": "https://github.com/GuitarAlchemist/tars/pull/337"
@@ -430,7 +430,7 @@
           "failingChecks": 0,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 319,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/tars/pull/319"
@@ -460,7 +460,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1126,
           "title": "ci: run under the merge queue",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
@@ -472,7 +472,7 @@
           "failingChecks": 1,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
@@ -484,7 +484,7 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
@@ -496,7 +496,7 @@
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -508,7 +508,7 @@
           "failingChecks": 1,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -520,7 +520,7 @@
           "failingChecks": 3,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
