@@ -36,4 +36,19 @@ public class OptickChordNameFilterTests
     [TestCase("Am7", "Unknown")]
     public void MatchesChordSymbol_OtherChord_DoesNotMatch(string symbol, string? storedName) =>
         Assert.That(OptickSearchStrategy.MatchesChordSymbol(storedName, symbol), Is.False);
+
+    [Test]
+    public void HybridPool_WithAChordNameFilter_ReachesPastTheTopHundred() =>
+        // On the 2026-04-19 index the first voicing named after the query's chord ranks
+        // 105 ("open G major chord"), 210 ("F major barre chord") and 306 ("E7#9 Hendrix
+        // chord"): a 100-voicing pool left the name filter nothing to keep.
+        Assert.That(
+            OptickSearchStrategy.HybridPoolSize(limit: 5, new VoicingSearchFilters(ChordName: "E7#9")),
+            Is.GreaterThanOrEqualTo(1000));
+
+    [Test]
+    public void HybridPool_WithoutAChordNameFilter_KeepsTheShallowPool() =>
+        Assert.That(
+            OptickSearchStrategy.HybridPoolSize(limit: 5, new VoicingSearchFilters(SymbolicBitIndices: [1])),
+            Is.EqualTo(100));
 }
