@@ -63,6 +63,52 @@ public sealed class SkillDeclineTests
         Assert.That(response.Declined, Is.True, response.Result);
     }
 
+    // A key named after "in" or "key of" is the context of the question, not a chord to
+    // substitute. The first prompt was answered on the live chat (2026-11-17) with the ICV
+    // neighbours of a C major triad.
+    [TestCase("Explain modal interchange with one example in C major.")]
+    [TestCase("Explain secondary dominants in the key of G.")]
+    public async Task ChordSubstitution_KeyContextWithoutChord_Declines(string message)
+    {
+        var response = await new ChordSubstitutionSkill(new GrothendieckService(), NullLogger<ChordSubstitutionSkill>.Instance)
+            .ExecuteAsync(message);
+
+        Assert.That(response.Declined, Is.True, response.Result);
+    }
+
+    [TestCase("Alternative chord for F major in C", "**F**")]
+    [TestCase("Suggest substitutions for G7 in a ii-V-I", "**G7**")]
+    [TestCase("Tritone substitution for G7", "**G7**")]
+    [TestCase("Substitutes for G7", "**G7**")]
+    [TestCase("What can I play instead of Dm7?", "**Dm7**")]
+    [TestCase("What can I play instead of Dm7 in C major?", "**Dm7**")]
+    public async Task ChordSubstitution_ChordBesideKeyContext_Answers(string message, string source)
+    {
+        var response = await new ChordSubstitutionSkill(new GrothendieckService(), NullLogger<ChordSubstitutionSkill>.Instance)
+            .ExecuteAsync(message);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Declined, Is.False, response.Result);
+            Assert.That(response.Result, Does.StartWith($"Harmonic substitutions for {source}"));
+        });
+    }
+
+    // A key is major or minor, so a seventh-chord symbol after "in" still names a chord
+    // (Codex review on #911).
+    [Test]
+    public async Task ChordSubstitution_SeventhChordAfterIn_KeepsComparison()
+    {
+        var response = await new ChordSubstitutionSkill(new GrothendieckService(), NullLogger<ChordSubstitutionSkill>.Instance)
+            .ExecuteAsync("Are the notes in G7 and Db7 related by a tritone substitution?");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Declined, Is.False, response.Result);
+            Assert.That(response.Result, Does.StartWith("**G7** → **Db7** relationship analysis"));
+        });
+    }
+
     [Test]
     public async Task ChordInfo_MessageWithoutChordName_Declines()
     {
