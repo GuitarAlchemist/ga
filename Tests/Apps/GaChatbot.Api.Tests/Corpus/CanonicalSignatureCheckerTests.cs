@@ -48,6 +48,26 @@ public class CanonicalSignatureCheckerTests
     }
 
     [Test]
+    public void Compare_IgnoresLlmCallSteps()
+    {
+        // One llm.call step per LLM round trip: their number varies with tool rounds and the
+        // critique loop, so they are not part of a prompt's canonical signature.
+        var sig = new Signature(1, "test", "x", "test",
+        [
+            new StepSignature("chat.request",         "completed", null),
+            new StepSignature("orchestration.answer", "completed", "theory"),
+        ]);
+
+        var trace = ToTrace(
+            ("chat.request",         null),
+            ("llm.call",             new Dictionary<string, string?> { ["agent.id"] = "theory" }),
+            ("llm.call",             new Dictionary<string, string?> { ["agent.id"] = "theory" }),
+            ("orchestration.answer", new Dictionary<string, string?> { ["agent.id"] = "theory" }));
+
+        Assert.That(Compare(trace, sig), Is.Null);
+    }
+
+    [Test]
     public void Compare_AgentIdMismatch_Diagnostic()
     {
         var sig = new Signature(1, "test", "x", "test",

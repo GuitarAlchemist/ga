@@ -93,10 +93,19 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     /// <summary>
     /// Sends a chat request to the LLM.
     /// </summary>
-    protected async Task<string> ChatAsync(
+    protected Task<string> ChatAsync(
         string userMessage,
         string? systemPrompt = null,
         CancellationToken cancellationToken = default,
+        IReadOnlyList<ChatHistoryTurn>? conversationHistory = null) =>
+        ChatPassAsync("single", userMessage, systemPrompt, cancellationToken, conversationHistory);
+
+    /// <summary>Sends one chat request and reports it to <see cref="LlmCallTrace"/> as <paramref name="pass"/>.</summary>
+    private async Task<string> ChatPassAsync(
+        string pass,
+        string userMessage,
+        string? systemPrompt,
+        CancellationToken cancellationToken,
         IReadOnlyList<ChatHistoryTurn>? conversationHistory = null)
     {
         var messages = new List<ChatMessage>();
@@ -125,10 +134,31 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
         chatActivity?.SetTag(ChatbotActivitySource.TagQueryLength, userMessage.Length);
 
         var sw = Stopwatch.StartNew();
-        var response = await ChatClient.GetResponseAsync(messages, cancellationToken: cancellationToken);
+        ChatResponse response;
+        try
+        {
+            response = await ChatClient.GetResponseAsync(messages, cancellationToken: cancellationToken);
+        }
+        catch
+        {
+            LlmCallTrace.Report(new LlmCall(AgentId, pass, null, sw.ElapsedMilliseconds, null, null, null, 0, 0, Succeeded: false));
+            throw;
+        }
+
         sw.Stop();
 
         var responseText = response.Messages.LastOrDefault()?.Text ?? "";
+        LlmCallTrace.Report(new LlmCall(
+            AgentId,
+            pass,
+            response.ModelId,
+            sw.ElapsedMilliseconds,
+            FirstTokenMs: null,
+            response.Usage?.InputTokenCount,
+            response.Usage?.OutputTokenCount,
+            response.Messages.SelectMany(m => m.Contents).OfType<FunctionCallContent>().Count(),
+            responseText.Length,
+            Succeeded: true));
         chatActivity?.SetTag("llm.response_ms", sw.ElapsedMilliseconds);
         chatActivity?.SetTag("llm.response_length", responseText.Length);
 
@@ -152,7 +182,7 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
         critiqueActivity?.SetTag(ChatbotActivitySource.TagAgentId, AgentId);
 
         // Only the draft sees prior turns; critique and refinement quote the draft directly.
-        var draft = await ChatAsync(userMessage, systemPrompt, cancellationToken, conversationHistory);
+        var draft = await ChatPassAsync("draft", userMessage, systemPrompt, cancellationToken, conversationHistory);
 
         var critiqueMessage = $"""
             I gave this answer to a music theory question. Identify any errors, missing context, or improvements. Be concise.
@@ -160,7 +190,7 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             QUESTION: {userMessage}
             ANSWER: {draft}
             """;
-        var critique = await ChatAsync(critiqueMessage, systemPrompt, cancellationToken);
+        var critique = await ChatPassAsync("critique", critiqueMessage, systemPrompt, cancellationToken);
 
         var refineMessage = $"""
             Rewrite the answer incorporating the critique. Return valid JSON in the same format as before.
@@ -169,7 +199,7 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             ORIGINAL ANSWER: {draft}
             CRITIQUE: {critique}
             """;
-        return await ChatAsync(refineMessage, systemPrompt, cancellationToken);
+        return await ChatPassAsync("rewrite", refineMessage, systemPrompt, cancellationToken);
     }
 
     /// <summary>
@@ -206,11 +236,48 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
 
         Logger.LogDebug("Agent {AgentId} streaming request: {Message}", AgentId, userMessage[..Math.Min(100, userMessage.Length)]);
 
-        await foreach (var update in ChatClient.GetStreamingResponseAsync(messages, cancellationToken: cancellationToken))
+        // Elapsed time includes the consumer's handling of each token between yields.
+        var sw = Stopwatch.StartNew();
+        long? firstTokenMs = null;
+        string? model = null;
+        long? inputTokens = null, outputTokens = null;
+        int toolCalls = 0, length = 0;
+        var succeeded = false;
+        try
         {
-            var text = update.Text;
-            if (!string.IsNullOrEmpty(text))
-                yield return text;
+            await foreach (var update in ChatClient.GetStreamingResponseAsync(messages, cancellationToken: cancellationToken))
+            {
+                model ??= update.ModelId;
+                foreach (var content in update.Contents)
+                {
+                    switch (content)
+                    {
+                        case FunctionCallContent:
+                            toolCalls++;
+                            break;
+                        case UsageContent usage:
+                            inputTokens = (inputTokens ?? 0) + (usage.Details.InputTokenCount ?? 0);
+                            outputTokens = (outputTokens ?? 0) + (usage.Details.OutputTokenCount ?? 0);
+                            break;
+                    }
+                }
+
+                var text = update.Text;
+                if (!string.IsNullOrEmpty(text))
+                {
+                    firstTokenMs ??= sw.ElapsedMilliseconds;
+                    length += text.Length;
+                    yield return text;
+                }
+            }
+
+            succeeded = true;
+        }
+        finally
+        {
+            LlmCallTrace.Report(new LlmCall(
+                AgentId, "stream", model, sw.ElapsedMilliseconds, firstTokenMs,
+                inputTokens, outputTokens, toolCalls, length, succeeded));
         }
     }
 

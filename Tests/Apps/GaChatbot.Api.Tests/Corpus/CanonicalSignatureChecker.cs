@@ -87,6 +87,10 @@ internal static class CanonicalSignatureChecker
         ArgumentNullException.ThrowIfNull(traceSteps);
         ArgumentNullException.ThrowIfNull(signature);
 
+        // llm.call steps record each LLM round trip; their number varies with tool rounds and
+        // the critique loop, so they are not part of the canonical shape.
+        traceSteps = [.. traceSteps.Where(s => !string.Equals(s.Name, "llm.call", StringComparison.OrdinalIgnoreCase))];
+
         for (var i = 0; i < signature.Steps.Count; i++)
         {
             var canon = signature.Steps[i];
