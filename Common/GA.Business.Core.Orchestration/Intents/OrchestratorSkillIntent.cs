@@ -28,6 +28,8 @@ public sealed class OrchestratorSkillIntent(IOrchestratorSkill skill) : IIntent
     /// predicate, consulted by <see cref="SemanticIntentRouter"/> only when embeddings are unavailable.</summary>
     public bool MatchesWithoutEmbeddings(string query) => skill.CanHandle(query);
 
+    public bool ResolvesFollowUps => skill.ResolvesFollowUps;
+
     public Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default) =>
         ExecuteAsync(query, [], cancellationToken);
 

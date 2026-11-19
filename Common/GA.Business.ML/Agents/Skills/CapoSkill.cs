@@ -46,6 +46,9 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
 
     public bool CanHandle(string message) => false;  // semantic-routing only
 
+    /// <summary>"And a C shape?" after a capo question is answered from the history.</summary>
+    public bool ResolvesFollowUps => true;
+
     // Pattern A: "<sounding>, capo <N>" or "capo <N>, <sounding>" → what SHAPE
     // The "shape" keyword (or sounding-key + capo without a shape token) implies
     // the user wants the played-side answer.
@@ -124,12 +127,14 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
     }
 
     // Rewrites a follow-up that names only a shape or only a capo fret as a complete question,
-    // taking the other argument from the previous question. Null when it names neither or both.
+    // taking the other argument from the previous question. Null when it names neither or both,
+    // or when it is a question of its own rather than a fragment.
     private static string? Complete(string followUp, string previous)
     {
         var fret = FretOnly.Match(followUp);
         var shape = ShapeOnly.Match(followUp);
         if (shape.Success == fret.Success) return null;
+        if (!IsFragment(followUp, shape.Success ? shape : fret)) return null;
 
         if (shape.Success)
         {
@@ -140,6 +145,20 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
         }
 
         return FretOnly.Replace(previous, $"capo {fret.Groups["n"].Value}", 1);
+    }
+
+    // An elliptical follow-up is the changed argument plus a few linking words ("And a C shape?",
+    // "What about capo 4?"). With the argument removed, a question of its own still carries its
+    // own predicate ("Can I use ... on a 12-string?", "How do I finger a ...?"), so it keeps more
+    // words than a fragment does.
+    private const int MaxFragmentWords = 4;
+
+    private static bool IsFragment(string followUp, Match argument)
+    {
+        var rest = followUp.Remove(argument.Index, argument.Length);
+        var words = rest.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Count(word => word.Any(char.IsLetterOrDigit));
+        return words <= MaxFragmentWords;
     }
 
     private static readonly Regex FretOnly = new(CapoFret("n"), RegexOptions.IgnoreCase | RegexOptions.Compiled);

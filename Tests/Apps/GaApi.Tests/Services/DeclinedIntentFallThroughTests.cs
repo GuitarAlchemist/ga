@@ -120,7 +120,7 @@ public class DeclinedIntentFallThroughTests
     public async Task EllipticalFollowUp_BelowThreshold_RoutesWithThePreviousUserTurn(bool streaming)
     {
         const string capoQuestion = "With a capo on fret 2, what key does a G shape sound in?";
-        var intent = new HistoryRecordingIntent(examplePrompt: capoQuestion);
+        var intent = new HistoryRecordingIntent(examplePrompt: capoQuestion, resolvesFollowUps: true);
         var chat = new RecordingChatClient();
         using var factory = CreateFactory(intent, chat, new TopicEmbeddingGenerator("capo"));
         using var scope = factory.Services.CreateScope();
@@ -146,11 +146,34 @@ public class DeclinedIntentFallThroughTests
         });
     }
 
+    // An intent that answers the same way whatever the message (a catalog page) cannot resolve
+    // a follow-up: "Thanks" after a practice-routine question must not repeat the routine
+    // (Codex review on #913).
+    [Test]
+    public async Task BelowThresholdMessage_ContextualMatchThatDoesNotResolveFollowUps_FallsThrough()
+    {
+        const string routineQuestion = "Give me a 30-minute practice routine.";
+        var intent = new HistoryRecordingIntent(examplePrompt: routineQuestion, resolvesFollowUps: false);
+        var chat = new RecordingChatClient();
+        using var factory = CreateFactory(intent, chat, new TopicEmbeddingGenerator("routine"));
+        using var scope = factory.Services.CreateScope();
+        var orchestrator = scope.ServiceProvider.GetRequiredService<ProductionOrchestrator>();
+        var request = new ChatRequest(
+            "Thanks",
+            History: [new ConversationTurn("user", routineQuestion, DateTimeOffset.UnixEpoch)]);
+
+        var response = await orchestrator.AnswerAsync(request);
+
+        Assert.That(response.Routing?.AgentId, Is.Not.EqualTo(intent.Id));
+        Assert.That(intent.ReceivedQuery, Is.Null);
+    }
+
     // Without a previous user turn there is nothing to read the message with: it falls through.
     [Test]
     public async Task BelowThresholdMessage_WithoutHistory_FallsThroughToAgentPath()
     {
-        var intent = new HistoryRecordingIntent(examplePrompt: "With a capo on fret 2, what key does a G shape sound in?");
+        var intent = new HistoryRecordingIntent(
+            examplePrompt: "With a capo on fret 2, what key does a G shape sound in?", resolvesFollowUps: true);
         var chat = new RecordingChatClient();
         using var factory = CreateFactory(intent, chat, new TopicEmbeddingGenerator("capo"));
         using var scope = factory.Services.CreateScope();
@@ -183,8 +206,11 @@ public class DeclinedIntentFallThroughTests
             });
         });
 
-    private sealed class HistoryRecordingIntent(string examplePrompt = "Describe his playing style.") : IIntent
+    private sealed class HistoryRecordingIntent(
+        string examplePrompt = "Describe his playing style.",
+        bool resolvesFollowUps = false) : IIntent
     {
+        public bool ResolvesFollowUps => resolvesFollowUps;
         public string? ReceivedQuery { get; private set; }
         public IReadOnlyList<ChatHistoryTurn>? ReceivedHistory { get; private set; }
         public string Id => "skill.recording";

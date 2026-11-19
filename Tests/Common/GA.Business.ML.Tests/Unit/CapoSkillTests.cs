@@ -74,6 +74,17 @@ public class CapoSkillTests
         Assert.That(response.Declined, Is.True);
     }
 
+    // A new question that happens to name a fret or a shape is not a continuation of the
+    // previous calculation (Codex review on #913).
+    [TestCase("Can I use capo 4 on a 12-string?")]
+    [TestCase("How do I finger a C shape?")]
+    public async Task NewQuestionNamingOneArgument_AfterACapoQuestion_Declines(string prompt)
+    {
+        var response = await Capo.ExecuteAsync(prompt, CapoTwoGShape);
+
+        Assert.That(response.Declined, Is.True, response.Result);
+    }
+
     [Test]
     public async Task UnrelatedFollowUp_AfterACapoQuestion_Declines()
     {

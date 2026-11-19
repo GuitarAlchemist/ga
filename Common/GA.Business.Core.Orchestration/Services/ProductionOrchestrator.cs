@@ -328,8 +328,8 @@ public class ProductionOrchestrator(
 
         // An elliptical follow-up ("And a C shape?" after a capo question) that claims no
         // intent on its own is routed again with the previous user turn as semantic context.
-        // The intent still parses the raw message with the history, and declines if it
-        // cannot resolve it.
+        // Only an intent that resolves follow-ups may take it; it still parses the raw message
+        // with the history, and declines if it cannot resolve it.
         var contextualRoutingMessage = string.Equals(routingMessage, turn.Message, StringComparison.Ordinal)
             ? routingContextEnricher.WithPriorUserTurn(turn.Message, sessionId, req.History)
             : null;
@@ -375,7 +375,9 @@ public class ProductionOrchestrator(
     /// <c>ExecuteAsync</c> receives <see cref="CascadeTurn.Message"/> so its
     /// internal regex parsers see the raw text without the enrichment prefix.</param>
     /// <param name="contextualRoutingMessage">The message read with the previous user turn,
-    /// routed only when <paramref name="routingMessage"/> claims no intent; null to skip.</param>
+    /// routed only when <paramref name="routingMessage"/> claims no intent; null to skip. Its
+    /// match counts only for an intent that resolves follow-ups: a catalog intent answers the
+    /// same page whatever the message, so "Thanks" would repeat the previous answer.</param>
     private async Task<ChatResponse?> TryDispatchViaIntentAsync(
         CascadeTurn turn,
         string routingMessage,
@@ -388,6 +390,7 @@ public class ProductionOrchestrator(
         {
             match = await intentRouter.RouteAsync(contextualRoutingMessage, services, ct);
             EmitRoutingTrace(match, "routing.candidates.with_previous_turn");
+            if (match is { Intent.ResolvesFollowUps: false }) match = null;
         }
 
         if (match is not { } pick) return null;
