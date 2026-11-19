@@ -1,0 +1,225 @@
+# Conversation acceptance set for the GA chatbot (free-form, multi-turn, off-topic).
+# Grading is deterministic: no LLM judge. Each case is a list of user turns; the
+# checks apply to the answer of the LAST turn. Earlier answers are fed back as history.
+#
+# Checks:
+#   any:      at least one of these words/phrases must appear (word-boundary, case-insensitive)
+#   all:      every one of these must appear
+#   none:     none of these may appear
+#   not_agent: the last turn must not be answered by these agent ids
+#   min_len:  minimum answer length in characters
+# Every case also fails on the universal error markers (see main.go).
+
+- id: free-improv-progress
+  kind: free
+  turns: ["How can I get better at improvising over chord changes? Give me a short practice plan."]
+  any: [arpeggio, "chord tones", "target", scale]
+  min_len: 200
+
+- id: free-django
+  kind: free
+  turns: ["Who was Django Reinhardt and what is his guitar style known for?"]
+  any: [gypsy, manouche, "jazz"]
+  not_agent: [voicing]
+  min_len: 120
+
+- id: free-modal-interchange
+  kind: free
+  turns: ["Explain modal interchange with one example in C major."]
+  any: [borrow, borrowed, parallel]
+  any2: [Fm, Ab, Bb, "iv", "bVI", "bVII"]
+  min_len: 150
+
+- id: free-tritone-sub
+  kind: free
+  turns: ["Why does a tritone substitution work over a dominant seventh chord?"]
+  any: [tritone]
+  any2: [Db7, "third", "seventh", "guide tone", "guide tones"]
+  min_len: 150
+
+- id: free-maj7-vs-m7
+  kind: free
+  turns: ["What is the difference between a major seventh chord and a minor seventh chord?"]
+  any: ["minor third", "b3", "flat third", "major third", "minor 3rd", "major 3rd", "♭3"]
+  min_len: 100
+
+- id: free-blues-scale
+  kind: free
+  turns: ["What is the blues scale and how is it different from the minor pentatonic?"]
+  any: ["b5", "flat five", "flat fifth", "blue note", "#4", "diminished fifth"]
+  min_len: 120
+
+- id: free-caged
+  kind: free
+  turns: ["What is the CAGED system on guitar?"]
+  not_agent: [voicing]
+  all: [CAGED]
+  any: [shape, shapes]
+  min_len: 150
+
+- id: free-vibrato
+  kind: free
+  turns: ["How do I develop a good finger vibrato on electric guitar?"]
+  not_agent: [voicing]
+  any: [vibrato]
+  min_len: 120
+
+- id: free-ear-training
+  kind: free
+  turns: ["How should a guitarist train their ear to recognise intervals?"]
+  any: [interval, intervals]
+  min_len: 120
+
+- id: free-dorian-sound
+  kind: free
+  turns: ["What makes the Dorian mode sound different from natural minor?"]
+  any: ["major sixth", "natural sixth", "raised sixth", "6th", "sixth", "degree 6"]
+  min_len: 100
+
+- id: free-ii-v-i-why
+  kind: free
+  turns: ["Why is the ii-V-I progression so common in jazz?"]
+  any: ["dominant", "resolution", "resolve", "fifth", "fifths"]
+  min_len: 120
+
+- id: free-secondary-dominant
+  kind: free
+  turns: ["What is a secondary dominant? Give one example in G major."]
+  any: [A7, B7, E7, D7, "V/V", "V7/V"]
+  min_len: 100
+
+- id: free-voice-leading
+  kind: free
+  turns: ["What does good voice leading mean when comping chords on guitar?"]
+  any: ["common tone", "common tones", "smallest", "step", "stepwise", "closest"]
+  min_len: 120
+
+- id: free-power-chord
+  kind: free
+  turns: ["Why is a power chord neither major nor minor?"]
+  any: [third]
+  min_len: 60
+
+- id: free-alternate-picking
+  kind: free
+  turns: ["Give me three tips for cleaner alternate picking."]
+  any: [metronome, slow, wrist, relax, relaxed, tension]
+  min_len: 120
+
+- id: free-key-signature-learning
+  kind: free
+  turns: ["What is an easy way to remember key signatures?"]
+  any: ["circle of fifths", "circle"]
+  min_len: 80
+
+- id: free-sus-chords
+  kind: free
+  turns: ["What is a sus4 chord and how does it usually resolve?"]
+  any: ["fourth", "4th"]
+  any2: ["third", "3rd", resolve, resolves]
+  min_len: 80
+
+- id: free-hendrix-chord
+  kind: free
+  turns: ["What notes are in the Hendrix chord E7#9?"]
+  all: [E, D, "G#"]
+  any: [G, "F##", "Fx", "F𝄪"]
+  none: ["F#"]
+  min_len: 40
+
+- id: free-practice-routine-30
+  kind: free
+  turns: ["I have 30 minutes a day to practice. How should I split it?"]
+  any: [minutes, min]
+  min_len: 150
+
+- id: free-chord-melody
+  kind: free
+  turns: ["How do I start arranging a chord melody?"]
+  any: [melody, "top note", "highest note", "top string"]
+  min_len: 150
+
+# ---------------------------------------------------------------- multi-turn
+- id: conv-key-followup-minor
+  kind: conversation
+  turns:
+    - "What are the diatonic chords in C major?"
+    - "And in its relative minor?"
+  all: [Am, Dm, Em]
+  any: [Bdim, "B°", "Bm7b5", "B diminished"]
+  min_len: 60
+
+- id: conv-transpose-followup
+  kind: conversation
+  turns:
+    - "Give me a ii-V-I in C major."
+    - "Now transpose it to F."
+  all: [Gm, F]
+  any: [C, C7]   # turn 1 gives triads (Dm – G – C), so the V of F is C or C7
+  min_len: 20
+
+- id: conv-scale-then-arpeggio
+  kind: conversation
+  turns:
+    - "Which scale fits over Am F C G?"
+    - "And which arpeggio should I play over the F?"
+  any: ["F major", "Fmaj7", "F A C", "F-A-C"]
+  min_len: 40
+
+- id: conv-chord-then-voicing
+  kind: conversation
+  turns:
+    - "What notes are in Dm7?"
+    - "Why does it sound sad compared to Dmaj7?"
+  any: ["minor third", "b3", "flat third", "F natural", "F"]
+  min_len: 80
+
+- id: conv-mode-then-song
+  kind: conversation
+  turns:
+    - "What is the Mixolydian mode?"
+    - "Which chord does it fit best?"
+  any: ["dominant", "7th chord", "seventh chord", "G7", "dominant seventh"]
+  min_len: 60
+
+- id: conv-capo-followup
+  kind: conversation
+  turns:
+    - "With a capo on fret 2, what key does a G shape sound in?"
+    - "And a C shape?"
+  all: [D]
+  min_len: 10
+
+- id: conv-practice-then-detail
+  kind: conversation
+  turns:
+    - "Give me a short warm-up routine for guitar."
+    - "Can you explain the first exercise in more detail?"
+  min_len: 120
+
+- id: conv-relative-then-signature
+  kind: conversation
+  turns:
+    - "What is the relative minor of E-flat major?"
+    - "How many flats does it have?"
+  any: ["three flats", "3 flats", "three", "3"]
+  min_len: 10
+
+# ---------------------------------------------------------------- off-topic
+- id: off-recipe
+  kind: offtopic
+  turns: ["Give me a recipe for chocolate cake."]
+  none: ["flour", "cocoa", "preheat"]
+  min_len: 20
+
+- id: off-code
+  kind: offtopic
+  turns: ["Write me a Python function that sorts a list."]
+  none: ["def ", "sorted(", ".sort("]
+  min_len: 20
+
+- id: off-weather
+  kind: offtopic
+  turns: ["What's the weather in Paris tomorrow?"]
+  none: ["°C", "sunny", "rain tomorrow"]
+  min_len: 20

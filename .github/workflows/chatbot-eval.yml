@@ -1,0 +1,263 @@
+name: Chatbot Eval
+
+# Measures the chatbot end to end on every chatbot-touching PR and on main, without
+# any local model server:
+#   - chat and single-prompt generation run on Anthropic (Haiku 5.5),
+#   - both text embedders (routing = bge-large, default = nomic-embed-text) run
+#     in-process from ONNX (parity with the Ollama models: cosine >= 0.99999),
+#   - Tools/chatbot-eval drives the conversations (convo), grades the answers and
+#     the agentic traces with an API judge (judge), and compares the run with the
+#     latest main run (evalgate).
+#
+# A pull request fails when it turns more cases from good to bad than the
+# tolerance allows (repo variable CHATBOT_EVAL_TOLERANCE, default 1: LLM answers
+# and verdicts are not deterministic). A run on main uploads the baseline the next
+# pull requests compare against.
+#
+# Secrets: GA_ANTHROPIC_API_KEY (required; without it the job reports a skip;
+# a key not scoped to a workspace also needs the repo variable GA_ANTHROPIC_WORKSPACE_ID),
+# OPTICK_INDEX_URL / OPTICK_INDEX_AUTH (voicing search; without them the voicing
+# cases degrade in the baseline and the candidate alike).
+
+on:
+  pull_request:
+    paths:
+      - 'Common/**'
+      - 'Apps/ga-server/**'
+      - 'Tools/chatbot-eval/**'
+      - '.github/workflows/chatbot-eval.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'Common/**'
+      - 'Apps/ga-server/**'
+      - 'Tools/chatbot-eval/**'
+      - '.github/workflows/chatbot-eval.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+
+concurrency:
+  group: chatbot-eval-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Pinned Hugging Face revisions of the ONNX embedders.
+  BGE_REPO: BAAI/bge-large-en-v1.5
+  BGE_REV: d4aa6901d3a41ba39fb536a557fa166f842b0e09
+  NOMIC_REPO: nomic-ai/nomic-embed-text-v1.5
+  NOMIC_REV: e9b6763023c676ca8431644204f50c2b100d9aab
+  MODELS_DIR: ${{ github.workspace }}/../models
+  EVAL_DIR: ${{ github.workspace }}/eval-out
+  GAAPI_URL: http://localhost:5290
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check the Anthropic key
+        id: key
+        env:
+          KEY: ${{ secrets.GA_ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::notice::GA_ANTHROPIC_API_KEY is not set; the chatbot eval is skipped."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.key.outputs.present == 'true'
+        uses: actions/checkout@v4
+
+      - name: Fetch the Demerzel governance submodule
+        if: steps.key.outputs.present == 'true'
+        run: git submodule update --init --depth 1 governance/demerzel
+
+      - name: Setup .NET
+        if: steps.key.outputs.present == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Setup Go
+        if: steps.key.outputs.present == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: Tools/chatbot-eval/go.mod
+          cache-dependency-path: Tools/chatbot-eval/go.sum
+
+      - name: Cache ONNX embedders
+        if: steps.key.outputs.present == 'true'
+        id: models
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.MODELS_DIR }}
+          key: onnx-embedders-${{ env.BGE_REV }}-${{ env.NOMIC_REV }}
+
+      - name: Download ONNX embedders
+        if: steps.key.outputs.present == 'true' && steps.models.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          fetch() { # repo rev dir
+            mkdir -p "$MODELS_DIR/$3/onnx"
+            curl -fsSL --retry 3 -o "$MODELS_DIR/$3/vocab.txt" "https://huggingface.co/$1/resolve/$2/vocab.txt"
+            curl -fsSL --retry 3 -o "$MODELS_DIR/$3/onnx/model.onnx" "https://huggingface.co/$1/resolve/$2/onnx/model.onnx"
+          }
+          fetch "$BGE_REPO" "$BGE_REV" bge
+          fetch "$NOMIC_REPO" "$NOMIC_REV" nomic
+          du -sh "$MODELS_DIR"/*
+
+      - name: Fetch the OPTIC-K index
+        if: steps.key.outputs.present == 'true'
+        env:
+          INDEX_URL: ${{ secrets.OPTICK_INDEX_URL }}
+          INDEX_AUTH: ${{ secrets.OPTICK_INDEX_AUTH }}
+        run: |
+          set -euo pipefail
+          mkdir -p state/voicings
+          if [ -z "$INDEX_URL" ]; then
+            echo "::warning::OPTICK_INDEX_URL is not set; voicing cases run without the index."
+            exit 0
+          fi
+          if [ -n "${INDEX_AUTH:-}" ]; then
+            curl -fsSL --retry 3 -H "Authorization: $INDEX_AUTH" -o state/voicings/optick.index "$INDEX_URL"
+          else
+            curl -fsSL --retry 3 -o state/voicings/optick.index "$INDEX_URL"
+          fi
+          du -h state/voicings/optick.index
+
+      - name: Build GaApi and the eval tools
+        if: steps.key.outputs.present == 'true'
+        run: |
+          set -euo pipefail
+          dotnet build Apps/ga-server/GaApi/GaApi.csproj -c Release
+          (cd Tools/chatbot-eval && go build -o "$RUNNER_TEMP/eval-bin/" ./cmd/...)
+
+      - name: Start GaApi (Anthropic + ONNX, no Ollama)
+        if: steps.key.outputs.present == 'true'
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+          ASPNETCORE_URLS: ${{ env.GAAPI_URL }}
+          AI__ChatProvider: claude
+          Anthropic__Model: claude-haiku-5-5
+          Anthropic__ApiKey: ${{ secrets.GA_ANTHROPIC_API_KEY }}
+          Anthropic__WorkspaceId: ${{ vars.GA_ANTHROPIC_WORKSPACE_ID }}
+          AI__EmbeddingProvider: onnx
+          AI__Embedding__Default__OnnxDir: ${{ env.MODELS_DIR }}/nomic
+          AI__Embedding__Default__Pooling: mean
+          AI__Embedding__Default__Model: nomic-embed-text
+          AI__Embedding__Routing__OnnxDir: ${{ env.MODELS_DIR }}/bge
+          AI__Embedding__Routing__Pooling: cls
+          AI__Embedding__Routing__Model: bge-large
+          AI__Routing__MinConfidence: '0.64'
+          AI__Routing__AmbiguousBelow: '0.75'
+          AI__Routing__MinMargin: '0.03'
+          # Any leftover Ollama call fails fast instead of hanging.
+          Ollama__BaseUrl: http://127.0.0.1:9
+          Ollama__Endpoint: http://127.0.0.1:9
+          VoicingSearch__OpticIndexPath: ${{ github.workspace }}/state/voicings/optick.index
+          VoicingSearch__EnableIndexing: 'false'
+          Governance__DemerzelRoot: ${{ github.workspace }}/governance/demerzel
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVAL_DIR"
+          nohup dotnet Apps/ga-server/GaApi/bin/Release/net10.0/GaApi.dll \
+            --contentRoot Apps/ga-server/GaApi/bin/Release/net10.0 > "$EVAL_DIR/gaapi.log" 2>&1 &
+          for i in $(seq 1 120); do
+            if curl -sf "$GAAPI_URL/api/chatbot/status" > /dev/null; then echo "GaApi is up after ${i}s"; exit 0; fi
+            sleep 1
+          done
+          echo "::error::GaApi did not answer /api/chatbot/status within 120 s"
+          tail -100 "$EVAL_DIR/gaapi.log"
+          exit 1
+
+      - name: Run the conversations
+        if: steps.key.outputs.present == 'true'
+        run: |
+          set -uo pipefail
+          for set in conversations conversations2; do
+            "$RUNNER_TEMP/eval-bin/convo" "$GAAPI_URL" "Tools/chatbot-eval/cases/$set.yaml" "$EVAL_DIR/$set.json" | tee "$EVAL_DIR/$set.log"
+            code=${PIPESTATUS[0]}
+            # 1 = some cases failed (that is data); anything else is a broken run.
+            if [ "$code" -ne 0 ] && [ "$code" -ne 1 ]; then echo "::error::convo exited $code on $set"; exit "$code"; fi
+          done
+
+      - name: Judge answers and traces
+        if: steps.key.outputs.present == 'true'
+        env:
+          GA_ANTHROPIC_API_KEY: ${{ secrets.GA_ANTHROPIC_API_KEY }}
+          GA_ANTHROPIC_WORKSPACE_ID: ${{ vars.GA_ANTHROPIC_WORKSPACE_ID }}
+        run: |
+          "$RUNNER_TEMP/eval-bin/judge" -backend api -model claude-haiku-5-5 -out "$EVAL_DIR/judge.jsonl" \
+            "$EVAL_DIR/conversations.json" "$EVAL_DIR/conversations2.json" | tee "$EVAL_DIR/judge.log"
+
+      - name: Upload the eval run
+        if: always() && steps.key.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatbot-eval
+          path: ${{ env.EVAL_DIR }}
+          retention-days: 90
+
+      - name: Download the main baseline
+        if: steps.key.outputs.present == 'true' && github.event_name == 'pull_request'
+        id: baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow chatbot-eval.yml --branch main \
+            --event push --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          if [ -z "$run_id" ]; then
+            echo "::notice::No successful main run yet; this run only reports."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name chatbot-eval --dir "$RUNNER_TEMP/baseline"
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+      - name: Compare with the baseline
+        if: steps.key.outputs.present == 'true' && steps.baseline.outputs.found == 'true'
+        id: gate
+        run: |
+          set -uo pipefail
+          b="$RUNNER_TEMP/baseline"
+          "$RUNNER_TEMP/eval-bin/evalgate" \
+            -base-convo "$b/conversations.json,$b/conversations2.json" -base-judge "$b/judge.jsonl" \
+            -convo "$EVAL_DIR/conversations.json,$EVAL_DIR/conversations2.json" -judge "$EVAL_DIR/judge.jsonl" \
+            -tolerance "${{ vars.CHATBOT_EVAL_TOLERANCE || 1 }}" -summary "$EVAL_DIR/summary.md"
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          {
+            echo "<!-- chatbot-eval -->"
+            echo "Baseline: main run ${{ steps.baseline.outputs.run_id }}"
+            echo
+            cat "$EVAL_DIR/summary.md"
+          } > "$EVAL_DIR/comment.md"
+          cat "$EVAL_DIR/comment.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on the pull request
+        if: always() && steps.gate.outputs.code != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq '[.[] | select(.body | startswith("<!-- chatbot-eval -->"))][0].id // empty')
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@"$EVAL_DIR/comment.md" > /dev/null
+          else
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file "$EVAL_DIR/comment.md"
+          fi
+
+      - name: Fail on regression
+        if: steps.gate.outputs.code != '' && steps.gate.outputs.code != '0'
+        run: |
+          echo "::error::evalgate exited ${{ steps.gate.outputs.code }} (1 = more regressions than the tolerance, 2 = unreadable input)"
+          exit 1

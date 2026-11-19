@@ -1,0 +1,149 @@
+# Second conversation acceptance set (2026-11-18): new realistic questions, written after
+# cases.yaml reached 30/31. Same format and deterministic grading as cases.yaml.
+
+# --- free-form, theory and practice ---
+- id: f2-circle-of-fifths
+  kind: free
+  turns: ["How do I use the circle of fifths to find the chords in a key?"]
+  any: [fifth, fifths]
+  any2: [IV, V, "relative minor", "dominant", "subdominant", "neighbouring", "neighboring", "adjacent"]
+  min_len: 150
+
+- id: f2-nashville
+  kind: free
+  turns: ["What is the Nashville number system?"]
+  any: [number, numbers]
+  any2: ["1", "4", "5", "I", "IV", "V"]
+  min_len: 120
+
+- id: f2-barre-pain
+  kind: free
+  turns: ["My barre chords buzz and my hand hurts. What am I doing wrong?"]
+  any: [thumb, pressure, fret, elbow, wrist, angle, "close to the fret"]
+  not_agent: [voicing]
+  min_len: 150
+
+- id: f2-cagged
+  kind: free
+  turns: ["Explain the CAGED system in simple terms."]
+  all: [CAGED]
+  any: [shape, shapes]
+  min_len: 150
+
+- id: f2-alternate-picking
+  kind: free
+  turns: ["How do I build speed with alternate picking without getting tense?"]
+  any: [metronome, slow, relax, tension, "down-up", downstroke, upstroke]
+  not_agent: [voicing]
+  min_len: 150
+
+- id: f2-why-minor-sad
+  kind: free
+  turns: ["Why does a minor chord sound sad compared to a major chord?"]
+  any: ["minor third", "major third", "third", "flat third", "b3", "3rd", "♭3"]
+  min_len: 120
+
+- id: f2-dorian-song
+  kind: free
+  turns: ["Give me an example of a famous song in Dorian mode."]
+  any: [Dorian]
+  any2: ["Oye Como Va", "So What", "Scarborough Fair", "Moondance", "Evil Ways", "Another Brick", "Get Lucky", "Mad World", "Billie Jean", "Smoke on the Water", "Light My Fire", "Eleanor Rigby", "Breathe"]
+  min_len: 60
+
+- id: f2-chord-tones-cmaj9
+  kind: free
+  turns: ["What notes are in a Cmaj9 chord?"]
+  all: [C, E, G, B, D]
+  min_len: 20
+
+- id: f2-g-major-scale
+  kind: free
+  turns: ["Spell the G major scale."]
+  all: [G, A, B, C, D, E, "F#"]
+  none: [F]
+  min_len: 20
+
+- id: f2-a-minor-penta-box
+  kind: free
+  turns: ["Which notes are in the A minor pentatonic scale?"]
+  all: [A, C, D, E, G]
+  none: [B, F]
+  min_len: 20
+
+# --- multi-turn ---
+- id: c2-key-then-chords
+  kind: conversation
+  turns:
+    - "I'm writing a song in E minor."
+    - "Which chords fit in that key?"
+  all: [Em]
+  any: [Am, Bm, B7, G, C, D]
+  min_len: 30
+
+- id: c2-chord-then-voicing
+  kind: conversation
+  turns:
+    - "What notes are in a D7 chord?"
+    - "Show me an easy way to play it on guitar."
+  any: ["x-x-0-2-1-2", "xx0212", "x x 0 2 1 2", "D7"]
+  min_len: 30
+
+- id: c2-scale-then-mode
+  kind: conversation
+  turns:
+    - "Spell the C major scale."
+    - "Now start it from D. What mode is that?"
+  any: [Dorian]
+  min_len: 20
+
+- id: c2-progression-then-key
+  kind: conversation
+  turns:
+    - "I'm playing Am F C G over and over."
+    - "What key am I in?"
+  any: ["A minor", "C major", "Am", "C"]
+  min_len: 20
+
+- id: c2-name-memory
+  kind: conversation
+  turns:
+    - "I play a seven-string guitar tuned B E A D G B E."
+    - "What is the lowest note I can play on it?"
+  any: [B]
+  min_len: 10
+
+- id: c2-correction
+  kind: conversation
+  turns:
+    - "What notes are in an F major chord?"
+    - "Sorry, I meant F minor."
+  all: [F, C]
+  any: [Ab, "A♭", "G#"]
+  min_len: 15
+
+# --- traps ---
+- id: t2-wrong-premise
+  kind: free
+  turns: ["Why does a C major chord contain an F sharp?"]
+  any: ["does not", "doesn't", "not contain", "no F", "isn't", "is not", "C, E", "C E G", "C-E-G"]
+  min_len: 20
+
+- id: t2-nonsense-chord
+  kind: free
+  turns: ["What notes are in an H13b19 chord?"]
+  none: ["score 0.000"]
+  any: ["not a", "isn't a", "not recognized", "unknown", "invalid", "doesn't exist", "does not exist", "not a standard", "couldn't", "could not", "H is", "German", "B13"]
+  min_len: 20
+
+- id: t2-recipe
+  kind: offtopic
+  turns: ["Give me a recipe for banana bread."]
+  any: [guitar, music, "Guitar Alchemist", "can't help", "cannot help", "outside", "only help", "focus"]
+  none: [flour, oven]
+  min_len: 20
+
+- id: t2-french
+  kind: free
+  turns: ["Quelles sont les notes de l'accord de la mineur ?"]
+  all: [A, C, E]
+  min_len: 10
