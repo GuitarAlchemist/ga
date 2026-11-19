@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "b57876aeb965022f100285d81c16df6a8548a03b",
-    "generatedAt": "2026-11-19T02:32:34.681876+00:00",
+    "commitSha": "33f23867d2351bae65ff1d071017bfd3adbe8718",
+    "generatedAt": "2026-11-19T04:47:51.950562+00:00",
     "repoCount": 5,
-    "totalPRs": 32
+    "totalPRs": 36
   },
   "repos": [
     {
@@ -113,19 +113,55 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 14,
+      "prCount": 17,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-11-19T00:41:15Z",
+          "createdAt": "2026-11-19T04:14:09Z",
           "failingChecks": 0,
-          "headRef": "fix/chat-agent-embedding-cache",
+          "headRef": "fix/815-theory-comparison-phrasings",
           "isDraft": false,
           "mergeable": "UNKNOWN",
-          "number": 918,
-          "title": "fix(chat): cache agent-description embeddings across router scopes",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/918"
+          "number": 922,
+          "title": "fix(chat): TheoryComparisonSkill reads the phrasings of \"major vs minor\" it refused",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/922"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-19T03:37:52Z",
+          "failingChecks": 0,
+          "headRef": "fix/822-status-embedding-loading",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 921,
+          "title": "fix(chatbot): report a slow first embedding load as loading, not as a failed provider",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/921"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-19T02:57:47Z",
+          "failingChecks": 0,
+          "headRef": "fix/voicing-followup-chord",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 920,
+          "title": "fix(chat): take a follow-up's chord from the previous user turn in VoicingAgent",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/920"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-19T02:57:42Z",
+          "failingChecks": 0,
+          "headRef": "feat/chat-llm-call-trace",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 919,
+          "title": "feat(chat): record each agent LLM call as an llm.call trace step",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/919"
         },
         {
           "ageDays": 0,
@@ -188,7 +224,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/858"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "app/claude",
           "createdAt": "2026-11-14T03:15:28Z",
           "failingChecks": 0,
@@ -200,7 +236,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/854"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "app/claude",
           "createdAt": "2026-11-14T03:06:25Z",
           "failingChecks": 0,
@@ -236,7 +272,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/840"
         },
         {
-          "ageDays": 29,
+          "ageDays": 30,
           "author": "spareilleux",
           "createdAt": "2026-10-20T03:36:58Z",
           "failingChecks": 1,
@@ -248,7 +284,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/839"
         },
         {
-          "ageDays": 45,
+          "ageDays": 46,
           "author": "spareilleux",
           "createdAt": "2026-10-04T03:41:20Z",
           "failingChecks": 0,
@@ -297,8 +333,32 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 7,
+      "prCount": 8,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-19T04:24:53Z",
+          "failingChecks": 0,
+          "headRef": "fix/workshop-sw-test-fixture",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 568,
+          "title": "test(workshop): give the worker mock a location and a scope (Codex P2 on #544)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/568"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-11-19T03:31:36Z",
+          "failingChecks": 0,
+          "headRef": "feat/ix-origami-cp-reader",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 567,
+          "title": "feat(ix-origami): read the .cp crease-pattern format",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/567"
+        },
         {
           "ageDays": 1,
           "author": "spareilleux",
@@ -318,7 +378,7 @@
           "failingChecks": 0,
           "headRef": "refactor/origami-verdict-check",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 563,
           "title": "refactor(ix-origami): assess() applies the verdict rules; Context private (5 slices)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/563"
@@ -330,22 +390,10 @@
           "failingChecks": 3,
           "headRef": "feat/ixforge-mobile-catalog",
           "isDraft": true,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 546,
           "title": "feat(ixforge): mobile catalog, tool states, pinning, optional names and widget traits (stacked on #544)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/546"
-        },
-        {
-          "ageDays": 3,
-          "author": "spareilleux",
-          "createdAt": "2026-11-15T05:33:50Z",
-          "failingChecks": 1,
-          "headRef": "feat/ixforge-workshop-r25",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 544,
-          "title": "feat(workshop): import IxForge R14\u2013R25 onto main",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/544"
         },
         {
           "ageDays": 4,
@@ -354,7 +402,7 @@
           "failingChecks": 0,
           "headRef": "codex/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 543,
           "title": "Document authorized remote path for IX Forge shared counter creation (no code/data mutation)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/543"
@@ -366,7 +414,7 @@
           "failingChecks": 0,
           "headRef": "claude/ixforge-counter-access-r1-create-shared-counter",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 542,
           "title": "IXFORGE-COUNTER-ACCESS-R1: investigation \u2014 no authorized non-Desktop path to create the shared \u00ab Lectures \u00bb counter",
           "url": "https://github.com/GuitarAlchemist/ix/pull/542"
@@ -378,7 +426,7 @@
           "failingChecks": 0,
           "headRef": "docs/learnings-wasi-validator",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 538,
           "title": "docs(solutions): two learnings from the IXQL WASI validator prototype",
           "url": "https://github.com/GuitarAlchemist/ix/pull/538"
@@ -424,7 +472,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/381"
         },
         {
-          "ageDays": 50,
+          "ageDays": 51,
           "author": "spareilleux",
           "createdAt": "2026-09-29T03:17:50Z",
           "failingChecks": 0,
@@ -490,7 +538,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
         },
         {
-          "ageDays": 58,
+          "ageDays": 59,
           "author": "spareilleux",
           "createdAt": "2026-09-21T03:02:23Z",
           "failingChecks": 1,
