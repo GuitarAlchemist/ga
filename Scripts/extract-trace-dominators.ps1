@@ -122,7 +122,9 @@ function Get-CanonicalSteps {
         if ($null -eq $steps) {
             $perRunSteps.Add(@()) | Out-Null
         } else {
-            $perRunSteps.Add(@($steps)) | Out-Null
+            # llm.call steps record each LLM round trip; their number varies with tool rounds and
+            # the critique loop, so they are not part of the canonical shape (CanonicalSignatureChecker).
+            $perRunSteps.Add(@($steps | Where-Object { $_.name -ne 'llm.call' })) | Out-Null
         }
     }
 

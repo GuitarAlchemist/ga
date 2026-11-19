@@ -68,15 +68,20 @@ public sealed class VoicingAgent(
         // Extract intent deterministically when possible; LLM fallback kicks in only for
         // fuzzy queries (composite extractor decides internally).
         var structured = await extractor.ExtractAsync(request.Query, cancellationToken);
-        var hasIntent = structured.ChordSymbol is not null
-                        || (structured.PitchClasses is { Length: > 0 })
-                        || structured.ModeName is not null
-                        || (structured.Tags is { Count: > 0 });
+
+        var namesMusic = structured.ChordSymbol is not null
+                         || (structured.PitchClasses is { Length: > 0 })
+                         || structured.ModeName is not null;
+        var hasIntent = namesMusic || (structured.Tags is { Count: > 0 });
 
         // No chord, mode or tag to search by — often a follow-up whose referent is in the
         // conversation ("Which chord does it fit best?"). Decline so the next agent, which
-        // reads the history, answers instead of this help text.
-        if (!hasIntent)
+        // reads the history, answers instead of this help text. A follow-up that carries only
+        // a tag declines too: its referent is in the conversation, which this agent does not
+        // read. "Show me an easy way to play it on guitar." after a D7 question searched the
+        // "open" tag alone and returned augmented hexachords; taking the previous turn's chord
+        // instead read "B" out of "tuned B E A D G B E" (2026-11-19).
+        if (!hasIntent || (!namesMusic && request.ConversationHistory is { Count: > 0 }))
         {
             return AgentResponse.Decline(
                 AgentId,
