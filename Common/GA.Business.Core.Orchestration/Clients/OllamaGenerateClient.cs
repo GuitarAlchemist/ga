@@ -2,20 +2,34 @@ namespace GA.Business.Core.Orchestration.Clients;
 
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 
 /// <summary>
-/// Shared HTTP client for the Ollama <c>/api/generate</c> endpoint.
-/// Consolidates the identical plumbing that was previously duplicated across
-/// <see cref="Services.OllamaGroundedNarrator"/> and <see cref="Services.QueryUnderstandingService"/>.
+/// Shared single-prompt generation client for <see cref="Services.OllamaGroundedNarrator"/>,
+/// <see cref="Services.QueryUnderstandingService"/> and the performance-intent services.
 /// </summary>
-public sealed class OllamaGenerateClient(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+/// <remarks>
+/// By default it calls Ollama's <c>/api/generate</c>. With <c>AI:Generate:Provider=chat</c> it
+/// sends the prompt through the application's <see cref="IChatClient"/> instead, so the chatbot
+/// needs no local model server (CI, and production on Anthropic). In that mode no temperature is
+/// sent (Haiku 5.5 rejects non-default sampling parameters), a JSON format or schema is written
+/// into the prompt, and the JSON object is extracted from the reply.
+/// </remarks>
+public sealed class OllamaGenerateClient(
+    IHttpClientFactory httpClientFactory,
+    IConfiguration configuration,
+    IChatClient? chatClient = null)
 {
     private const string DefaultModel = "llama3.2";
 
     // Static to avoid expensive per-call reflection-cache allocation
     private static readonly JsonSerializerOptions _caseInsensitive =
         new() { PropertyNameCaseInsensitive = true };
+
+    private bool UseChat =>
+        chatClient is not null
+        && string.Equals(configuration["AI:Generate:Provider"], "chat", StringComparison.OrdinalIgnoreCase);
 
     private string BaseUrl =>
         configuration["Ollama:Endpoint"] ?? "http://localhost:11434";
@@ -43,6 +57,11 @@ public sealed class OllamaGenerateClient(IHttpClientFactory httpClientFactory, I
         int?          numPredict  = null,
         CancellationToken ct      = default)
     {
+        if (UseChat)
+        {
+            return await GenerateWithChatAsync(prompt, format, numPredict, ct);
+        }
+
         var requestBody = BuildRequestBody(prompt, format, temperature, numPredict);
         var json        = JsonSerializer.Serialize(requestBody);
         var content     = new StringContent(json, Encoding.UTF8, "application/json");
@@ -89,6 +108,30 @@ public sealed class OllamaGenerateClient(IHttpClientFactory httpClientFactory, I
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
+
+    private async Task<string> GenerateWithChatAsync(string prompt, object? format, int? numPredict, CancellationToken ct)
+    {
+        var text = format switch
+        {
+            null => prompt,
+            string => $"{prompt}\n\nRespond with a single JSON object and nothing else.",
+            _ => $"{prompt}\n\nRespond with a single JSON object matching this JSON Schema, and nothing else:\n{JsonSerializer.Serialize(format)}",
+        };
+        var response = await chatClient!.GetResponseAsync(
+            [new ChatMessage(ChatRole.User, text)],
+            new ChatOptions { MaxOutputTokens = numPredict },
+            ct);
+        var reply = response.Text;
+        return format is null ? reply : ExtractJsonObject(reply);
+    }
+
+    /// <summary>The outermost <c>{…}</c> of a reply (fences and prose around it dropped), or empty.</summary>
+    private static string ExtractJsonObject(string reply)
+    {
+        var start = reply.IndexOf('{');
+        var end = reply.LastIndexOf('}');
+        return start >= 0 && end > start ? reply[start..(end + 1)] : string.Empty;
+    }
 
     private object BuildRequestBody(string prompt, object? format, float temperature, int? numPredict)
     {
