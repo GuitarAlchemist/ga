@@ -22,7 +22,7 @@ traffic, which no set so far contains.
 
 ## Enable
 
-The shadow reads these variables from the GaChatbot.Api process environment:
+The shadow reads these variables from the chat host's process environment (GaApi):
 
 | Variable | Value |
 |---|---|
@@ -33,7 +33,7 @@ The shadow reads these variables from the GaChatbot.Api process environment:
 
 Without `TYPESAFE_API_KEY` the shadow stays off even when the flag is set.
 
-On the deployed public chatbot (`docs/runbooks/chatbot-deploy.md`):
+On the deployed public chatbot (`docs/runbooks/gaapi-deploy.md`):
 
 - Keep `TYPESAFE_API_KEY` in the user environment, which the scheduled task inherits. Never put it in a file.
 - Put the flag in the operator-owned `.deploy\local-env.cmd` of the deploy worktree, so it survives redeploys:
@@ -42,9 +42,9 @@ On the deployed public chatbot (`docs/runbooks/chatbot-deploy.md`):
   set GA_ROUTER_JEV_SHADOW=1
   ```
 
-- Restart the launcher (`Stop-ScheduledTask GA-Chatbot-5252`, then `Start-ScheduledTask GA-Chatbot-5252`) or redeploy.
+- Restart the launcher (`Stop-ScheduledTask GA-GaApi-5262`, then `Start-ScheduledTask GA-GaApi-5262`) or redeploy.
 
-Do not set `GA_ROUTER_JEV_SHADOW` in the user environment. GaApi and local harness runs would then call Jev too.
+Do not set `GA_ROUTER_JEV_SHADOW` in the user environment. The dev GaApi and local harness runs would then call Jev too.
 
 To disable it, delete the line and restart the launcher.
 

@@ -17,7 +17,7 @@
     - `GA.Business.Core.Analysis.Gpu` - GPU-accelerated analysis.
     - `GA.Business.DSL` - music-theory DSL.
     - `GA.Business.Graphiti`, `GA.Business.Intelligence`, `GA.Business.Personalization` - supporting domains.
-- **Runtime apps** in `Apps/`: `ga-server/GaApi` (main API + the deployed chatbot's SignalR/REST surfaces), `GaChatbot.Api` (chatbot host), `GaChatbotCli`, `ga-client` (production React bundle). See [architecture/chat-surfaces.md](architecture/chat-surfaces.md) for which host serves which chat surface.
+- **Runtime apps** in `Apps/`: `ga-server/GaApi` (main API and the only chat host; the production deploy on :5262 serves the public chatbot), `GaChatbotCli`, `ga-client` (production React bundle). See [architecture/chat-surfaces.md](architecture/chat-surfaces.md) for which host serves which chat surface.
 - **Orchestration**: `AllProjects.AppHost`, `GaCLI`, `GaMcpServer`, and experimental agents under `mcp-servers/`
 - **Frontend sources**: `ReactComponents/ga-react-components`; production bundle in `Apps/ga-client`
 - **Tests** mirror sources under `Tests/**`; supporting research and specs live in `docs/`, `Experiments/`, and `Specs/`

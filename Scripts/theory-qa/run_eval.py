@@ -133,7 +133,7 @@ def main():
     ap.add_argument("--questions", default=str(HERE / "questions.json"))
     ap.add_argument("--out-dir", default=None, help="default: runs/<UTC timestamp>-<target> next to this script")
     ap.add_argument("--target", choices=["deployed", "ollama"], default="deployed")
-    ap.add_argument("--endpoint", default="http://localhost:5252/api/chatbot/chat")
+    ap.add_argument("--endpoint", default="http://localhost:5262/api/chatbot/chat")
     ap.add_argument("--source", default="theory-qa", help="traffic tag sent with deployed requests")
     ap.add_argument("--ollama", default="http://localhost:11434")
     ap.add_argument("--model", default=None, help="required for --target ollama")

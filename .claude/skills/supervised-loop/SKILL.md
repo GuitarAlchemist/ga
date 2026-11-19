@@ -59,7 +59,7 @@ an operator-reviewed change to the protected policy file.
   worktree-clean gate forgives dirty files outside both `allow_edit` and
   `protected_paths` but still hard-fails on dirty files INSIDE either.
 - Service restarts (`Restart-Service`, `taskkill` against GaApi /
-  GaChatbot.Api / cloudflared / Ollama / Redis), secret rotation,
+  cloudflared / Ollama / Redis), secret rotation,
   cross-repo schema edits (`docs/contracts/**`, ix schemas, Demerzel
   governance schemas), OPTIC-K dimension changes -> abort, hand back to
   human.

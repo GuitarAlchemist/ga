@@ -1447,7 +1447,7 @@ function devDataPlugin(): Plugin {
     const serviceTopology: ServiceTopology[] = [
         { name: 'ga-react-components (Vite SPA)', port: 5176, public_path: '/', expected: 'serves React SPA + dev-data middleware' },
         { name: 'GaApi', port: 5232, public_path: '/api/*, /hubs/*', expected: '/health → "Healthy"' },
-        { name: 'GaChatbot.Api', port: 5252, public_path: '/chatbot/*, /api/chatbot/*', expected: '/api/chatbot/status → JSON' },
+        { name: 'GaApi (production)', port: 5262, public_path: '/chatbot/*, /api/chatbot/*, /api/a2a/*', expected: '/api/chatbot/status → JSON' },
         { name: 'cloudflared (ga-demos)', port: 0, public_path: 'demos.guitaralchemist.com', expected: 'reverse tunnel to local services' },
     ];
 

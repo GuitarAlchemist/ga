@@ -72,7 +72,7 @@ does not claim assembly-wide purity.
 Apps live in `Apps/`:
 
 - `ga-server/GaApi` — ASP.NET + SignalR + GraphQL
-- `GaChatbot` — chatbot API (port 5252)
+- `GaChatbot` — console chatbot (interactive loop over the shared orchestration)
 - `ga-client` — React + R3F frontend
 - `GaMusicTheoryLsp` — F# language server
 - `AllProjects.AppHost` — Aspire orchestrator

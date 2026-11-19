@@ -35,7 +35,7 @@ GA currently has multiple live chat surfaces:
 | SignalR `/hubs/chatbot` | De-facto public `/chatbot/` demo path served by GaApi. |
 | `POST /api/chatbot/agui/stream` | AG-UI streaming path for ga-client / Prime Radiant surfaces. |
 | `POST /api/chatbot/chat` and `/chat/stream` | REST/SSE sibling surfaces over the same orchestrator substrate. |
-| `Apps/GaChatbot.Api` | Compiles, but is not the deployed public chatbot host. Keep frozen until there is a concrete deploy reason. |
+| `Apps/GaChatbot.Api` | Retired 2026-11-18 (ADR-0005). The production GaApi on :5262 serves the public chatbot. |
 | `GA.AI.Service` | Frozen. Do not add new code unless the architecture decision changes. |
 
 ```mermaid
@@ -95,8 +95,6 @@ Current guidance:
 
 - Keep `ChatbotHub` and REST/SSE chatbot surfaces wire-equivalent where public
   metadata matters.
-- Do not promote `GaChatbot.Api` until the deploy target and ingress path are
-  explicit.
 - Keep `POST /api/chatbot/ask` marked dangling until a server route is added or
   the Prime Radiant caller is removed.
 - Treat `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync`

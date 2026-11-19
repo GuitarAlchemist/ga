@@ -30,13 +30,11 @@ Treat `chat-surfaces.md` as authoritative for runtime wiring. Treat the
 - REST/SSE siblings exist at `/api/chatbot/chat` and `/api/chatbot/chat/stream`.
 - `IChatApplicationService` is the host-neutral orchestration boundary.
 - `ProductionOrchestrator` owns the main skill/router/RAG path.
-- `GaChatbot.Api` compiles but is not the public deployed host.
+- `GaChatbot.Api` was retired on 2026-11-18; the production GaApi on :5262 serves the public `/chatbot/` demo.
 - `GA.AI.Service` is frozen.
 
 ## Do Not Do Silently
 
-- Do not promote `GaChatbot.Api` without updating AppHost, ingress, docs, and
-  the public `/chatbot/` SPA route.
 - Do not add chatbot behavior to `GA.AI.Service`.
 - Do not change public chat wire fields (`Grounding`, `Trace`, routing
   metadata, failure reasons) without updating `chat-surfaces.md`.

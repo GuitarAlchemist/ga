@@ -1,6 +1,6 @@
 ---
 name: theory-qa
-description: Music-theory QA for the live GA chatbot. Runs the theory eval set in Scripts/theory-qa against GaChatbot.Api, grades every answer as a theory expert (regex gate, then claim-by-claim verification with the ga MCP tools), and writes a dated quality snapshot to state/quality/theory-qa/. Use after any change to chatbot prompts, skills, models or routing, and before declaring a theory fix done.
+description: Music-theory QA for the live GA chatbot. Runs the theory eval set in Scripts/theory-qa against the GaApi chat host, grades every answer as a theory expert (regex gate, then claim-by-claim verification with the ga MCP tools), and writes a dated quality snapshot to state/quality/theory-qa/. Use after any change to chatbot prompts, skills, models or routing, and before declaring a theory fix done.
 ---
 
 # theory-qa — is the chatbot's music theory right?
@@ -32,7 +32,7 @@ measures both, on a fixed question set, the same way every run.
 - `Scripts/theory-qa/_selftest.py`: proves the grader. Every hand-written
   correct answer and right shape must pass, and every known-wrong answer and
   wrong shape must fail; it exits 1 otherwise.
-- The chatbot at `http://localhost:5252` (override only if the caller says so).
+- The chatbot at `http://localhost:5262` (override only if the caller says so).
 
 ## Procedure
 

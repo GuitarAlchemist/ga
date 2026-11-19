@@ -3,16 +3,14 @@
     Install Guitar Alchemist platform processes as non-admin Windows services.
 
 .DESCRIPTION
-    Registers three NSSM-managed Windows services so the production trio
-    (Vite frontend, GaApi backend, GaChatbot.Api backend) runs under a
-    dedicated low-privilege service account. Each service is independent
-    so an agent can kill or restart one without elevation and without
-    taking the other two down.
+    Registers two NSSM-managed Windows services so the production pair
+    (Vite frontend, GaApi backend) runs under a dedicated low-privilege
+    service account. Each service is independent so an agent can kill or
+    restart one without elevation and without taking the other down.
 
     Services registered:
       GA-Vite-5176       (Apps/ga-react-components, pnpm dev, port 5176)
       GA-Api-5232        (GaApi, dotnet run, port 5232)
-      GA-Chatbot-5252    (GaChatbot.Api, dotnet run, port 5252)
 
     The Cloudflared tunnel is intentionally NOT wrapped here. Use
     `cloudflared service install` for that — it ships its own native
@@ -24,17 +22,17 @@
     Always dry-run with -WhatIf first.
 
 .PARAMETER Install
-    Register the three services. Honours -WhatIf.
+    Register the two services. Honours -WhatIf.
 
 .PARAMETER Uninstall
-    Remove the three services. Honours -WhatIf. Prefer the dedicated
+    Remove the two services. Honours -WhatIf. Prefer the dedicated
     Scripts/uninstall-ga-service.ps1 for symmetry.
 
 .PARAMETER Start
-    Start all three services (or those installed). Honours -WhatIf.
+    Start both services (or those installed). Honours -WhatIf.
 
 .PARAMETER Stop
-    Stop all three services. Honours -WhatIf.
+    Stop both services. Honours -WhatIf.
 
 .PARAMETER Status
     Show service status, port listeners, and PID per service. Read-only.
@@ -120,17 +118,6 @@ $Services = @(
         Port        = 5232
         StdOut      = 'gaapi.log'
         StdErr      = 'gaapi.err.log'
-    }
-    @{
-        Name        = 'GA-Chatbot-5252'
-        Display     = 'Guitar Alchemist - GaChatbot.Api (5252)'
-        Description = 'Public chatbot host, dotnet run, port 5252.'
-        WorkingDir  = Join-Path $RepoRoot 'Apps\GaChatbot.Api'
-        Exe         = 'dotnet.exe'
-        Args        = 'run --project GaChatbot.Api.csproj --no-build --urls http://0.0.0.0:5252'
-        Port        = 5252
-        StdOut      = 'chatbot.log'
-        StdErr      = 'chatbot.err.log'
     }
 )
 

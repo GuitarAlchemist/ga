@@ -619,9 +619,9 @@ interface OperationalTodo {
 const operationalTodos: OperationalTodo[] = [
   {
     title: 'Install GuitarAlchemist Windows service',
-    why: 'Vite + GaApi + GaChatbot.Api currently die on reboot/logoff (24h outage on 2026-05-22). Service install supervises them.',
+    why: 'Vite + GaApi currently die on reboot/logoff (24h outage on 2026-05-22). Service install supervises them.',
     command: 'pwsh C:\\Users\\spare\\source\\repos\\ga\\Scripts\\install-ga-service.ps1',
-    doc: 'docs/runbooks/chatbot-deploy.md',
+    doc: 'docs/runbooks/gaapi-deploy.md',
   },
   {
     title: 'Set MISTRAL_API_KEY for chatbot cascade',

@@ -72,11 +72,11 @@ C. EMIT status via Scripts/afk-harness-status.ps1 at every phase boundary
 2. Halt/killswitch checks (reuse `/auto-optimize` Step 0 exactly): if
    `state/.loop-halted`, `state/quality/chatbot-qa/.STOP`, or a live
    `~/.demerzel/HALT-ALL` marker is present → emit `state=killed`, explain, STOP.
-3. **Backend preflight**: `POST http://localhost:5252/api/chatbot/chat` with
+3. **Backend preflight**: `POST http://localhost:5262/api/chatbot/chat` with
    `{"message":"What is a major triad"}`. If not a real non-empty
    `naturalLanguageAnswer` → emit `state=blocked`,
-   `-Blocker "backend_unavailable: GaChatbot.Api :5252"`, STOP. (Bring it up
-   per `docs/runbooks/chatbot-deploy.md`, then re-arm.)
+   `-Blocker "backend_unavailable: GaApi :5262"`, STOP. (Bring it up
+   per `docs/runbooks/gaapi-deploy.md`, then re-arm.)
 4. Create/checkout `branch`. Emit `state=running phase=qa-snapshot branch=<branch>`.
 
 > **SCALE — read this first.** Both oracles report `pass_pct` on a **0..100**

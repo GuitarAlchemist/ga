@@ -9,7 +9,7 @@
 #>
 
 param(
-    [string]$ApiUrl = "http://localhost:5252",
+    [string]$ApiUrl = "http://localhost:5262",
     [int]$SimpleTimeoutSeconds = 20,
     [int]$VoicingTimeoutSeconds = 240,
     [int]$MaxSimpleElapsedMs = 10000,

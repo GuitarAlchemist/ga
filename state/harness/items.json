@@ -124,7 +124,7 @@
       "merge_sha": "e774e969",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/312",
       "owner": "scaffolded 2026-05-23 — needs admin install",
-      "notes": "Scaffold only. Three independent NSSM services (GA-Vite-5176, GA-Api-5232, GA-Chatbot-5252) under NetworkService. Runbook at docs/runbooks/non-admin-service-install.md. Status flips to 'shipped' only after user runs the install with admin. Existing install script was unfit for harness goal (wrapped Aspire AppHost); rewritten from ground up with -WhatIf support."
+      "notes": "Scaffold only. Two independent NSSM services (GA-Vite-5176, GA-Api-5232; the GA-Chatbot-5252 entry went with GaChatbot.Api on 2026-11-18) under NetworkService. Runbook at docs/runbooks/non-admin-service-install.md. Status flips to 'shipped' only after user runs the install with admin. Existing install script was unfit for harness goal (wrapped Aspire AppHost); rewritten from ground up with -WhatIf support."
     },
     {
       "number": 9,

@@ -1,4 +1,4 @@
-namespace GaChatbot.Api.Tests.Corpus;
+namespace GaApi.Tests.Corpus;
 
 using System.Net;
 using System.Net.Http.Json;
@@ -8,16 +8,12 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 /// <summary>
-///     Runs a YAML-defined corpus of prompts against the GaChatbot.Api host
-///     and asserts per-prompt invariants. This is the safety net under
-///     ongoing skill refactors: a failing prompt fails the gate before merge,
-///     and the same prompt set is the oracle for the autonomous improvement
-///     loop (task #144).
-///
-///     Why GaChatbot.Api and not GaApi: the GaApi smoke test
-///     (ChatbotShowcaseSmokeTests) tests a host that cloudflared no longer
-///     routes to. Live demo traffic hits GaChatbot.Api on :5252. This file
-///     tests the same code path users actually exercise.
+///     Runs a YAML-defined corpus of prompts against the GaApi host (the
+///     canonical chat host, ADR-0005) and asserts per-prompt invariants. This
+///     is the safety net under ongoing skill refactors: a failing prompt fails
+///     the gate before merge, and the same prompt set is the oracle for the
+///     autonomous improvement loop (task #144). <see cref="CorpusHost"/> gives
+///     the in-process host the public deployment's routing and voicing index.
 /// </summary>
 [TestFixture]
 [Category("Integration")]
@@ -77,7 +73,7 @@ public class PromptCorpusTests
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        _factory = new GaChatbot.Api.Tests.TestWebApplicationFactory();
+        _factory = CorpusHost.Create();
         _client = _factory.CreateClient();
         _client.Timeout = TimeSpan.FromMinutes(3);
 

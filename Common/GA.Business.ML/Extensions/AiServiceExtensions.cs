@@ -263,7 +263,7 @@ public static class AiServiceExtensions
         // they transitively depend on IChatClient — if a host registers
         // IChatClient as Scoped, Singleton agents would capture that scoped
         // dependency forever, which is the classic lifetime-capture bug. None
-        // of the live hosts (GaApi / GaChatbot.Api / GaChatbotCli) currently
+        // of the live hosts (GaApi / GaChatbotCli) currently
         // register IChatClient as Scoped, but the lowercase helper above used
         // to make singleton agents the path of least resistance for new
         // hosts; Codex CLI 2026-05-07 review flagged this as a footgun.

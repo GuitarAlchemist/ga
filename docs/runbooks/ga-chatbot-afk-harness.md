@@ -55,7 +55,7 @@ consensus) catches *wrong-but-well-formatted* answers the oracle passes.
 
 ## 3. Arming it (3 modes)
 
-> Preconditions: GaChatbot.Api up on `:5252` (`docs/runbooks/chatbot-deploy.md`),
+> Preconditions: the GaApi chat host up on `:5262` (`docs/runbooks/gaapi-deploy.md`),
 > no `state/.loop-halted`, no `state/quality/chatbot-qa/.STOP`, no live
 > `~/.demerzel/HALT-ALL`.
 
@@ -83,7 +83,7 @@ The dashboard (zero dependencies, auto-refresh 5s) shows:
 - **State pill** — `preflight · running · blocked · degraded · killed · done`
 - **QA metrics** — deterministic pass %, semantic-panel pass %, target
 - **Run card** — run id, branch, iteration / max, commits, elapsed
-- **Blockers** — e.g. "backend_unavailable: GaChatbot.Api :5252" (shown only when blocked)
+- **Blockers** — e.g. "backend_unavailable: GaApi :5262" (shown only when blocked)
 - **Metric trend** — deterministic + semantic over the run's cycles
 - **Event timeline** — every phase, target-selected, commit, revert, with Δpp
 
@@ -140,7 +140,7 @@ gh pr create --base main --head afk/chatbot-qa-<date>
 | Symptom | Likely cause | Action |
 |---|---|---|
 | Dashboard "No harness run" | not armed yet, or served from wrong root | arm it, or pass `?root=` |
-| State stuck `blocked` | GaChatbot.Api down on :5252 | start backend, re-arm |
+| State stuck `blocked` | GaApi down on :5262 | start backend, re-arm |
 | Loop exits immediately `killed` | a `.STOP` / `.loop-halted` / HALT-ALL marker present | remove the marker if intended |
 | No commits despite low pass | every fix was roundtrip-rejected, or plateau | inspect timeline reverts; the corpus shape may be exhausted |
 | Metric trend empty | only phase events so far (no cycle completed) | wait for the first cycle |

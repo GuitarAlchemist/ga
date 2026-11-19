@@ -5,6 +5,8 @@ date: 2026-06-22
 
 # GaApi is the single canonical chat host — GaChatbot.Api and GA.AI.Service are retired
 
+> **Outcome (2026-11-18):** step 5 and step 6 are done. The public chat routes (`/chatbot/*`, `/api/chatbot/*`, `/api/a2a/*`) moved to the production GaApi on `:5262` ([gaapi-deploy.md](../runbooks/gaapi-deploy.md)), and GaChatbot.Api (:5252) was deleted from the repository.
+
 ## Context
 
 GA accreted **three** chat-host services, and `docs/architecture/chat-surfaces.md`
@@ -70,7 +72,7 @@ cloudflared serves the **public demo** from GaChatbot.Api today. Therefore
    seam, so GaApi *gains parity* (incl. the markdown-table-truncation fix).
 5. **Re-point cloudflared** `/chatbot/` (and `/api/chatbot/*`) to GaApi; verify
    the live demo against GaApi.
-6. **Retire GaChatbot.Api** — only once 3–5 are verified in deployment.
+6. **Retire GaChatbot.Api** — only once 3–5 are verified in deployment. Done 2026-11-18.
 
 Reversibility: steps 1–4 are in-repo refactors/deletions gated by CI build. Step
 5 (cloudflared) is the one operational one-way-ish action — verify the demo

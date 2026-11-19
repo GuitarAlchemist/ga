@@ -18,8 +18,8 @@ The React 18 + Vite SPA that serves Guitar Alchemist's UI: the AG-UI chat panel 
 - **`optimizeDeps.include` is load-bearing for the tunnel.** `demos.guitaralchemist.com` → Cloudflare → local Vite has a per-request timeout. Cold esbuild transforms exceed it → `net::ERR_FAILED`. Adding a heavy ESM dep (Three.js example modules, `@mui/x-tree-view` hooks) means adding it to `optimizeDeps.include` in `vite.config.ts`.
 - **API keys live ONLY in `.env.local`, never in `.env`.** `vite.config.ts` loads `.env.local` at boot and injects `MISTRAL_API_KEY` / `CODESTRAL_API_KEY` server-side via the `/proxy/voxtral` and `/proxy/codestral` proxies. Browser code never sees the key.
 - **`/test/fleet` is the latest test surface (PR #269, merged 2026-05-16).** When adding a test page, mirror it: route in `src/main.tsx`, page component in `src/pages/<Name>Test.tsx`, link from `TestIndex.tsx`.
-- **CORS lives in GaChatbot.Api appsettings, not here.** If you add a dev port (e.g. 5178), update `Apps/GaChatbot.Api/appsettings.json` `Cors:AllowedOrigins` too.
-- **Chatbot routes (`/chatbot`, `/ai-copilot` redirect) point at `${VITE_GA_API_URL ?? 'https://localhost:7001'}`.** That fallback is the HTTPS dev profile of GaApi, not GaChatbot.Api. Don't "fix" it to `http://localhost:5252` without testing both modes.
+- **CORS lives in GaApi, not here.** If you add a dev port (e.g. 5178), add it to the default origins in `Apps/ga-server/GaApi/Program.cs` or to `Cors:AllowedOrigins` in its appsettings.
+- **Chatbot routes (`/chatbot`, `/ai-copilot` redirect) point at `${VITE_GA_API_URL ?? 'https://localhost:7001'}`.** That fallback is the HTTPS dev profile of GaApi. Don't change it without testing both modes.
 
 ## The 5-10 files that matter
 
@@ -41,7 +41,7 @@ The React 18 + Vite SPA that serves Guitar Alchemist's UI: the AG-UI chat panel 
 3. **Add an entry to `src/pages/TestIndex.tsx`** so it's discoverable from `/test`.
 4. **If the page calls a NEW API endpoint**, regenerate types: `npm run generate:api` (requires GaApi running on 5232 with current swagger).
 5. **If the page imports a heavy ESM dep** (>200KB or many submodules), add it to `optimizeDeps.include` in `vite.config.ts`. Otherwise tunnel users see `net::ERR_FAILED` on first load.
-6. **Manual click-test in Chrome at `http://localhost:5176/test/<kebab-name>`** against a real GaApi (port 5232) and GaChatbot.Api (port 5252) — both running. Then again through the tunnel at `https://demos.guitaralchemist.com/test/<kebab-name>`.
+6. **Manual click-test in Chrome at `http://localhost:5176/test/<kebab-name>`** against a real GaApi (port 5232). Then again through the tunnel at `https://demos.guitaralchemist.com/test/<kebab-name>`.
 7. **Add a Playwright spec** under `src/test/` for the happy path. Shape-only assertions are not enough; assert against rendered content the user would see.
 
 ## What NOT to do here
@@ -54,13 +54,13 @@ The React 18 + Vite SPA that serves Guitar Alchemist's UI: the AG-UI chat panel 
 - Don't run `npm install` at the package root unless deps are explicitly NOT hoisted; the workspace hoists most deps and `postinstall` will `echo skipped` correctly.
 - Don't use Edge for verification (project rule). Chrome only.
 - Don't disable `hmr.overlay` cosmetically; it's already off because R3F errors spam.
-- Don't add a non-allow-listed dev origin without updating `Cors:AllowedOrigins` in `Apps/GaChatbot.Api/appsettings.json` — chat calls will silently fail.
+- Don't add a non-allow-listed dev origin without updating GaApi's CORS origins (`Apps/ga-server/GaApi/Program.cs` or `Cors:AllowedOrigins`) — chat calls will silently fail.
 - Don't proxy a new external API without an Origin guard. The pattern is documented at the `/proxy/ollama` proxy in `vite.config.ts`.
 
 ## Where to look for related context
 
 - Parent: [/CLAUDE.md](../../CLAUDE.md) — build/test commands, frontend conventions, Karpathy rules.
-- Sibling: [`../../Apps/GaChatbot.Api/CONTEXT.md`](../../Apps/GaChatbot.Api/CONTEXT.md) — where the chat backend (and its CORS allow-list) lives.
+- Chat host: [`docs/architecture/chat-surfaces.md`](../../docs/architecture/chat-surfaces.md) — GaApi, the chat backend.
 - Sibling: [`../../Common/GA.Business.ML/Agents/CONTEXT.md`](../../Common/GA.Business.ML/Agents/CONTEXT.md) — the skill surface the chat panel renders.
 - Skills (auto-discovered by Claude Code): `.agent/skills/react-frontend-engineering/SKILL.md`, `.claude/skills/r3f-best-practices/`, `.claude/skills/three-best-practices/`.
 - Solutions: `docs/solutions/best-practices/showcase-demo-end-to-end-qa-2026-05-12.md`, `docs/solutions/integration-issues/playwright-tests-against-ghost-ui-2026-05-06.md`, `docs/solutions/integration-issues/2026-03-10-ag-ui-scale-event-sse-streaming-frontend-bridge.md`.

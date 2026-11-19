@@ -454,8 +454,8 @@ app.UseAuthorization();
 // CORS + rate limiting provide weak protection; this gate prevents accidental public exposure
 // while full bearer auth is designed. Replace with [Authorize] + AddAuthentication once a
 // token/key issuance strategy is in place (see todo 036).
-// The chatbot calls GaChatbot.Api serves anonymously today (the public page and the JSON
-// chat, AnonymousChatbotApi) pass without a key; every other /api/chatbot route keeps the gate.
+// The chatbot calls the retired GaChatbot.Api served anonymously (the public page and the
+// JSON chat, AnonymousChatbotApi) pass without a key; every other /api/chatbot route keeps the gate.
 if (!app.Environment.IsDevelopment())
 {
     app.Use(async (ctx, next) =>

@@ -1,5 +1,5 @@
 // Assembly-wide test setup (global namespace → applies to every fixture in
-// GaChatbot.Api.Tests). Suppresses routing telemetry for the whole test run.
+// GaApi.Tests). Suppresses routing telemetry for the whole test run.
 //
 // Why: the in-process orchestrator host (TestWebApplicationFactory) drives
 // SemanticIntentRouter.RouteAsync for every corpus prompt (PromptCorpusTests),

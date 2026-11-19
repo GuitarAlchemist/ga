@@ -2,7 +2,7 @@
 #
 # Each entry asserts what a real user-facing answer must contain, must NOT
 # contain, and where it must route to. Run by PromptCorpusTests.cs against
-# the GaChatbot.Api host (the host actually serving demos.guitaralchemist.com).
+# the GaApi host (the host actually serving demos.guitaralchemist.com).
 #
 # Tags map to the architecture:
 #   routes_to                — expected agentId from /chat response

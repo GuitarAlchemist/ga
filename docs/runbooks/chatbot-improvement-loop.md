@@ -18,9 +18,9 @@ How to run a long-running autonomous iteration on the GA chatbot using the promp
 | Piece | Role | Where |
 |---|---|---|
 | Oracle | YAML corpus + invariants | `Tests/Apps/GaApi.Tests/Corpus/prompts.yaml` |
-| Runner | NUnit test exec + failure aggregation | `Tests/Apps/GaChatbot.Api.Tests/Corpus/PromptCorpusTests.cs` |
+| Runner | NUnit test exec + failure aggregation | `Tests/Apps/GaApi.Tests/Corpus/PromptCorpusTests.cs` |
 | Loop-friendly wrapper | Picks worst failures, emits JSON | `Scripts/run-prompt-corpus.ps1` |
-| Target hosts | The actual chatbot under test | `GaChatbot.Api` (5252) + `GaApi` (5232 for hubs) |
+| Target host | The actual chatbot under test | `GaApi`, in-process (`Tests/Apps/GaApi.Tests/Corpus/CorpusHost.cs`); the public deploy runs on :5262 |
 
 ## One-shot health check
 

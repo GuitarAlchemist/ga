@@ -53,7 +53,7 @@ The chatbot's deterministic-first skill surface. Each `IOrchestratorSkill` is a 
 ## Where to look for related context
 
 - Parent: [/CLAUDE.md](../../../../CLAUDE.md) — Karpathy rules, layer model, OPTIC-K invariants.
-- Sibling: [`../../../Apps/GaChatbot.Api/CONTEXT.md`](../../../Apps/GaChatbot.Api/CONTEXT.md) — the host that wires this up.
+- Host: [`docs/architecture/chat-surfaces.md`](../../../docs/architecture/chat-surfaces.md) — GaApi, the chat host that wires this up.
 - Sibling: [`../../GA.Business.Core.Orchestration/Plugins/CONTEXT.md`](../../GA.Business.Core.Orchestration/Plugins/CONTEXT.md) — where skills get registered.
 - Architecture: [`docs/architecture/layers.md`](../../../../docs/architecture/layers.md) — layer-4 rule (AI code lives here).
 - Solutions: `docs/solutions/architecture/2026-05-08-voicing-search-corpus-tagging-mismatch.md`, `docs/solutions/architecture/2026-05-11-memoryhook-conflates-transcript-log-with-durable-memory.md`, `docs/solutions/runtime-errors/enricher-substring-on-wrong-field-cmaj7-jazz.md`.

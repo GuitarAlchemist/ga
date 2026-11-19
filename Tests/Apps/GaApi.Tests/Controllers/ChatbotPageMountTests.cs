@@ -155,22 +155,6 @@ public class ChatbotPageMountTests
         });
     }
 
-    [Test]
-    public void ThePage_MatchesGaChatbotApisCopy_UntilThatHostIsRetired()
-    {
-        // GaChatbot.Api serves the same page until cloudflared moves /chatbot/ to GaApi.
-        // One copy edited without the other would make the cutover change what users see.
-        var gaApiCopy = TestPaths.RepositoryPath("Apps", "ga-server", "GaApi", "wwwroot", "chatbot");
-        var chatbotApiCopy = TestPaths.RepositoryPath("Apps", "GaChatbot.Api", "wwwroot");
-        if (!Directory.Exists(chatbotApiCopy)) Assert.Ignore("GaChatbot.Api is retired; GaApi holds the only copy.");
-
-        foreach (var relative in new[] { "index.html", Path.Combine("vendor", "vexflow", "vexflow.js") })
-        {
-            Assert.That(File.ReadAllBytes(Path.Combine(gaApiCopy, relative)),
-                Is.EqualTo(File.ReadAllBytes(Path.Combine(chatbotApiCopy, relative))), relative);
-        }
-    }
-
     private sealed record SseEvent(string? Name, string Data);
 
     // The page's consumeSseStream: events end at a blank line; `event:` names one; the
@@ -188,8 +172,8 @@ public class ChatbotPageMountTests
 
 /// <summary>
 ///     Outside Development, Program.cs requires X-Api-Key on /api/chatbot/*. The public page
-///     sends no key, so its own calls and the JSON chat must pass anonymously, as they do on
-///     GaChatbot.Api, while the rest of /api/chatbot stays behind the key.
+///     sends no key, so its own calls and the JSON chat must pass anonymously, as they did on
+///     the retired GaChatbot.Api, while the rest of /api/chatbot stays behind the key.
 /// </summary>
 [TestFixture]
 [Category("Integration")]
@@ -253,8 +237,8 @@ public class ChatbotPageMountProductionTests
         });
     }
 
-    // GaChatbot.Api serves the JSON chat without a key to external callers and to the deploy
-    // smoke test (docs/runbooks/chatbot-deploy.md); the cutover keeps that contract.
+    // GaChatbot.Api served the JSON chat without a key to external callers and to the deploy
+    // smoke test (docs/runbooks/gaapi-deploy.md); the cutover kept that contract.
     [TestCase("/api/chatbot/chat")]
     [TestCase("/chatbot/api/chatbot/chat")]
     public async Task TheJsonChat_PassesWithoutAKey(string path)

@@ -79,7 +79,7 @@ CI level.)
 ```powershell
 dotnet build AllProjects.slnx -c Release --nologo
 # exit 0 required
-dotnet test Tests/Apps/GaChatbot.Api.Tests --no-build -c Release `
+dotnet test Tests/Apps/GaApi.Tests --no-build -c Release `
   --filter "FullyQualifiedName~CanonicalSignatureChecker|FullyQualifiedName~Corpus_" `
   --nologo
 # exit 0 required

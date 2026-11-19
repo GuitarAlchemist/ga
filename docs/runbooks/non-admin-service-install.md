@@ -12,11 +12,11 @@ This session (2026-05-23) we lost ~25 minutes of demos.guitaralchemist.com uptim
 1. **Port displacement** — Codex started a stray Vite from `Apps/ga-client` which stole port 5176 from the canonical `ga-react-components` instance (fixed in PR #289).
 2. **Elevated-PID lock** — GaApi PID 21036 was running with an elevated token. No agent in the user's PowerShell context could `Stop-Process` it to unblock an AppHost rebuild. The user had to manually kill it from an admin shell.
 
-Running Vite, GaApi, and GaChatbot.Api as Windows services owned by a **non-admin service account** breaks this class of bug:
+Running Vite and GaApi as Windows services owned by a **non-admin service account** breaks this class of bug:
 
 - The agent's user-mode PowerShell can run `Restart-Service GA-Api-5232` (allowed by Service Control Manager ACLs once configured) without needing to spawn an elevated child process or pass UAC.
 - The bin-lock problem disappears because the service owner is the only process holder; restarting the service releases the lock cleanly.
-- Each of the three production processes (Vite/GaApi/Chatbot) is independent — restarting one doesn't take the other two down. Today, killing the AppHost takes everything with it.
+- The two production processes (Vite/GaApi) are independent — restarting one doesn't take the other down. Today, killing the AppHost takes everything with it.
 
 The plan tagged this as **L effort / H impact** — high impact because it eliminates a recurring outage class, but L effort because it requires admin-level OS changes, a service account decision, and irreversible registration.
 
@@ -40,13 +40,12 @@ Native Windows `New-Service`/`sc.exe create` with a domain account. Robust for s
 
 ### Option C (CHOSEN): NSSM + built-in virtual account
 
-Three independent services, each wrapping one process, all running under `NT AUTHORITY\NetworkService` by default:
+Two independent services, each wrapping one process, all running under `NT AUTHORITY\NetworkService` by default:
 
 | Service | Working dir | Command | Port |
 |---|---|---|---|
 | `GA-Vite-5176` | `ReactComponents/ga-react-components` | `pnpm dev --host --port 5176` | 5176 |
 | `GA-Api-5232` | `GaApi` | `dotnet run --project GaApi.csproj --no-build --urls http://0.0.0.0:5232` | 5232 |
-| `GA-Chatbot-5252` | `GaChatbot.Api` | `dotnet run --project GaChatbot.Api.csproj --no-build --urls http://0.0.0.0:5252` | 5252 |
 
 Rationale:
 
@@ -74,7 +73,7 @@ The service account (default `NT AUTHORITY\NetworkService`) needs:
 |---|---|---|
 | Read access to repo path (`C:\Users\spare\source\repos\ga`) | Read csproj, source, node_modules, dlls | `icacls "C:\Users\spare\source\repos\ga" /grant "NT AUTHORITY\NetworkService:(OI)(CI)RX" /T` |
 | Write access to `logs\services\` | NSSM stdout/stderr capture | Created by the install script; inherits from parent or grant explicitly |
-| Bind ports 5176/5232/5252 | Listen for HTTP | NetworkService can bind > 1024 by default; no action needed |
+| Bind ports 5176/5232 | Listen for HTTP | NetworkService can bind > 1024 by default; no action needed |
 | Network egress | LLM API calls, NuGet, npm | NetworkService has this by default |
 | Read access to `~/.aspire/`, `~/.nuget/`, `%LOCALAPPDATA%\pnpm-store` | Tooling caches | NetworkService can't read the developer's profile — see "Profile caches" below |
 
@@ -143,11 +142,10 @@ After step 7, do all of these:
    # From admin shell, one-time:
    sc.exe sdset GA-Api-5232 "D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)(A;;RPWPCR;;;<your-user-SID>)"
    ```
-4. **Smoke test the three URLs:**
+4. **Smoke test the two URLs:**
    ```powershell
    curl http://localhost:5176/         # Vite, expect HTML
    curl http://localhost:5232/health   # GaApi
-   curl http://localhost:5252/health   # Chatbot
    ```
 5. **Public tunnel smoke (if cloudflared installed):**
    ```powershell

@@ -56,7 +56,7 @@ public class RoutingEvalHarness
     private static readonly string EmbeddingEndpoint =
         Environment.GetEnvironmentVariable("GA_EMBED_ENDPOINT") ?? "http://localhost:11434";
     // The embedder/threshold pair the harness measures DEFAULTS to the pair
-    // production routes with, read from the chatbot host's appsettings with the
+    // production routes with, read from GaApi's appsettings.Production.json with the
     // same keys and fallbacks production binds (ChatbotOrchestrationExtensions +
     // DefaultEmbeddingGeneratorFactory). Hardcoded defaults drifted twice: 0.65
     // while prod sat at 0.55 (dropped 2026-05-13), then nomic-embed-text @ 0.55
@@ -67,7 +67,7 @@ public class RoutingEvalHarness
     // GA_EMBED_MODEL / GA_ROUTER_MIN_CONFIDENCE still override, together, because
     // the threshold is embedder-SPECIFIC: a stronger embedder scores higher, so a
     // bake-off candidate must be measured at its own recalibrated threshold.
-    private const string ProductionAppsettings = "Apps/GaChatbot.Api/appsettings.json";
+    private const string ProductionAppsettings = "Apps/ga-server/GaApi/appsettings.Production.json";
     private static readonly IConfiguration? ProductionConfig = LoadProductionConfig();
     private static readonly string EmbeddingModel =
         ResolveEmbeddingModel(Environment.GetEnvironmentVariable("GA_EMBED_MODEL"), ProductionConfig);

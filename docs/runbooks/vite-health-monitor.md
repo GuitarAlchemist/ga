@@ -45,8 +45,8 @@ pwsh -NoProfile -File Scripts\install-vite-monitor.ps1 -Uninstall
 ## Relationship to the NSSM service install (Tier 2)
 
 This is the **interim** safety net. The proper fix is the NSSM service
-install in `Scripts/install-ga-service.ps1` which runs Vite + GaApi +
-GaChatbot.Api as Windows services with auto-restart-on-failure. That
+install in `Scripts/install-ga-service.ps1` which runs Vite + GaApi
+as Windows services with auto-restart-on-failure. That
 needs admin UAC, which is the only reason this watchdog exists.
 
 Once NSSM is installed, uninstall this monitor — duplicate restart
