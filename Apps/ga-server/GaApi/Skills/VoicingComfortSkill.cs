@@ -11,7 +11,7 @@ using GaApi.Services;
 /// </summary>
 /// <remarks>
 /// Registered by <see cref="GaApiPlugin"/> and runs at the orchestrator fast-path.
-/// When triggered, it parses a chord name from the message (if present) or defaults to "C",
+/// When triggered, it parses a chord name from the message (and declines when there is none),
 /// calls <see cref="VoicingComfortService.GetComfortRankedAsync"/>, and presents
 /// the three most comfortable voicings with fret diagrams and stretch metrics.
 /// </remarks>
@@ -48,9 +48,16 @@ public sealed class VoicingComfortSkill(VoicingComfortService comfortService) : 
 
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
-        // Extract chord name if present; default to "C" for generic hand-pain queries
+        // Without a chord there is nothing to rank: an assumed C answered "my barre chords buzz"
+        // with C voicings. Decline so the technique agent answers the question asked.
         var chordMatch = ChordSymbol.Match(message);
-        var chordName  = chordMatch.Success ? NormalizeChord(chordMatch) : "C";
+        if (!chordMatch.Success)
+        {
+            return AgentResponse.Decline(AgentIds.Technique,
+                "No chord named, so there are no voicings to rank by comfort.");
+        }
+
+        var chordName = NormalizeChord(chordMatch);
 
         var result = await comfortService.GetComfortRankedAsync(
             chordName, excludeFullBarre: true, ct: cancellationToken);
