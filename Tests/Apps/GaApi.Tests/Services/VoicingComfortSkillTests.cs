@@ -30,4 +30,25 @@ public class VoicingComfortSkillTests
         Assert.That(response.Result, Does.Not.Contain("`x-x-5-x-0-5`"), response.Result);
         Assert.That(response.Result, Does.Not.Contain("`x-x-10-10-0-x`"), response.Result);
     }
+
+    // A technique complaint that names no chord used to get three voicings of an assumed C.
+    // Decline instead, so the technique agent answers the question actually asked.
+    [TestCase("My barre chords buzz and my hand hurts. What am I doing wrong?")]
+    [TestCase("My hand hurts after practicing, is that normal?")]
+    public async Task PainComplaintWithoutAChord_Declines(string message)
+    {
+        var response = await _sut.ExecuteAsync(message);
+
+        Assert.That(response.Declined, Is.True, response.Result);
+        Assert.That(response.Result, Does.Not.Contain("voicings for **C**"), response.Result);
+    }
+
+    [Test]
+    public async Task PainComplaintNamingAChord_StillSuggestsVoicings()
+    {
+        var response = await _sut.ExecuteAsync("My hand hurts when I play the F barre chord");
+
+        Assert.That(response.Declined, Is.False, response.Result);
+        Assert.That(response.Result, Does.Contain("**F**"), response.Result);
+    }
 }
