@@ -62,6 +62,19 @@ public class GenerateClientChatModeTests
     }
 
     [Test]
+    public async Task WithoutProviderSetting_TheChatClientIsUsed()
+    {
+        // Ollama is being phased out: it is used only when AI:Generate:Provider=ollama.
+        var chat = new Mock<IChatClient>();
+        chat.Setup(c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "From the chat client.")));
+        var client = new OllamaGenerateClient(
+            new Mock<IHttpClientFactory>(MockBehavior.Strict).Object, new ConfigurationBuilder().Build(), chat.Object);
+
+        Assert.That(await client.GenerateAsync("Explain Dorian."), Is.EqualTo("From the chat client."));
+    }
+
+    [Test]
     public async Task ChatMode_ReplyWithoutJson_ReturnsNull()
     {
         var (client, _, _) = Client("I cannot help with that.");

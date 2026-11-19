@@ -10,11 +10,11 @@ using Microsoft.Extensions.Configuration;
 /// <see cref="Services.QueryUnderstandingService"/> and the performance-intent services.
 /// </summary>
 /// <remarks>
-/// By default it calls Ollama's <c>/api/generate</c>. With <c>AI:Generate:Provider=chat</c> it
-/// sends the prompt through the application's <see cref="IChatClient"/> instead, so the chatbot
-/// needs no local model server (CI, and production on Anthropic). In that mode no temperature is
-/// sent (Haiku 5.5 rejects non-default sampling parameters), a JSON format or schema is written
-/// into the prompt, and the JSON object is extracted from the reply.
+/// Ollama is being phased out. The prompt goes through the application's <see cref="IChatClient"/>
+/// (Anthropic in CI and production), so the chatbot needs no local model server: no temperature is
+/// sent (Haiku 5.5 rejects non-default sampling parameters), a JSON format or schema is written into
+/// the prompt, and the JSON object is extracted from the reply. Ollama's <c>/api/generate</c> is
+/// used only with <c>AI:Generate:Provider=ollama</c>, or when no chat client is registered.
 /// </remarks>
 public sealed class OllamaGenerateClient(
     IHttpClientFactory httpClientFactory,
@@ -29,7 +29,7 @@ public sealed class OllamaGenerateClient(
 
     private bool UseChat =>
         chatClient is not null
-        && string.Equals(configuration["AI:Generate:Provider"], "chat", StringComparison.OrdinalIgnoreCase);
+        && !string.Equals(configuration["AI:Generate:Provider"], "ollama", StringComparison.OrdinalIgnoreCase);
 
     private string BaseUrl =>
         configuration["Ollama:Endpoint"] ?? "http://localhost:11434";
