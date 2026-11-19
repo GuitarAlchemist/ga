@@ -287,6 +287,8 @@ public static class AiServiceExtensions
         services.AddTransient<Agents.GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<Agents.VoicingAgent>());
 
         services.AddScoped<Agents.SemanticRouter>();
+        // Process-wide: the scoped router would otherwise re-embed agent descriptions per request.
+        services.TryAddSingleton<Agents.AgentEmbeddingCache>();
         services.TryAddSingleton<Agents.IRoutingFeedback, Agents.MongoRoutingFeedback>();
 
         return services;

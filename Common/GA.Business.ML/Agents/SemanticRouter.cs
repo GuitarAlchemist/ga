@@ -19,7 +19,8 @@ public class SemanticRouter(
     IChatClient? chatClient,
     IEmbeddingGenerator<string, Embedding<float>>? textEmbeddings,
     ILogger<SemanticRouter> logger,
-    IRoutingFeedback? routingFeedback = null)
+    IRoutingFeedback? routingFeedback = null,
+    AgentEmbeddingCache? embeddingCache = null)
     : IDisposable
 {
     private readonly IReadOnlyList<GuitarAlchemistAgentBase> _agents = agents.ToList() is { Count: > 0 } list
@@ -31,8 +32,11 @@ public class SemanticRouter(
 
     private readonly ILogger<SemanticRouter> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    // Cached embeddings for agent descriptions
+    // Agent-description embeddings for this instance, filled from the process-wide cache.
+    // Without an injected cache (direct construction) the router owns a private one.
     private readonly Dictionary<string, float[]> _agentEmbeddings = [];
+    private readonly AgentEmbeddingCache _embeddingCache = embeddingCache ?? new AgentEmbeddingCache();
+    private readonly bool _ownsEmbeddingCache = embeddingCache is null;
     private volatile bool _embeddingsInitialized;
     private readonly SemaphoreSlim _initLock = new(1, 1);
 
@@ -259,17 +263,24 @@ public class SemanticRouter(
 
             var sw = Stopwatch.StartNew();
             var descriptions = _agents.Select(a => $"{a.Name}: {a.Description}. Capabilities: {string.Join(", ", a.Capabilities)}").ToArray();
-            var embeddings = await textEmbeddings.GenerateAsync(descriptions, cancellationToken: cancellationToken);
+            var embeddings = await _embeddingCache.GetOrCreateAsync(textEmbeddings, descriptions, cancellationToken);
 
             for (var i = 0; i < _agents.Count; i++)
             {
-                _agentEmbeddings[_agents[i].AgentId] = embeddings[i].Vector.ToArray();
+                _agentEmbeddings[_agents[i].AgentId] = embeddings.Vectors[i];
             }
 
             _embeddingsInitialized = true;
             sw.Stop();
             initActivity?.SetTag(ChatbotActivitySource.TagEmbeddingMs, sw.ElapsedMilliseconds);
-            _logger.LogInformation("Initialized embeddings for {Count} agents in {Ms}ms", _agents.Count, sw.ElapsedMilliseconds);
+            if (embeddings.GeneratedCount > 0)
+            {
+                _logger.LogInformation("Initialized embeddings for {Count} agents in {Ms}ms", _agents.Count, sw.ElapsedMilliseconds);
+            }
+            else
+            {
+                _logger.LogDebug("Reused cached embeddings for {Count} agents", _agents.Count);
+            }
         }
         finally
         {
@@ -535,6 +546,7 @@ public class SemanticRouter(
     {
         _initLock.Dispose();
         _queryEmbeddingCache.Dispose();
+        if (_ownsEmbeddingCache) _embeddingCache.Dispose();
         foreach (var agent in _agents)
         {
             agent.Dispose();
