@@ -17,36 +17,70 @@ internal static class AgentResponseParser
 {
     /// <summary>
     /// Returns the best JSON candidate string from <paramref name="responseText"/>:
-    /// markdown fences removed, and — when a balanced top-level object is present —
-    /// narrowed to just that <c>{...}</c> block. Falls back to the fence-stripped
-    /// text when no balanced object is found (preserving the prior behaviour where
-    /// the deserializer still gets a chance on the stripped text).
+    /// the first top-level <c>{...}</c> object after the opening markdown fence (if
+    /// any), or, when that object is cut off, everything from its opening brace.
+    /// Line breaks written literally inside its strings are escaped. Falls back to
+    /// the fence-stripped text when there is no object at all.
     /// </summary>
     public static string ExtractJsonCandidate(string responseText)
     {
         if (string.IsNullOrEmpty(responseText))
             return responseText;
 
-        var json = responseText;
-
-        // Strip code fences first.
-        if (json.Contains("```json"))
-            json = json.Split("```json")[1].Split("```")[0].Trim();
-        else if (json.Contains("```"))
-            json = json.Split("```")[1].Split("```")[0].Trim();
+        // Look for the object after the opening fence, if any. Its end is found by
+        // brace matching, not at the next ```, because the "result" string may
+        // itself hold a fenced example (```vextab ... ```).
+        var jsonFence = responseText.IndexOf("```json", StringComparison.Ordinal);
+        var anyFence = responseText.IndexOf("```", StringComparison.Ordinal);
+        var start = jsonFence >= 0 ? jsonFence + 7 : anyFence >= 0 ? anyFence + 3 : 0;
 
         // Models often emit a JSON object followed by extra prose
         // ("To distinguish these keys, listen for…"). Extract just the first
         // top-level {...} block so the trailing text doesn't break parsing.
-        var firstBrace = json.IndexOf('{');
+        var firstBrace = responseText.IndexOf('{', start);
         if (firstBrace >= 0)
         {
-            var lastBrace = FindMatchingBrace(json, firstBrace);
-            if (lastBrace > firstBrace)
-                json = json.Substring(firstBrace, lastBrace - firstBrace + 1);
+            var lastBrace = FindMatchingBrace(responseText, firstBrace);
+            var json = lastBrace > firstBrace
+                ? responseText[firstBrace..(lastBrace + 1)]
+                : responseText[firstBrace..];
+            return EscapeControlCharactersInStrings(json);
         }
 
-        return json;
+        return responseText[start..].Split("```")[0].Trim();
+    }
+
+    /// <summary>
+    /// Escapes the line breaks and tabs that models write literally inside JSON
+    /// strings (multi-line answers), which strict JSON rejects. Text outside
+    /// string literals is unchanged.
+    /// </summary>
+    private static string EscapeControlCharactersInStrings(string json)
+    {
+        var escaped = new System.Text.StringBuilder(json.Length);
+        var inString = false;
+        var escape = false;
+        foreach (var ch in json)
+        {
+            if (inString && !escape && ch < ' ')
+            {
+                escaped.Append(ch switch
+                {
+                    '\n' => "\\n",
+                    '\r' => "\\r",
+                    '\t' => "\\t",
+                    _ => $"\\u{(int)ch:x4}",
+                });
+                continue;
+            }
+
+            escaped.Append(ch);
+            if (escape) escape = false;
+            else if (inString && ch == '\\') escape = true;
+            else if (ch == '"') inString = !inString;
+        }
+
+        return escaped.ToString();
     }
 
     /// <summary>
