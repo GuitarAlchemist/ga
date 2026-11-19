@@ -1,17 +1,16 @@
 ---
 title: GaApi production deploy runbook (:5262)
 status: living
-date: 2026-11-16
+date: 2026-11-18
 related:
   - docs/adr/0005-gaapi-single-canonical-chat-host.md
-  - docs/runbooks/chatbot-deploy.md
   - Scripts/deploy-gaapi.ps1
-  - Scripts/deploy-chatbot.ps1
+  - Scripts/ga-service-wrapper.ps1
 ---
 
 # GaApi production deploy runbook
 
-How to run GaApi as a production host on `localhost:5262`, built from a clean git ref, so the public chat routes can move from GaChatbot.Api (:5252) to GaApi, as [ADR-0005](../adr/0005-gaapi-single-canonical-chat-host.md) step 5 plans. The deploy mirrors the chatbot deploy ([chatbot-deploy.md](chatbot-deploy.md)); only the differences are spelled out here.
+How to run GaApi as a production host on `localhost:5262`, built from a clean git ref. Since 2026-11-18 it serves the public chat routes (`/chatbot/*`, `/api/chatbot/*`, `/api/a2a/*`) of `https://demos.guitaralchemist.com`, which moved there from GaChatbot.Api (:5252); that host was then retired ([ADR-0005](../adr/0005-gaapi-single-canonical-chat-host.md)). There is no CI/CD workflow for this deploy: the demos host is a single Windows workstation, so every release is an operator running the script below.
 
 ## Topology
 
@@ -19,9 +18,10 @@ How to run GaApi as a production host on `localhost:5262`, built from a clean gi
 |---|---|---|---|
 | GaApi, dev stack | 5232 | task `GA-Dev-Stack-Logon` → `Scripts/start-all.ps1` (Aspire, Development) | the main checkout, whatever branch it is on |
 | **GaApi, production** | **5262** | task `GA-GaApi-5262` → `.deploy\run-gaapi.cmd` | `ga-deploy-gaapi` worktree, a pinned commit |
-| GaChatbot.Api | 5252 | task `GA-Chatbot-5252` → `.deploy\run-chatbot.cmd` | `ga-deploy-chatbot` worktree |
 
-Until the cloudflared flip below, nothing public reaches :5262.
+cloudflared routes the three chat paths to :5262. GaChatbot.Api (:5252, task `GA-Chatbot-5252`) was retired on 2026-11-18; the `ga-deploy-chatbot` worktree still holds its last release.
+
+Ollama runs from the Ollama app in the user's Startup folder, unelevated. Do not start `ollama serve` from an elevated process: it locks `ollama.exe`, the app's auto-updater then cannot replace it, and on 2026-09-27 the aborted update's rollback deleted `lib\ollama` (the model runtime), so every embed and generate call failed while `/api/tags` still answered.
 
 ## Deploy
 
@@ -33,7 +33,7 @@ pwsh -NoProfile -File Scripts/deploy-gaapi.ps1 -Ref <sha> # any other commit
 pwsh -NoProfile -File Scripts/deploy-gaapi.ps1 -PublicProbe  # after the flip: also probe demos.guitaralchemist.com
 ```
 
-The steps are the chatbot script's: clean detached worktree `..\ga-deploy-gaapi` (refuses to run if it has changes or untracked files outside `.deploy`), `dotnet publish -c Release` of `Apps/ga-server/GaApi` into `.deploy\releases\<sha>`, launcher plus scheduled task, junction switch, verification, automatic rollback to the previous release when verification fails, and the three newest releases kept.
+The steps: clean detached worktree `..\ga-deploy-gaapi` (refuses to run if it has changes or untracked files outside `.deploy`), `dotnet publish -c Release` of `Apps/ga-server/GaApi` into `.deploy\releases\<sha>`, launcher plus scheduled task, junction switch, verification, automatic rollback to the previous release when verification fails, and the three newest releases kept.
 
 The scheduled task `GA-GaApi-5262` runs `conhost.exe --headless cmd.exe /c <DeployRoot>\.deploy\run-gaapi.cmd` as the logged-on user (Interactive, Limited), at logon and every 5 minutes, with `MultipleInstances=IgnoreNew` and no execution time limit. The launcher restarts GaApi 10 s after it exits and rotates `.deploy\logs\gaapi.{out,err}.log` and `restarts.log` past 10 MB.
 
@@ -56,9 +56,9 @@ GaApi normally runs under Aspire, which injects `ConnectionStrings__guitar-alche
 | `ASPNETCORE_URLS` | `http://localhost:5262` | loopback only; cloudflared is the public edge |
 | `--contentRoot` | `.deploy\current` | `appsettings.json` and `wwwroot` come from the release |
 | working directory | `.deploy\work` | GaApi writes `cache\`, `musical-knowledge.db` and similar relative to it; under the worktree root they would be untracked files that fail the next deploy's clean check |
-| `AI__ChatProvider` | `ollama` | what GaChatbot.Api uses; explicit because `appsettings.Development.json` selects `claude`. The model comes from `local-env.cmd` below |
-| `AI__CascadeProvider` | `mistral` | as on GaChatbot.Api: the Ollama client is wrapped in the Mistral cascade, which answers when Ollama times out or is unreachable. `MISTRAL_API_KEY` comes from the user environment |
-| `AI__Embedding__Routing__Model` | `bge-large` | same routing embedder as GaChatbot.Api (`Apps/GaChatbot.Api/appsettings.json`) |
+| `AI__ChatProvider` | `ollama` | what the retired GaChatbot.Api used; explicit because `appsettings.Development.json` selects `claude`. The model comes from `local-env.cmd` below |
+| `AI__CascadeProvider` | `mistral` | as on the retired GaChatbot.Api: the Ollama client is wrapped in the Mistral cascade, which answers when Ollama times out or is unreachable. `MISTRAL_API_KEY` comes from the user environment |
+| `AI__Embedding__Routing__Model` | `bge-large` | the production routing embedder, also in `Apps/ga-server/GaApi/appsettings.Production.json`, which `RoutingEvalHarness` and the corpus host read |
 | `AI__Routing__MinConfidence` | `0.64` | the threshold calibrated for bge-large; it only makes sense together with the line above (nomic's default is 0.55) |
 | `VoicingSearch__OpticIndexPath` | `<main checkout>\state\voicings\optick.index` | read-only; the gitignored OPTK index only exists in the main checkout. GaApi reads this key, not `GA_OPTICK_INDEX_PATH` |
 | `VoicingSearch__EnableIndexing` | `false` | the startup indexer embeds every voicing through Ollama, which the public chatbot shares. OPTK search needs no warmup, so it is not needed |
@@ -69,7 +69,7 @@ Secrets are never written by the script. The chat path needs none with the defau
 
 ### Operator settings: `.deploy\local-env.cmd`
 
-As for the chatbot: optional `set` lines the launcher calls before the first start, never generated or overwritten by the script, never secrets. On the demos host it mirrors `ga-deploy-chatbot\.deploy\local-env.cmd`:
+Optional `set` lines the launcher calls before the first start, never generated or overwritten by the script, never secrets. On the demos host it holds:
 
 ```bat
 set Ollama__ChatModel=gpt-oss:120b-cloud
@@ -82,11 +82,11 @@ Without it GaApi uses `llama3.2:3b` from `appsettings.json`. The routing shadows
 
 After editing it, run `Stop-ScheduledTask GA-GaApi-5262` then `Start-ScheduledTask GA-GaApi-5262`, or redeploy.
 
-## Cutover: point the public chat routes at :5262
+## Cutover: point the public chat routes at :5262 (done 2026-11-18)
 
-Prerequisites: the deployed build contains the public page (PR #881) and, for `/api/a2a/*`, the A2A endpoint (PR #882); `pwsh -NoProfile -File Scripts/deploy-gaapi.ps1` passes, including the page check.
+Kept as a record of the flip. Prerequisites: the deployed build contains the public page (PR #881) and, for `/api/a2a/*`, the A2A endpoint (PR #882); `pwsh -NoProfile -File Scripts/deploy-gaapi.ps1` passes, including the page check.
 
-Known difference to accept or fix first: GaChatbot.Api answers `POST /api/chatbot/chat` (the JSON endpoint) anonymously; GaApi keeps it behind the `X-Api-Key` gate (only the page's calls are exempt, see `PublicChatbotPageApi`). External callers of the JSON endpoint, including step 6 of [chatbot-deploy.md](chatbot-deploy.md), get 401 after the flip.
+GaChatbot.Api answered `POST /api/chatbot/chat` (the JSON endpoint) anonymously; GaApi keeps that call anonymous too (`AnonymousChatbotApi`), so external callers of the JSON endpoint kept working after the flip.
 
 The edit, in `C:\Users\spare\.cloudflared\config.yml`: change the `service` of the three chat rules from `5252` to `5262`, leaving their order and every other rule unchanged.
 
@@ -111,11 +111,9 @@ Restart-Service cloudflared   # elevated; see reference_cloudflared_recovery if 
 pwsh -NoProfile -File Scripts/deploy-gaapi.ps1 -PublicProbe
 ```
 
-Keep GaChatbot.Api running on :5252 until the flip has been verified on the live demo (ADR-0005 step 6 retires it).
-
 ### Rollback of the flip
 
-Set the three `service` values back to `http://localhost:5252`, validate, and restart cloudflared. GaChatbot.Api is untouched by this deploy, so the old surface comes back as it was.
+GaChatbot.Api was retired after the flip had been verified, so there is no :5252 to fall back to. To roll back a bad GaApi release, redeploy the last known-good commit (`Scripts/deploy-gaapi.ps1 -Ref <sha>`). To restore the old host, see [chatbot-deploy.md](chatbot-deploy.md).
 
 ## Common failures
 

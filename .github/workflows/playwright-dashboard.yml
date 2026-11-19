@@ -42,7 +42,7 @@ on:
     branches: [ main ]
     paths:
       - 'ReactComponents/ga-react-components/**'
-      - 'Apps/GaChatbot.Api/**'
+      - 'Apps/ga-server/GaApi/wwwroot/chatbot/**'
       - '.github/workflows/playwright-dashboard.yml'
   workflow_dispatch:
 

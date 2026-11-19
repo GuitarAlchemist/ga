@@ -8,7 +8,7 @@ name: Semantic Regression — Chatbot Goldens
 # nothing automated catches semantic drift in the answer text itself.
 #
 # What this does on a PR touching the chatbot or LLM-routing code:
-#   1. Spins up GaChatbot.Api locally on the runner.
+#   1. Spins up GaApi (the chat host) locally on the runner.
 #   2. Replays each golden-trace prompt that has a stored reference answer
 #      (presence of run-1.json with response.naturalLanguageAnswer).
 #   3. Embeds reference + new answer via OpenAI text-embedding-3-small.
@@ -45,7 +45,7 @@ name: Semantic Regression — Chatbot Goldens
 
 on:
   # Dispatch-only (2026-05-31). This is a LIVE-MODEL integration check: it spins
-  # up GaChatbot.Api and replays golden prompts, which needs Ollama (llama3.2:3b
+  # up GaApi and replays golden prompts, which needs Ollama (llama3.2:3b
   # + nomic-embed) for the chatbot to generate answers. GitHub-hosted runners
   # have no Ollama, so on `pull_request` the chatbot never became ready
   # ("Connection refused localhost:11434" in SemanticIntentRouter warmup) and
@@ -83,8 +83,10 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       COSINE_THRESHOLD: ${{ github.event.inputs.cosine_threshold || '0.85' }}
       SAMPLE_SIZE: ${{ github.event.inputs.sample_size || '0' }}
-      CHATBOT_PORT: '5252'
-      CHATBOT_URL: 'http://localhost:5252'
+      CHATBOT_PORT: '5262'
+      CHATBOT_URL: 'http://localhost:5262'
+      # appsettings.Development.json selects Claude; the goldens were recorded on Ollama.
+      AI__ChatProvider: 'ollama'
     steps:
       - name: Checkout PR head
         uses: actions/checkout@v4
@@ -106,15 +108,15 @@ jobs:
 
       - name: Restore + build chatbot
         run: |
-          dotnet restore Apps/GaChatbot.Api/GaChatbot.Api.csproj
-          dotnet build  Apps/GaChatbot.Api/GaChatbot.Api.csproj -c Release --no-restore
+          dotnet restore Apps/ga-server/GaApi/GaApi.csproj
+          dotnet build  Apps/ga-server/GaApi/GaApi.csproj -c Release --no-restore
 
       - name: Start chatbot in background
         shell: bash
         run: |
           mkdir -p artifacts
           nohup dotnet run \
-            --project Apps/GaChatbot.Api/GaChatbot.Api.csproj \
+            --project Apps/ga-server/GaApi/GaApi.csproj \
             --configuration Release \
             --no-build \
             --urls "${CHATBOT_URL}" \

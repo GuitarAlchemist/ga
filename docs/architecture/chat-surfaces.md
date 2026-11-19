@@ -2,7 +2,7 @@
 title: Chat & Agent Surfaces
 scope: All HTTP/SignalR/GraphQL chat endpoints and the orchestrator/agent stack behind them
 status: authoritative
-last_verified: 2026-05-13
+last_verified: 2026-11-18
 parent: docs/architecture/README.md
 ---
 
@@ -13,7 +13,13 @@ Authoritative map of every chat / agent entry point in the Guitar Alchemist solu
 Conventions used throughout:
 - Status tags: ✅ canonical, 🟡 parallel-to-canonical, 🪦 deprecated-candidate, ❓ unknown / unverified.
 
-## 0. Status update — 2026-05-13
+## 0. Status update — 2026-11-18
+
+GaApi is the single chat host ([ADR-0005](../adr/0005-gaapi-single-canonical-chat-host.md)). Since 2026-11-18 the production GaApi on `:5262` (deployed by `Scripts/deploy-gaapi.ps1`, runbook [`docs/runbooks/gaapi-deploy.md`](../runbooks/gaapi-deploy.md)) serves `/chatbot/*`, `/api/chatbot/*` and `/api/a2a/*` on `demos.guitaralchemist.com`; the page is `Apps/ga-server/GaApi/wwwroot/chatbot/index.html`. The same day GaChatbot.Api (:5252) was retired: the project, its tests, `Scripts/deploy-chatbot.ps1`, `Scripts/start-chatbot-api.ps1`, `Scripts/start-chatbot-dev.ps1` and the `GA-Chatbot-5252` task are gone. The prompt and session corpora (`Tests/Apps/GaApi.Tests/Corpus/`) run against an in-process GaApi.
+
+Sections below that describe GaChatbot.Api as a live host are kept for history.
+
+## 0a. Status update — 2026-05-13 (superseded by §0)
 
 `GaChatbot.Api` (port 5252) is now the canonical deployable for `/chatbot/` and `/api/chatbot/*` — cloudflared (`~/.cloudflared/config.yml`) routes the prefixes accordingly. The chatbot HTML lives in `Apps/GaChatbot.Api/wwwroot/index.html` (single source of truth) and is served via `UseDefaultFiles` + `UseStaticFiles`. Two distinct canonicals coexist today:
 
@@ -180,7 +186,9 @@ Reachability is separate and never runs inference: `IChatProviderAvailability` (
 
 ---
 
-## 5b. GaChatbot.Api — the parallel host (added 2026-05-07)
+## 5b. GaChatbot.Api — the parallel host (added 2026-05-07, retired 2026-11-18)
+
+> **Historical.** GaChatbot.Api was deleted on 2026-11-18 after its routes moved to GaApi (§0). This section describes it as it was.
 
 `Apps/GaChatbot.Api` is a thin ASP.NET Web API host whose stated purpose is "the public chatbot, separately deployable, talks to the same orchestrator". It compiles, has 90 passing tests (post-2026-05-07-fix), exposes a controller surface that **collides path-for-path with GaApi's `ChatbotController`**, but is not started by Aspire AppHost and is not on `demos.guitaralchemist.com`'s ingress.
 
@@ -215,7 +223,7 @@ The two controllers are **not feature-equivalent**:
 
 ### Canonical-deployable decision (resolved 2026-05-13, kept for history)
 
-> **Superseded by §0.** The public `/chatbot/` demo is now served by `GaChatbot.Api` (`Apps/GaChatbot.Api/wwwroot/index.html`, which uses `fetch` against `api/chatbot/*` and no SignalR), and cloudflared routes `/chatbot/` and `/api/chatbot/*` there. The analysis below describes the situation before that switch.
+> **Superseded by §0a, then by §0.** The public `/chatbot/` demo is now served by `GaChatbot.Api` (`Apps/GaChatbot.Api/wwwroot/index.html`, which uses `fetch` against `api/chatbot/*` and no SignalR), and cloudflared routes `/chatbot/` and `/api/chatbot/*` there. The analysis below describes the situation before that switch.
 
 At the time (2026-05-07), the deployed `https://demos.guitaralchemist.com/chatbot/` static SPA calls `/hubs/chatbot` (SignalR on GaApi). To make `GaChatbot.Api` the canonical deployable for the public chatbot, one of these three paths has to be chosen:
 
@@ -225,7 +233,7 @@ At the time (2026-05-07), the deployed `https://demos.guitaralchemist.com/chatbo
 | **B. Move `ChatbotHub` into `GaChatbot.Api`** | Keep the SignalR contract, just relocate the hub. SPA changes from `/hubs/chatbot → GaApi` to `/hubs/chatbot → GaChatbot.Api`. AppHost adds the new project; tunnel routes `^/hubs/chatbot$` and `^/chatbot(/.*)?$` to `GaChatbot.Api`. | Medium — the hub's deps (`ProductionOrchestrator`, `LlmConcurrencyGate`, `ConversationHistoryStore`, etc.) all live in `GA.Business.Core.Orchestration`, so they cross the host boundary cleanly via DI. | Recommended if you want minimum frontend change. |
 | **C. Cut `GaChatbot.Api`** | Treat `GaChatbot.Api` as exploratory; keep its `Grounding`/`Trace`/readiness improvements but port them into `GaApi.ChatbotController` and `GaApi.ChatbotHub`. Delete `Apps/GaChatbot.Api`. | Lowest external — no deployable changes. Highest internal — refactor of GaApi controllers. | Recommended only if the multi-host story has no near-term need (independent scaling, public-vs-internal separation, etc.). |
 
-**Before the 2026-05-13 switch**, both `GaChatbot.Api` and `GaApi.ChatbotController` were 🟡 parallel-to-canonical for the public chatbot REST surface and `GaApi.ChatbotHub` was the de-facto canonical for the deployed demo. Since the switch, see the §0 matrix: `GaChatbot.Api` is canonical for the demo and the GaApi chatbot HTML and hub are not in the deployed flow.
+**Before the 2026-05-13 switch**, both `GaChatbot.Api` and `GaApi.ChatbotController` were 🟡 parallel-to-canonical for the public chatbot REST surface and `GaApi.ChatbotHub` was the de-facto canonical for the deployed demo. Since the switch, see the §0a matrix: `GaChatbot.Api` is canonical for the demo and the GaApi chatbot HTML and hub are not in the deployed flow.
 
 ---
 
@@ -264,7 +272,7 @@ Reclassify to `🪦 deprecated-candidate` once `<ChatWidget>` has migrated to th
 | **HTTP endpoint serving the legacy ga-client / Prime Radiant chat UIs** | ✅ AG-UI: `POST /api/chatbot/agui/stream` → `AgUiChatController.AgUiStream` → `IHarmonicChatOrchestrator.AnswerStreamingAsync` (= `ProductionOrchestrator`). | 🟡 `POST /api/chatbot/chat/stream` (`ChatbotController`) — same orchestrator backend, different SSE shape; no first-party frontend caller since 2026-11-15. 🟡 `POST /api/chatbot/agui/json` — non-streaming sibling, same orchestrator, used by MCP / agent callers. 🟡 `POST /api/chatbot/chat` — non-streaming sibling, same orchestrator, used by `<ChatWidget>`. |
 | **In-process chat for console / CLI** | ✅ `IHarmonicChatOrchestrator` (= `ProductionOrchestrator`) resolved via DI in `GaChatbotCli` and `GaChatbot`. | None notable — both apps share the same `AddChatbotOrchestration` registrations. |
 | **AG-UI protocol bridge** | ✅ `AgUiChatController` (`/agui/stream` for SSE, `/agui/json` for non-streaming). | None (single implementation). |
-| **SignalR streaming chat** | 🟡 `ChatbotHub` at `/hubs/chatbot` on GaApi — same orchestrator substrate as the REST surfaces. Not in the deployed `/chatbot/` flow since 2026-05-13 (§0): the demo is served by `GaChatbot.Api` over REST. | 🟡 Parallel REST/SSE surfaces exist (`/api/chatbot/chat`, `/api/chatbot/chat/stream`) and must stay wire-equivalent where the public demo depends on shared metadata (`Grounding`, `Trace`, routing). |
+| **SignalR streaming chat** | 🟡 `ChatbotHub` at `/hubs/chatbot` on GaApi — same orchestrator substrate as the REST surfaces. Not in the deployed `/chatbot/` flow since 2026-05-13 (§0a). Since 2026-11-18 the demo is served by GaApi over REST (§0). | 🟡 Parallel REST/SSE surfaces exist (`/api/chatbot/chat`, `/api/chatbot/chat/stream`) and must stay wire-equivalent where the public demo depends on shared metadata (`Grounding`, `Trace`, routing). |
 | **GraphQL chat mutation** | ❌ none defined; `Apps/ga-server/GaApi/Program.cs:113-121` registers Query types only. | _N/A_ |
 | **Chat provider (`IChatClient`)** | ✅ one binding chosen via `AI:ChatProvider` (§5); reachability through `IChatProviderAvailability` for `ChatbotController.GetStatus` and the opt-in readiness probe. | None (the GaApi-local `IChatService` was folded into `IChatClient` in 2026-11). |
 | **Specialized agent invocation** | ✅ via `SemanticRouter.RouteAsync` (called by `ProductionOrchestrator`). | 🟡 `SemanticRouter.AggregateAsync` and `DebateAsync` exist but are not currently exposed through any HTTP/SignalR surface. |

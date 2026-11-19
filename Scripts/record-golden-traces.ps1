@@ -8,7 +8,7 @@
 # canonical trace shape. v1 is the recorder only.
 #
 # Usage:
-#   pwsh Scripts/record-golden-traces.ps1                          # 1 run/prompt against localhost:5252
+#   pwsh Scripts/record-golden-traces.ps1                          # 1 run/prompt against localhost:5262
 #   pwsh Scripts/record-golden-traces.ps1 -RunsPerPrompt 3
 #   pwsh Scripts/record-golden-traces.ps1 -ChatbotUrl https://demos.guitaralchemist.com
 #   pwsh Scripts/record-golden-traces.ps1 -Filter "modes"          # only categories containing "modes"
@@ -22,7 +22,7 @@
 
 [CmdletBinding()]
 param(
-    [string]$ChatbotUrl     = "http://localhost:5252",
+    [string]$ChatbotUrl     = "http://localhost:5262",
     [int]$RunsPerPrompt     = 1,
     [int]$TimeoutSeconds    = 60,
     [string]$Filter         = "",

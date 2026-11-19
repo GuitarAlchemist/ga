@@ -30,7 +30,7 @@ param(
     [switch]$FrontendOnly,
     [switch]$SkipE2E,
     [switch]$LiveA2A,
-    [string]$A2AApiUrl = "http://localhost:5252",
+    [string]$A2AApiUrl = "http://localhost:5262",
     [int]$A2ATimeoutSeconds = 120,
     [string]$OutRoot = (Join-Path $env:TEMP "ga-chatbot-quality")
 )
@@ -93,7 +93,6 @@ if (-not $SkipBuild -and -not $FrontendOnly) {
 
 if (-not $FrontendOnly) {
     $testProjects = @(
-        @{ Name = "GaChatbot.Api.Tests"; Path = "Tests\Apps\GaChatbot.Api.Tests\GaChatbot.Api.Tests.csproj" },
         @{ Name = "GaApi.Tests"; Path = "Tests\Apps\GaApi.Tests\GaApi.Tests.csproj" },
         @{ Name = "GA.Business.ML.Tests"; Path = "Tests\Common\GA.Business.ML.Tests\GA.Business.ML.Tests.csproj" },
         @{ Name = "GA.Business.Core.Tests"; Path = "Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj" },

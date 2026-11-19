@@ -6,11 +6,6 @@
       "code_path": "Common/GA.Business.ML/Agents/**",
       "context_file": "Common/GA.Business.ML/Agents/CONTEXT.md",
       "max_staleness_days": 30
-    },
-    {
-      "code_path": "Apps/GaChatbot.Api/**",
-      "context_file": "Apps/GaChatbot.Api/CONTEXT.md",
-      "max_staleness_days": 30
     }
   ]
 }

@@ -101,8 +101,8 @@ jobs:
           }
 
       # In-runner backend: run Ollama ON the runner — no secret, no tunnel, no
-      # Cloudflare. Pulls the exact models the chatbot config declares (Apps/
-      # GaChatbot.Api/appsettings.json: ChatModel llama3.2:3b, EmbeddingModel
+      # Cloudflare. Pulls the exact models the corpus host declares (Apps/ga-server/
+      # GaApi/appsettings.Development.json: ChatModel llama3.2:3b, EmbeddingModel
       # nomic-embed-text) so the measured pass_pct is comparable to the local
       # baseline (0.94, llama3.2:3b).
       #
@@ -147,10 +147,10 @@ jobs:
           global-json-file: global.json
 
       - name: Restore
-        run: dotnet restore Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj
+        run: dotnet restore Tests/Apps/GaApi.Tests/GaApi.Tests.csproj
 
       - name: Build chatbot tests
-        run: dotnet build Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj -c Debug --no-restore
+        run: dotnet build Tests/Apps/GaApi.Tests/GaApi.Tests.csproj -c Debug --no-restore
 
       - name: Fetch OPTIC-K index (when OPTICK_INDEX_URL secret is set)
         if: ${{ env.OPTICK_INDEX_URL != '' }}

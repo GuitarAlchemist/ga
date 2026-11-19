@@ -71,8 +71,8 @@ public sealed class ChatHookContext
     /// </para>
     /// <para>
     /// <b>HTTP controllers (PR #159 review plumb-001):</b> the HTTP chat
-    /// surfaces at <c>ChatbotController</c> (both GaApi and
-    /// GaChatbot.Api) do NOT plumb SessionId today — Phase B is
+    /// surface at GaApi's <c>ChatbotController</c> does NOT
+    /// plumb SessionId today — Phase B is
     /// SignalR-only. The orchestrator falls back to a fresh Guid per
     /// request so HTTP callers get throwaway per-request sessions whose
     /// writes are unreachable from future retrieval. Tracked as Phase C

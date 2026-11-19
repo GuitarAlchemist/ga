@@ -38,15 +38,15 @@
       "Common/GA.Business.ML/Agents/Plugins/*.cs",
       "Common/GA.Business.Core.Orchestration/Plugins/GaPlugin.cs",
       "Common/GA.Domain.Services/**/*.cs",
-      "Common/GA.Business.Core/**/*.cs",
-      "Apps/GaChatbot.Api/Services/*.cs"
+      "Common/GA.Business.Core/**/*.cs"
     ],
     "allow_edit_rationale": "Loop edits skill implementations, MCP wrappers, intent routing, orchestrator plugins, and domain services — the layers behind a chatbot answer. NEVER prompts, corpus, oracle scripts, runbooks, or CI workflows.",
 
     "protected": [
       "Tests/Apps/GaApi.Tests/Corpus/prompts.yaml",
-      "Tests/Apps/GaChatbot.Api.Tests/Corpus/PromptCorpusTests.cs",
-      "Tests/Apps/GaChatbot.Api.Tests/Corpus/CanonicalSignatureChecker.cs",
+      "Tests/Apps/GaApi.Tests/Corpus/PromptCorpusTests.cs",
+      "Tests/Apps/GaApi.Tests/Corpus/CanonicalSignatureChecker.cs",
+      "Tests/Apps/GaApi.Tests/Corpus/CorpusHost.cs",
       "state/quality/chatbot-qa/golden-traces/**/_signature.json",
       "state/quality/chatbot-qa/baseline.json",
       "docs/runbooks/chatbot-improvement-loop.md",

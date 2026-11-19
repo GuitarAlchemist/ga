@@ -29,7 +29,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path $PSScriptRoot -Parent
-$testProj = Join-Path $repoRoot "Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj"
+$testProj = Join-Path $repoRoot "Tests/Apps/GaApi.Tests/GaApi.Tests.csproj"
 
 Write-Host "─── Running chatbot prompt corpus ───" -ForegroundColor Cyan
 
@@ -134,8 +134,8 @@ if (-not $oracleUsable) {
     Write-Host "  dotnet test exit=$dotnetExitCode; runner_completed=$runnerCompleted; total_tests_ran=$(if ($null -eq $totalTestsRan) { '<unknown>' } else { $totalTestsRan })." -ForegroundColor Red
     # rel-010: tiered failure-mode messages instead of a single guess.
     if ($errTail -match 'MSB3027|MSB3021|file is locked') {
-        Write-Host "  Cause (from stderr): build failed — a DLL is locked by a running host (GaChatbot.Api or GaApi)." -ForegroundColor DarkYellow
-        Write-Host "  Fix: Stop-Process -Name 'GaChatbot.Api' -Force; then retry." -ForegroundColor DarkYellow
+        Write-Host "  Cause (from stderr): build failed — a DLL is locked by a running host (GaApi)." -ForegroundColor DarkYellow
+        Write-Host "  Fix: stop the GaApi built from this checkout; then retry." -ForegroundColor DarkYellow
     } elseif ($errTail -match 'MSB1009|did not specify a project|workload') {
         Write-Host "  Cause (from stderr): SDK / project-resolution failure. Run 'dotnet build' separately and inspect." -ForegroundColor DarkYellow
     } elseif ($null -ne $totalTestsRan -and $totalTestsRan -lt 1) {

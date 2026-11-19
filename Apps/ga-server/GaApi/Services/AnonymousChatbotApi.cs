@@ -2,13 +2,13 @@ namespace GaApi.Services;
 
 /// <summary>
 ///     The chatbot API calls that stay anonymous outside Development. <c>Program.cs</c> requires
-///     <c>X-Api-Key</c> on <c>/api/chatbot/*</c>; GaChatbot.Api serves these calls without a key
-///     today, so the cutover to GaApi (ADR-0005) keeps that contract.
+///     <c>X-Api-Key</c> on <c>/api/chatbot/*</c>; the retired GaChatbot.Api served these calls
+///     without a key, so the cutover to GaApi (ADR-0005) kept that contract.
 /// </summary>
 /// <remarks>
 ///     The public page (<c>wwwroot/chatbot/index.html</c>) makes the first five; keep them in step
 ///     with its <c>fetch</c> calls. The JSON <c>chat</c> serves external callers and the deploy
-///     smoke test (docs/runbooks/chatbot-deploy.md). AG-UI and <c>skills</c> stay behind the key.
+///     smoke test (docs/runbooks/gaapi-deploy.md). AG-UI and <c>skills</c> stay behind the key.
 /// </remarks>
 public static class AnonymousChatbotApi
 {

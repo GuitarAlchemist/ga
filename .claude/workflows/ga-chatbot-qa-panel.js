@@ -4,7 +4,7 @@ export const meta = {
   whenToUse:
     'Daily/local semantic QA of the GA chatbot. Complements (does NOT replace) the deterministic ' +
     'PromptCorpusTests.cs invariant gate: this layer judges correctness, grounding, and helpfulness ' +
-    'that substring checks cannot see. Requires the live GaChatbot.Api backend (default :5252).',
+    'that substring checks cannot see. Requires the live GaApi chat host (default :5262).',
   phases: [
     { title: 'Probe', detail: 'confirm backend live + discover chat endpoint/request shape; load corpus' },
     { title: 'Evaluate', detail: 'per prompt: query live chatbot, then judge the answer with N lenses + consensus' },
@@ -13,12 +13,12 @@ export const meta = {
 }
 
 // ── Config (override via Workflow args: { host, limit }) ──────────────────────
-// host  : GaChatbot.Api base URL (default http://localhost:5252)
+// host  : GaApi chat host base URL (default http://localhost:5262)
 // limit : cap the number of (non-skipped) prompts evaluated — for smoke runs.
-const HOST = (args && args.host) || 'http://localhost:5252'
+const HOST = (args && args.host) || 'http://localhost:5262'
 const LIMIT = args && Number.isFinite(args.limit) ? args.limit : null
 const CORPUS = 'Tests/Apps/GaApi.Tests/Corpus/prompts.yaml'
-const CORPUS_RUNNER = 'Tests/Apps/GaChatbot.Api.Tests/Corpus/PromptCorpusTests.cs'
+const CORPUS_RUNNER = 'Tests/Apps/GaApi.Tests/Corpus/PromptCorpusTests.cs'
 const SNAPSHOT_DIR = 'state/quality/chatbot-qa-semantic'
 
 // The judge panel: each lens is an INDEPENDENT reviewer with a distinct failure
@@ -55,7 +55,7 @@ const PROBE_SCHEMA = {
   required: ['healthy', 'endpoint', 'requestTemplate', 'answerField'],
   properties: {
     healthy: { type: 'boolean', description: 'true only if the chat endpoint returned a real answer to a probe request' },
-    endpoint: { type: 'string', description: 'full chat URL actually used, e.g. http://localhost:5252/api/chatbot/chat' },
+    endpoint: { type: 'string', description: 'full chat URL actually used, e.g. http://localhost:5262/api/chatbot/chat' },
     requestTemplate: { type: 'string', description: 'JSON request body with the literal token {{PROMPT}} where the user text goes' },
     answerField: { type: 'string', description: 'response JSON field holding the natural-language answer (e.g. naturalLanguageAnswer)' },
     note: { type: 'string' },

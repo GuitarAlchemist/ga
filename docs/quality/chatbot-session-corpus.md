@@ -23,7 +23,7 @@ scales/modes, jazz & advanced harmony). Generic guitar-teacher content
 (practice routines, metronome, gear/tuning) is deliberately **out of scope** —
 not GA's value.
 `SessionCorpusTests.EverySession_SatisfiesItsInvariants` replays each one
-turn-by-turn against `GaChatbot.Api`, passing the **accumulating
+turn-by-turn against an in-process GaApi, passing the **accumulating
 `ConversationHistory`** on every request — the exact path the live `/chatbot` UI
 uses — so context-dependent turns actually carry state.
 

@@ -3,10 +3,10 @@
 .SYNOPSIS
     Deploy GaApi as a production host on :5262 from a clean git ref.
 .DESCRIPTION
-    Production twin of the GaApi that the Aspire dev stack runs on :5232. It exists so
-    the public chat routes (/chatbot/*, /api/chatbot/*, /api/a2a/*) can move from
-    GaChatbot.Api (:5252) to GaApi (ADR-0005) without pointing the tunnel at a dev
-    process. Same mechanics as Scripts/deploy-chatbot.ps1: builds a git ref (default
+    Production twin of the GaApi that the Aspire dev stack runs on :5232. It serves
+    the public chat routes (/chatbot/*, /api/chatbot/*, /api/a2a/*), which moved there
+    from the retired GaChatbot.Api (:5252, ADR-0005), so the tunnel never points at a
+    dev process. It builds a git ref (default
     origin/main) in a dedicated detached worktree, publishes it to a release folder,
     switches the `current` junction to it, restarts the scheduled task that runs it and
     smoke-tests it with a real chat request. A failed smoke test switches back to the
@@ -231,9 +231,9 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXIT
 #    - Production: no appsettings.Development.json, no user secrets, no Swagger, and the
 #      X-Api-Key gate on /api/chatbot/* (the public page's own calls are exempt in builds
 #      that ship the page).
-#    - Chat provider, Mistral cascade, routing embedder and threshold as on GaChatbot.Api
-#      (its launcher and appsettings.json), so the public chat answers and routes the same
-#      way after the cutover. The provider is explicit because appsettings.Development.json
+#    - Chat provider, Mistral cascade, routing embedder and threshold as on the retired
+#      GaChatbot.Api, so the public chat answered and routed the same way after the cutover.
+#      The routing pair is also in Apps/ga-server/GaApi/appsettings.Production.json. The provider is explicit because appsettings.Development.json
 #      selects Claude. MinConfidence=0.64 is calibrated for bge-large; the two settings
 #      only make sense together. AmbiguousBelow=0.75 with MinMargin=0.03 is calibrated on
 #      the same embedder: a skill scoring under 0.75 must lead the runner-up by 0.03, or a

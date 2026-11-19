@@ -40,7 +40,7 @@ The DI composition root for the chatbot's domain skills, hooks, MCP tools, and p
    ```
 3. **If the skill needs `IChatClient`**, pass `ServiceLifetime.Scoped`. Otherwise omit (defaults to Singleton).
 4. **Place the registration near peers.** Domain-retrieval skills group with `ChordVoicingsSkill` / `ImprovisationSkill`. Path-B (DSL-eval) skills group with `TransposeSkill` / `CommonTonesSkill` / `DiatonicChordsSkill`. Domain-backed (no LLM) group with `RelativeKeySkill` / `CapoSkill`. Order inside a group is chronological.
-5. **No other registration sites.** Do not add a `services.AddSingleton<YourSkill>()` in `ChatbotOrchestrationExtensions.cs` or in the GaChatbot.Api host. `AddChatPluginHost` discovers this plugin reflectively.
+5. **No other registration sites.** Do not add a `services.AddSingleton<YourSkill>()` in `ChatbotOrchestrationExtensions.cs` or in the GaApi host. `AddChatPluginHost` discovers this plugin reflectively.
 6. **If the skill exposes an MCP tool**, add the tool type to `McpToolTypes` at the bottom of the file. Wire-name convention: `ga_<topic>_<verb>`.
 
 ## What NOT to do here
@@ -57,7 +57,7 @@ The DI composition root for the chatbot's domain skills, hooks, MCP tools, and p
 
 - Parent: [/CLAUDE.md](../../../CLAUDE.md) — layer rule, build/test commands.
 - Sibling: [`../../GA.Business.ML/Agents/CONTEXT.md`](../../GA.Business.ML/Agents/CONTEXT.md) — where the skill source lives.
-- Sibling: [`../../../Apps/GaChatbot.Api/CONTEXT.md`](../../../Apps/GaChatbot.Api/CONTEXT.md) — the host that calls `AddChatbotOrchestration()`.
+- Host: [`docs/architecture/chat-surfaces.md`](../../../docs/architecture/chat-surfaces.md) — GaApi, the chat host that calls `AddChatbotOrchestration()`.
 - Architecture: [`docs/architecture/layers.md`](../../../docs/architecture/layers.md) — the five-layer rule.
 - Plan (canonical): `docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`.
 - Solutions: `docs/solutions/architecture/2026-05-07-di-composition-root-casing-drift.md`, `docs/solutions/runtime-errors/fsharp-module-init-closure-registry.md`, `docs/solutions/runtime-errors/2026-05-07-mcp-withtools-overload-resolution-trap.md`.

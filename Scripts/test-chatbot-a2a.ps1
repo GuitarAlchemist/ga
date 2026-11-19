@@ -13,11 +13,11 @@
 .EXAMPLE
     pwsh Scripts/test-chatbot-a2a.ps1
 .EXAMPLE
-    pwsh Scripts/test-chatbot-a2a.ps1 -ApiUrl http://localhost:5252 -TimeoutSeconds 120
+    pwsh Scripts/test-chatbot-a2a.ps1 -ApiUrl http://localhost:5262 -TimeoutSeconds 120
 #>
 
 param(
-    [string]$ApiUrl = "http://localhost:5252",
+    [string]$ApiUrl = "http://localhost:5262",
     [int]$TimeoutSeconds = 120
 )
 

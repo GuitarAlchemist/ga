@@ -299,7 +299,8 @@ state/digests/*
 # locally. Never committed.
 state/harness/skill-invocations.jsonl
 
-# Thin chatbot host deployment files stay local/private
+# Deployment files of the retired GaChatbot.Api host (removed 2026-11-18). Still ignored:
+# an old checkout may keep them locally, and they can hold secrets.
 Apps/GaChatbot.Api/appsettings.Production.json
 Apps/GaChatbot.Api/.env*
 Apps/GaChatbot.Api/railway.toml

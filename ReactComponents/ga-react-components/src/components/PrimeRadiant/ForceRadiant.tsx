@@ -3845,8 +3845,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   // ─── Backend connectivity check ───
   // Probes /api/health (GaApi) as the primary "is the API up" signal.
   // /api/chatbot/status used to be the primary probe, but GaChatbot.Api
-  // is a separate service on :5252 (cloudflared routes /chatbot and
-  // /api/chatbot/* to it on demos). When GaChatbot.Api was down but
+  // was a separate service on :5252 (retired 2026-11-18; cloudflared routed
+  // /chatbot and /api/chatbot/* to it on demos). When GaChatbot.Api was down but
   // GaApi was up, the badge flipped to "Offline" even though the bulk
   // of the API was healthy. The chatbot service is now a secondary
   // capability surface — see the popover below.

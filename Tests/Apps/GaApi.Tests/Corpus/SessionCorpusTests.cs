@@ -1,4 +1,4 @@
-namespace GaChatbot.Api.Tests.Corpus;
+namespace GaApi.Tests.Corpus;
 
 using System.Net;
 using System.Net.Http.Json;
@@ -9,7 +9,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 /// <summary>
 ///     Replays YAML-defined multi-turn conversations (sessions.yaml) against
-///     the GaChatbot.Api host and asserts per-turn invariants, carrying the
+///     the GaApi host and asserts per-turn invariants, carrying the
 ///     accumulating ConversationHistory between turns exactly as the live
 ///     /chatbot UI does. This is the multi-turn counterpart to
 ///     <see cref="PromptCorpusTests"/>: where that gate sees one-shot answers,
@@ -48,7 +48,7 @@ public class SessionCorpusTests
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        _factory = new GaChatbot.Api.Tests.TestWebApplicationFactory();
+        _factory = CorpusHost.Create();
         _client = _factory.CreateClient();
         _client.Timeout = TimeSpan.FromMinutes(3);
 

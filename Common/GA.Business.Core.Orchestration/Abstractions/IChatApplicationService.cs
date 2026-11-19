@@ -17,11 +17,9 @@ using GA.Business.Core.Orchestration.Models;
 /// fallback behaviour belong here, not on hosts. Codex CLI second-opinion
 /// 2026-05-07 — roadmap P0 #2 first cut, option C-prime.
 ///
-/// Note: <see cref="GaChatbot.Api.Services.IChatApplicationService"/> is a
-/// separate, GaChatbot.Api-specific interface that bundles richer wire
-/// (Trace, readiness, ChatExecutionResult) and stays frozen until a
-/// concrete deploy reason emerges. This contract is deliberately the
-/// narrowest possible alternative.
+/// Note: the retired GaChatbot.Api host (removed 2026-11-18) had its own,
+/// richer IChatApplicationService (Trace, readiness, ChatExecutionResult).
+/// This contract is deliberately the narrowest possible alternative.
 /// </remarks>
 public interface IChatApplicationService
 {

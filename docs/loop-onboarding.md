@@ -43,7 +43,7 @@ agent-blackbox:
 >    override, PR preflight pass, no service restarts or service-manager
 >    changes unless explicitly approved.
 > 5. **Keep service restarts human-only.** Loops can edit code/config
->    inside scope, but cannot restart services (GaApi, GaChatbot.Api,
+>    inside scope, but cannot restart services (GaApi,
 >    cloudflared, Ollama, Redis), mutate service managers, rotate
 >    secrets, deploy production, or change billing/legal/customer
 >    commitments.
@@ -114,7 +114,7 @@ An author comment cannot satisfy that check, and autonomous merge is disabled.
 The supervised loop never bypasses any of these:
 
 - Restarting services (`Restart-Service`, `taskkill` against GaApi /
-  GaChatbot.Api / cloudflared / Ollama / Redis / any service-manager).
+  cloudflared / Ollama / Redis / any service-manager).
 - Schema or contract freezes (`docs/contracts/**`, ix schemas, Demerzel
   governance schemas, IXQL grammar bumps).
 - OPTIC-K embedding dimension changes (240-dim one-way door across the

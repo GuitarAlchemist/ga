@@ -6,7 +6,7 @@
 #   pwsh Scripts/run-session-corpus.ps1 -NoBuild        # skip build (DLL must be current)
 #
 # The multi-turn counterpart to run-prompt-corpus.ps1. Drives
-# SessionCorpusTests.EverySession_SatisfiesItsInvariants against GaChatbot.Api,
+# SessionCorpusTests.EverySession_SatisfiesItsInvariants against GaApi,
 # parses the canonical summary line it prints, and emits a trend-shaped JSON the
 # improvement loop can target on the SESSION axis (lost context, follow-up
 # fallback) — distinct from the single-turn pass_pct.
@@ -26,7 +26,7 @@ $ErrorActionPreference = 'Stop'
 # pipe; we still sanitize to ASCII before persisting the snapshot.
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $repoRoot = Split-Path $PSScriptRoot -Parent
-$testProj = Join-Path $repoRoot 'Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj'
+$testProj = Join-Path $repoRoot 'Tests/Apps/GaApi.Tests/GaApi.Tests.csproj'
 
 Write-Host '─── Replaying chatbot session corpus ───' -ForegroundColor Cyan
 
@@ -47,7 +47,7 @@ if (-not $summary.Success) {
     Write-Host '✗ Oracle did NOT run cleanly — no session summary line found.' -ForegroundColor Red
     Write-Host "  dotnet test exit=$dotnetExit. Likely a build failure or host that never booted." -ForegroundColor Red
     if ($out -match 'MSB3027|MSB3021|file is locked') {
-        Write-Host '  Cause: a DLL is locked by a running host (GaChatbot.Api). Stop it and retry.' -ForegroundColor DarkYellow
+        Write-Host '  Cause: a DLL is locked by a running host (GaApi). Stop it and retry.' -ForegroundColor DarkYellow
     }
     ($out -split "`r?`n" | Select-Object -Last 20) | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
     exit 2

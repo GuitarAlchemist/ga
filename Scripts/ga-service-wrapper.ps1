@@ -25,7 +25,7 @@ Write-Output "Started Vite dev server (PID $($procs[-1].Id))"
 # This wrapper runs elevated at boot; an elevated `ollama serve` locks ollama.exe,
 # so the app's unelevated auto-updater cannot replace it. On 2026-09-27 the update
 # aborted and its rollback deleted the model runtime (lib\ollama), which broke
-# every embed and generate call. See docs/runbooks/chatbot-deploy.md.
+# every embed and generate call. See docs/runbooks/gaapi-deploy.md.
 
 # Monitor loop — restart crashed processes
 while ($true) {

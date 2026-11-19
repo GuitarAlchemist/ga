@@ -1,4 +1,4 @@
-namespace GaChatbot.Api.Tests.Corpus;
+namespace GaApi.Tests.Corpus;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;

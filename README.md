@@ -48,7 +48,6 @@ For frontend work: `npm run build && npm run lint` in `ReactComponents/ga-react-
 | Service | Port | Purpose |
 |---|---|---|
 | GaApi (.NET) | 5232 | REST + GraphQL, mounts the chatbot at `/chatbot/*` via PathBase reverse-proxy |
-| GaChatbot.Api (.NET) | 5252 | Skill-routed chatbot backend — runs side-by-side with GaApi |
 | Vite (React) | 5176 | Frontend dev server with HMR |
 | Aspire Dashboard | 15001 | Service health + traces |
 
@@ -101,8 +100,7 @@ All operations governed by the [Demerzel](https://github.com/GuitarAlchemist/Dem
 ```
 ga/
 ├── Apps/
-│   ├── GaApi/                       # Main API (REST + GraphQL, port 5232)
-│   └── GaChatbot.Api/               # Skill-routed chatbot (port 5252)
+│   └── GaApi/                       # Main API (REST + GraphQL + chat, port 5232)
 ├── Common/
 │   ├── GA.Business.Core/            # Layer 1 — pure theory primitives
 │   ├── GA.Domain/                   # Layer 2 — domain types

@@ -2,7 +2,7 @@
 #
 # Where prompts.yaml asserts invariants on single one-shot answers, this file
 # asserts invariants across a *full conversation* a real guitarist would have.
-# Each session is replayed turn-by-turn against GaChatbot.Api with the
+# Each session is replayed turn-by-turn against GaApi with the
 # accumulating ConversationHistory passed on every request (the same path the
 # live /chatbot UI uses), so context-dependent turns ("those chords", "in that
 # key") actually carry state. SessionCorpusTests.cs is the canonical runner.

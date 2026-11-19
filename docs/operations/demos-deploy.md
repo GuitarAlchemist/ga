@@ -74,7 +74,7 @@ host header override:
 # Keep these three rules at the top — backend stays local:
 - hostname: demos.guitaralchemist.com
   path: ^/chatbot(/.*)?$
-  service: http://localhost:5252
+  service: http://localhost:5262
 - hostname: demos.guitaralchemist.com
   path: ^/api/.*$
   service: http://localhost:5232
@@ -96,7 +96,7 @@ Then `Restart-Service cloudflared`. After that:
 
 - `demos.guitaralchemist.com/test/fleet` is served by GH Pages
 - `demos.guitaralchemist.com/api/*` still routes to the local GaApi
-- `demos.guitaralchemist.com/chatbot/*` still routes to GaChatbot.Api
+- `demos.guitaralchemist.com/chatbot/*` still routes to the production GaApi (:5262)
 
 Caveat: cloudflared's URL-rewriting to inject the `/ga/` base path is
 fiddly. The cleanest variant is **Option 2** below.
@@ -144,7 +144,7 @@ If the new deploy breaks something:
   operator's local GaApi instance through Cloudflare Tunnel. Test
   pages that fetch from `/api/*` only work behind a proxy that
   routes those paths to a live GaApi.
-- **The chatbot service.** `GaChatbot.Api` on `:5252` is still
-  local-tunnel only.
+- **The chatbot service.** The production GaApi on `:5262` (which
+  replaced GaChatbot.Api on 2026-11-18) is still local-tunnel only.
 - **Custom domain.** `demos.guitaralchemist.com` continues to point
   at the tunnel until the operator does Option 1 or Option 2 above.

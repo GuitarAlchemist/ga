@@ -3,7 +3,7 @@
 //
 // Catches:
 //   - /chatbot/ 404 (deploy didn't publish wwwroot)
-//   - Showcase button missing (regression in Apps/GaChatbot.Api/wwwroot/index.html)
+//   - Showcase button missing (regression in Apps/ga-server/GaApi/wwwroot/chatbot/index.html)
 //   - api/chatbot/demo broken (modal stuck on "Loading…")
 //   - QA badges all gone (qa-summary endpoint broken)
 //   - response time > 5s (slow LLM / GPU thermal throttle / no warmup)

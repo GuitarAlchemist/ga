@@ -9,7 +9,7 @@
 #>
 
 param(
-    [string]$ApiUrl = "http://localhost:5252",
+    [string]$ApiUrl = "http://localhost:5262",
     [string]$FrontendUrl = "http://localhost:5173"
 )
 

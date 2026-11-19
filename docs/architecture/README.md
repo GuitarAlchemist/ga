@@ -105,7 +105,7 @@ For the authoritative, code-verified breakdown of which chat surface is served b
 
 - **LIVE and serving traffic**: `ga-client`, `GaApi`, MongoDB, Ollama, and the OPTIC-K mmap loaded by GaApi. The chatbot surfaces (Harmonic Nebula, the public `/chatbot/` demo, AG-UI streaming) are enumerated with their exact hosts in [chat-surfaces.md](chat-surfaces.md).
 - **CANONICAL SUBSTRATE**: `IChatApplicationService` in `GA.Business.Core.Orchestration`, wrapped by trace/readiness/fallback decorators and backed by `ProductionOrchestrator`.
-- **PARALLEL / FROZEN**: `GA.AI.Service` is frozen and should not receive new code without a concrete deploy reason. The `GaApi` vs `GaChatbot.Api` host question is tracked in [chat-surfaces.md](chat-surfaces.md).
+- **PARALLEL / FROZEN**: `GA.AI.Service` is frozen and should not receive new code without a concrete deploy reason. The `GaApi` vs `GaChatbot.Api` host question is settled: GaApi is the only chat host and GaChatbot.Api was retired on 2026-11-18 ([chat-surfaces.md](chat-surfaces.md), ADR-0005).
 - **DRIFT / CLEANUP CANDIDATES**: see the decision table in [audit-2026-04-25.md](audit-2026-04-25.md).
 
 > The public demo is fronted by `demos.guitaralchemist.com`, a cloudflared tunnel to local dev servers — not a hermetic deploy. Treat its availability as best-effort.

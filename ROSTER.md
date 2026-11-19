@@ -30,8 +30,8 @@ band determines whether the agent may act, must confirm, or must escalate.
 
 **Role:** SSE chat ingress + skill orchestration for guitaralchemist.com. Hosts
 the `/api/chatbot` SSE endpoint (`Apps/ga-server/GaApi/Controllers/ChatbotController.cs`),
-the Blazor-side experience (`Apps/GaChatbot/`), the API layer
-(`Apps/GaChatbot.Api/`), and the CLI driver (`Apps/GaChatbotCli/`). Fans out to
+the Blazor-side experience (`Apps/GaChatbot/`), and the CLI driver
+(`Apps/GaChatbotCli/`). Fans out to
 ML skills under `Common/GA.Business.ML/Agents/Skills/` (top traffic:
 `ChordVoicingsSkill`), which call into the OPTIC-K index reader
 (`Common/GA.Business.ML/Search/OptickIndexReader.cs`).

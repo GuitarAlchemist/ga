@@ -121,7 +121,7 @@ Progressive-disclosure map for fresh agents. Look here before grepping — most 
 | Checking quality baselines | `state/quality/` (daily snapshots: chatbot-qa, voicing-analysis, readme-drift). Aggregated trend: `docs/quality/README.md` |
 | Looking up an MCP / federation peer | `.mcp.json` (ix, demerzel, chrome-devtools, context7, ga, tars, notebooklm, sentrux, hari). Capability registry: `../Demerzel/schemas/capability-registry.json` |
 | Updating UI tokens / colors | `DESIGN.md` (canonical YAML frontmatter) → `npm run gen:theme` in `ReactComponents/ga-react-components` → `src/theme.ts`. Pre-commit hook verifies sync. |
-| Running anything | `Scripts/` (`start-all.ps1`, `install-ga-service.ps1`, `run-all-tests.ps1`); Claude Code hooks in `go/claudehooks/` (`ga-hooks`); runbooks in `docs/runbooks/` (`chatbot-deploy.md`) |
+| Running anything | `Scripts/` (`start-all.ps1`, `install-ga-service.ps1`, `run-all-tests.ps1`); Claude Code hooks in `go/claudehooks/` (`ga-hooks`); runbooks in `docs/runbooks/` (`gaapi-deploy.md`) |
 | Reading governance / Galactic Protocol | `../Demerzel/` constitutions + IXQL pipelines; `demerzel-*` skills locally |
 
 **Live everything-summary:** `https://demos.guitaralchemist.com/dev-data/manifest` aggregates BACKLOG, quality snapshots, architecture inventory, process health, recent activity, agent files, MCP servers — generated fresh on each request from `vite.config.ts` middleware. The visual dashboard wraps it at `/test` (Demos + Development tabs).

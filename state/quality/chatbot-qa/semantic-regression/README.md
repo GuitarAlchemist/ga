@@ -23,7 +23,7 @@ cosine, post a PR comment, persist the JSON for the dashboard.
   "schema": "semantic-regression-v1",
   "head_sha": "abc123...",
   "run_at": "2026-05-23T18:42:00Z",
-  "chatbot_url": "http://localhost:5252",
+  "chatbot_url": "http://localhost:5262",
   "encoder": "text-embedding-3-small",
   "threshold_cosine": 0.85,
   "sample_size": 0,
@@ -102,7 +102,7 @@ upper bound assuming a merged PR every day).
 ## Running locally
 
 ```powershell
-# Start the chatbot first (Apps/GaChatbot.Api on :5252).
+# Start the chat host first (GaApi; the production deploy listens on :5262).
 # Then:
 $env:OPENAI_API_KEY = "sk-..."
 pwsh Scripts/replay-chatbot-goldens.ps1

@@ -20,7 +20,7 @@ This runbook captures three opinionated workflows from [Garry Tan's gstack](http
 
 ### When to invoke
 - Before declaring any UI / demo / showcase feature done
-- After a PR touches `Apps/GaChatbot.Api/wwwroot/`, `Apps/ga-client/src/`, or any user-visible HTML/CSS/JS
+- After a PR touches `Apps/ga-server/GaApi/wwwroot/chatbot/`, `Apps/ga-client/src/`, or any user-visible HTML/CSS/JS
 - After a "the demo is broken" report from the user
 
 This pairs with memory `feedback_ui_click_through_before_done` (PR #210 shipped 8/15 broken prompts past green CI on 2026-05-12 because corpus tests didn't click). Today's session caught the SSE multi-line writer bug AND the DiatonicChords routing bug via chrome-devtools click-test that the 50-prompt corpus missed.

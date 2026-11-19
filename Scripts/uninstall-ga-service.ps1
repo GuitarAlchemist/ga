@@ -4,8 +4,8 @@
 
 .DESCRIPTION
     Convenience wrapper around `install-ga-service.ps1 -Uninstall`.
-    Removes the three NSSM-managed services (GA-Vite-5176, GA-Api-5232,
-    GA-Chatbot-5252). Does NOT touch the Cloudflared service - remove
+    Removes the two NSSM-managed services (GA-Vite-5176, GA-Api-5232).
+    Does NOT touch the Cloudflared service - remove
     that separately with `cloudflared service uninstall`.
 
     Always dry-run with -WhatIf first.

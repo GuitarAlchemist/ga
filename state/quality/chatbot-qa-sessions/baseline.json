@@ -25,13 +25,13 @@
     "allow_edit": [
       "Common/GA.Business.ML/Agents/**",
       "Common/GA.Business.ML/Skills/**",
-      "Common/GA.Business.Core.Orchestration/**",
-      "Apps/GaChatbot.Api/Services/**"
+      "Common/GA.Business.Core.Orchestration/**"
     ],
     "allow_edit_rationale": "The loop fixes the chatbot's behaviour — skills, agents, orchestration, narration — to make failing session turns pass.",
     "protected": [
       "Tests/Apps/GaApi.Tests/Corpus/sessions.yaml",
-      "Tests/Apps/GaChatbot.Api.Tests/Corpus/SessionCorpusTests.cs",
+      "Tests/Apps/GaApi.Tests/Corpus/SessionCorpusTests.cs",
+      "Tests/Apps/GaApi.Tests/Corpus/CorpusHost.cs",
       "state/quality/chatbot-qa-sessions/baseline.json"
     ],
     "protected_rationale": "The loop must not weaken the measure to pass it. It MAY ADD new sessions/turns (corpus growth is the point of the user request) but must not relax or delete existing invariants without an explicit [allow-protected: <path>] override and human sign-off."

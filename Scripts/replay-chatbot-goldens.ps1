@@ -15,7 +15,7 @@
 #   pwsh Scripts/replay-chatbot-goldens.ps1                          # all prompts, default threshold
 #   pwsh Scripts/replay-chatbot-goldens.ps1 -SampleSize 5             # random 5
 #   pwsh Scripts/replay-chatbot-goldens.ps1 -Threshold 0.90           # stricter
-#   pwsh Scripts/replay-chatbot-goldens.ps1 -ChatbotUrl http://localhost:5252
+#   pwsh Scripts/replay-chatbot-goldens.ps1 -ChatbotUrl http://localhost:5262
 #
 # Requires: $env:OPENAI_API_KEY for embedding calls. Without it the script
 # fails fast — "we'll add semantic diff later" is the failure mode the
@@ -38,7 +38,7 @@
 
 [CmdletBinding()]
 param(
-    [string]$ChatbotUrl     = "http://localhost:5252",
+    [string]$ChatbotUrl     = "http://localhost:5262",
     [int]$TimeoutSeconds    = 120,
     [double]$Threshold      = 0.85,
     [int]$SampleSize        = 0,   # 0 == all

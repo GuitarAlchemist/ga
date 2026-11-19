@@ -4,7 +4,7 @@ name: Routing-Eval Ratchet
 #
 # Runs the semantic-intent RoutingEvalHarness against an in-runner Ollama
 # embedder (bge-large @ minConfidence 0.64 — the production routing pair set in
-# GaChatbot.Api appsettings, plan #420 Phase 2) and FAILS the PR if in-scope
+# Apps/ga-server/GaApi/appsettings.Production.json, plan #420 Phase 2) and FAILS the PR if in-scope
 # routing accuracy or out-of-scope decline rate regressed beyond tolerance vs
 # the newest committed state/quality/routing-eval-*.json baseline measured with
 # that same pair.
@@ -73,7 +73,7 @@ jobs:
       - name: Run RoutingEvalHarness baseline (emits routing-eval-<date>.json)
         env:
           GA_EMBED_ENDPOINT: http://localhost:11434
-          # Production routing pair (GaChatbot.Api appsettings): bge-large @ 0.64.
+          # Production routing pair (GaApi appsettings.Production.json): bge-large @ 0.64.
           # The threshold is embedder-specific — measuring bge-large at nomic's 0.55
           # would force-route out-of-scope prompts (validated, plan #420 Phase 2).
           GA_EMBED_MODEL: bge-large
