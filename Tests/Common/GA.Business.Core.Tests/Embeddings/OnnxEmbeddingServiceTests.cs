@@ -9,6 +9,69 @@ using ML.Text.Onnx;
 [TestFixture]
 public class OnnxEmbeddingServiceTests
 {
+    // Routing embeds a short question per request; padding it to MaxTokens multiplies the work.
+    [Test]
+    public async Task WithoutPadding_TheSequenceIsTheTokenCount()
+    {
+        using var harness = new OnnxServiceTestHarness(padToMaxTokens: false);
+
+        await harness.Service.GenerateEmbeddingAsync("alpha beta");
+
+        // [CLS] alpha beta [SEP]
+        Assert.That(harness.SessionFactory.LastSession!.LastInputIds, Is.EqualTo(new long[] { 1, 4, 5, 2 }));
+    }
+
+    // BERT's basic tokenizer splits every punctuation mark, apostrophe and '#' included:
+    // keeping "l'accord" whole made the French routing vector differ from Ollama's (cosine 0.886).
+    [TestCase("alpha'beta")]
+    [TestCase("alpha#beta")]
+    public async Task Punctuation_IsSplitLikeBert(string text)
+    {
+        using var harness = new OnnxServiceTestHarness(padToMaxTokens: false);
+
+        await harness.Service.GenerateEmbeddingAsync(text);
+
+        // [CLS] alpha [UNK] beta [SEP]: the mark is its own token, absent from this vocabulary.
+        Assert.That(harness.SessionFactory.LastSession!.LastInputIds, Is.EqualTo(new long[] { 1, 4, 3, 5, 2 }));
+    }
+
+    // BERT exports such as bge-large declare token_type_ids as a required input.
+    [Test]
+    public async Task DeclaredTokenTypeIds_AreSentAsZeros()
+    {
+        using var harness = new OnnxServiceTestHarness(padToMaxTokens: false, declareTokenTypeIds: true);
+
+        await harness.Service.GenerateEmbeddingAsync("alpha beta");
+
+        Assert.That(harness.SessionFactory.LastSession!.LastTokenTypeIds, Is.EqualTo(new long[] { 0, 0, 0, 0 }));
+    }
+
+    [Test]
+    public async Task UndeclaredTokenTypeIds_AreNotSent()
+    {
+        using var harness = new OnnxServiceTestHarness();
+
+        await harness.Service.GenerateEmbeddingAsync("alpha beta");
+
+        Assert.That(harness.SessionFactory.LastSession!.LastTokenTypeIds, Is.Null);
+    }
+
+    [Test]
+    public async Task Generator_EmbedsEachValue()
+    {
+        using var harness = new OnnxServiceTestHarness(padToMaxTokens: false);
+        using var generator = new OnnxTextEmbeddingGenerator(harness.Service, "test-model");
+
+        var embeddings = await generator.GenerateAsync(["alpha beta", "hello"]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(embeddings, Has.Count.EqualTo(2));
+            Assert.That(embeddings[0].Vector.Length, Is.EqualTo(harness.SessionFactory.HiddenSize));
+            Assert.That(embeddings[0].ModelId, Is.EqualTo("test-model"));
+        });
+    }
+
     [Test]
     public async Task ShouldNormalizeMeanPooledEmbeddings()
     {
@@ -97,7 +160,10 @@ public class OnnxEmbeddingServiceTests
     {
         private readonly string _tempDirectory;
 
-        public OnnxServiceTestHarness(OnnxEmbeddingPoolingStrategy poolingStrategy = OnnxEmbeddingPoolingStrategy.Mean)
+        public OnnxServiceTestHarness(
+            OnnxEmbeddingPoolingStrategy poolingStrategy = OnnxEmbeddingPoolingStrategy.Mean,
+            bool padToMaxTokens = true,
+            bool declareTokenTypeIds = false)
         {
             _tempDirectory = Path.Combine(Path.GetTempPath(), $"onnx-tests-{Guid.NewGuid():N}");
             Directory.CreateDirectory(_tempDirectory);
@@ -113,14 +179,15 @@ public class OnnxEmbeddingServiceTests
                 "beta",
                 "hello"
             ]);
-            SessionFactory = new(2);
+            SessionFactory = new(2, declareTokenTypeIds);
             var options = new OnnxEmbeddingOptions
             {
                 ModelPath = ModelPath,
                 VocabularyPath = VocabularyPath,
                 MaxTokens = 8,
                 PoolingStrategy = poolingStrategy,
-                NormalizeEmbeddings = true
+                NormalizeEmbeddings = true,
+                PadToMaxTokens = padToMaxTokens,
             };
             Service = new(options, NullLogger<OnnxEmbeddingService>.Instance, SessionFactory);
         }
@@ -147,23 +214,28 @@ public class OnnxEmbeddingServiceTests
         }
     }
 
-    private sealed class FakeOnnxSessionFactory(int hiddenSize) : IOnnxSessionFactory
+    private sealed class FakeOnnxSessionFactory(int hiddenSize, bool declareTokenTypeIds = false) : IOnnxSessionFactory
     {
         public int HiddenSize => hiddenSize;
         public FakeOnnxSession? LastSession { get; private set; }
 
         public IOnnxSession Create(string modelPath)
         {
-            var session = new FakeOnnxSession(hiddenSize);
+            var session = new FakeOnnxSession(hiddenSize, declareTokenTypeIds);
             LastSession = session;
             return session;
         }
     }
 
-    private sealed class FakeOnnxSession(int hiddenSize) : IOnnxSession
+    private sealed class FakeOnnxSession(int hiddenSize, bool declareTokenTypeIds) : IOnnxSession
     {
         public long[]? LastInputIds { get; private set; }
         public long[]? LastAttentionMask { get; private set; }
+        public long[]? LastTokenTypeIds { get; private set; }
+
+        public IReadOnlyCollection<string> InputNames => declareTokenTypeIds
+            ? ["input_ids", "attention_mask", "token_type_ids"]
+            : ["input_ids", "attention_mask"];
 
         public IDisposableReadOnlyCollection<NamedOnnxValue> Run(IReadOnlyCollection<NamedOnnxValue> inputs)
         {
@@ -172,6 +244,7 @@ public class OnnxEmbeddingServiceTests
             var attentionMask = materialized.Single(v => v.Name == "attention_mask").AsTensor<long>().ToArray();
             LastInputIds = inputIds;
             LastAttentionMask = attentionMask;
+            LastTokenTypeIds = materialized.SingleOrDefault(v => v.Name == "token_type_ids")?.AsTensor<long>().ToArray();
             var tensor = BuildTensor(attentionMask, hiddenSize);
             var value = NamedOnnxValue.CreateFromTensor("last_hidden_state", tensor);
             return new FakeResultCollection(value);

@@ -58,6 +58,18 @@ public sealed class DefaultEmbeddingGeneratorFactory(
 
     public IEmbeddingGenerator<string, Embedding<float>>? Create(string purpose)
     {
+        // An in-process ONNX model needs no embedding server (AI:Embedding:<purpose>:OnnxDir).
+        var section = $"AI:Embedding:{purpose}";
+        if (Text.Onnx.OnnxEmbeddingConfig.IsConfigured(configuration, section))
+        {
+            return _overrides.GetOrAdd(purpose, _ =>
+            {
+                _logger.LogInformation("Embedding purpose '{Purpose}' uses the in-process ONNX model in {Dir}.",
+                    purpose, configuration[$"{section}:OnnxDir"]);
+                return Text.Onnx.OnnxEmbeddingConfig.Create(configuration, section);
+            });
+        }
+
         // Config keys are case-insensitive, so the lowercase purpose matches
         // "AI:Embedding:Routing:Model" as authored.
         var model = configuration.GetValue<string>($"AI:Embedding:{purpose}:Model");
