@@ -13,6 +13,7 @@ internal sealed class AgenticTraceCapture : IAgenticTraceCapture
     private const string Protocol = "w3c-trace-context+otel-genai+ag-ui";
 
     private readonly List<AgenticTraceStep> _steps = [];
+    private readonly Lock _sync = new();
     private readonly string _traceId;
 
     public AgenticTraceCapture()
@@ -27,19 +28,28 @@ internal sealed class AgenticTraceCapture : IAgenticTraceCapture
         string name,
         string status,
         long elapsedMs,
-        IReadOnlyDictionary<string, object?>? attributes = null) =>
-        _steps.Add(new AgenticTraceStep(
-            name,
-            status,
-            elapsedMs,
-            attributes ?? new Dictionary<string, object?>()));
+        IReadOnlyDictionary<string, object?>? attributes = null)
+    {
+        // Agents running in parallel (debate, fan-out) report LLM calls concurrently.
+        lock (_sync)
+        {
+            _steps.Add(new AgenticTraceStep(
+                name,
+                status,
+                elapsedMs,
+                attributes ?? new Dictionary<string, object?>()));
+        }
+    }
 
     public ITimedStep StartStep(
         string name,
         IReadOnlyDictionary<string, object?>? attributes = null) =>
         new TimedStep(this, name, attributes ?? new Dictionary<string, object?>());
 
-    public AgenticTrace Build() => new(_traceId, Protocol, RunId, [.. _steps]);
+    public AgenticTrace Build()
+    {
+        lock (_sync) return new(_traceId, Protocol, RunId, [.. _steps]);
+    }
 
     private sealed class TimedStep(
         AgenticTraceCapture capture,

@@ -87,9 +87,16 @@ internal static class CanonicalSignatureChecker
         ArgumentNullException.ThrowIfNull(traceSteps);
         ArgumentNullException.ThrowIfNull(signature);
 
-        for (var i = 0; i < signature.Steps.Count; i++)
+        // llm.call steps record each LLM round trip; their number varies with tool rounds and
+        // the critique loop, so they are not part of the canonical shape. Dropped from both
+        // sides, so a signature generated before scripts/extract-trace-dominators.ps1 filtered
+        // them still compares on its stable steps.
+        traceSteps = [.. traceSteps.Where(s => !IsLlmCall(s.Name))];
+        var canonicalSteps = signature.Steps.Where(s => !IsLlmCall(s.Name)).ToList();
+
+        for (var i = 0; i < canonicalSteps.Count; i++)
         {
-            var canon = signature.Steps[i];
+            var canon = canonicalSteps[i];
 
             if (i >= traceSteps.Count)
             {
@@ -121,4 +128,7 @@ internal static class CanonicalSignatureChecker
 
         return null;
     }
+
+    private static bool IsLlmCall(string stepName) =>
+        string.Equals(stepName, "llm.call", StringComparison.OrdinalIgnoreCase);
 }

@@ -3,6 +3,7 @@ namespace GA.Business.Core.Orchestration.Services;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
+using GA.Business.ML.Agents;
 
 /// <summary>
 /// <see cref="IChatApplicationService"/> decorator that records each
@@ -57,6 +58,24 @@ public sealed class TraceableChatApplicationService(
             {
                 ["chat.mode"] = "full",
             });
+
+        // Each LLM round trip an agent makes inside the answer becomes its own step, so the
+        // trace shows where the time inside orchestration.answer goes.
+        using var llmCalls = LlmCallTrace.Observe(call => capture.AddStep(
+            "llm.call",
+            call.Succeeded ? "completed" : "error",
+            call.ElapsedMs,
+            new Dictionary<string, object?>
+            {
+                ["agent.id"] = call.AgentId,
+                ["llm.pass"] = call.Pass,
+                ["gen_ai.response.model"] = call.Model,
+                ["gen_ai.usage.input_tokens"] = call.InputTokens,
+                ["gen_ai.usage.output_tokens"] = call.OutputTokens,
+                ["llm.tool_calls"] = call.ToolCalls,
+                ["llm.first_token_ms"] = call.FirstTokenMs,
+                ["response.length"] = call.ResponseLength,
+            }));
 
         try
         {
