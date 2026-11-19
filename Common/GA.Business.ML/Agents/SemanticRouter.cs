@@ -36,7 +36,6 @@ public class SemanticRouter(
     // Without an injected cache (direct construction) the router owns a private one.
     private readonly Dictionary<string, float[]> _agentEmbeddings = [];
     private readonly AgentEmbeddingCache _embeddingCache = embeddingCache ?? new AgentEmbeddingCache();
-    private readonly bool _ownsEmbeddingCache = embeddingCache is null;
     private volatile bool _embeddingsInitialized;
     private readonly SemaphoreSlim _initLock = new(1, 1);
 
@@ -546,7 +545,6 @@ public class SemanticRouter(
     {
         _initLock.Dispose();
         _queryEmbeddingCache.Dispose();
-        if (_ownsEmbeddingCache) _embeddingCache.Dispose();
         foreach (var agent in _agents)
         {
             agent.Dispose();

@@ -18,13 +18,14 @@ using Microsoft.Extensions.AI;
 /// chat request (up to several seconds on a cold Ollama). Register this type as a singleton.
 /// Entries are keyed by the generator instance (held weakly, so a different embedder never
 /// reuses another's vectors) and by the exact description text (so an edited description is
-/// re-embedded). Only missing texts are embedded, one fill at a time; a failed call stores
-/// nothing, so the next request retries.
+/// re-embedded). Only missing texts are embedded. Callers that arrive while a fill is in flight
+/// await that same fill and share its outcome, failure included, so a wedged embedder costs
+/// every waiting request one timeout rather than one timeout each in turn. A failed fill stores
+/// nothing, so the next request after it retries.
 /// </remarks>
-public sealed class AgentEmbeddingCache : IDisposable
+public sealed class AgentEmbeddingCache
 {
-    private readonly ConditionalWeakTable<IEmbeddingGenerator<string, Embedding<float>>, ConcurrentDictionary<string, float[]>> _byGenerator = [];
-    private readonly SemaphoreSlim _fillLock = new(1, 1);
+    private readonly ConditionalWeakTable<IEmbeddingGenerator<string, Embedding<float>>, Entry> _byGenerator = [];
 
     /// <summary>
     /// Returns one vector per description, in order, embedding only the texts not cached yet.
@@ -38,32 +39,52 @@ public sealed class AgentEmbeddingCache : IDisposable
         ArgumentNullException.ThrowIfNull(generator);
         ArgumentNullException.ThrowIfNull(descriptions);
 
-        var vectors = _byGenerator.GetValue(generator, static _ => new ConcurrentDictionary<string, float[]>(StringComparer.Ordinal));
-        if (TryCollect(vectors, descriptions) is { } cached) return new(cached, 0);
-
-        await _fillLock.WaitAsync(cancellationToken);
-        try
+        var entry = _byGenerator.GetValue(generator, static _ => new Entry());
+        while (true)
         {
-            var missing = descriptions.Distinct(StringComparer.Ordinal).Where(d => !vectors.ContainsKey(d)).ToArray();
-            if (missing.Length > 0)
+            if (TryCollect(entry.Vectors, descriptions) is { } cached) return new(cached, 0);
+
+            Task<int> fill;
+            bool started;
+            lock (entry.Gate)
             {
-                // Store only after the whole batch succeeded, so a failure caches nothing.
-                var embeddings = await generator.GenerateAsync(missing, cancellationToken: cancellationToken);
-                for (var i = 0; i < missing.Length; i++)
+                if (entry.Fill is { IsCompleted: false } running)
                 {
-                    vectors[missing[i]] = embeddings[i].Vector.ToArray();
+                    fill = running;
+                    started = false;
+                }
+                else
+                {
+                    var missing = descriptions.Distinct(StringComparer.Ordinal).Where(d => !entry.Vectors.ContainsKey(d)).ToArray();
+                    // The fill is shared, so one caller's cancellation must not fail it for the others;
+                    // each caller still stops waiting on its own token below.
+                    fill = entry.Fill = FillAsync(generator, entry.Vectors, missing);
+                    started = true;
                 }
             }
 
-            return new(TryCollect(vectors, descriptions)!, missing.Length);
-        }
-        finally
-        {
-            _fillLock.Release();
+            var generated = await fill.WaitAsync(cancellationToken);
+            if (started) return new(TryCollect(entry.Vectors, descriptions)!, generated);
+            // Joined another caller's fill: its texts may differ from ours, so look again.
         }
     }
 
-    public void Dispose() => _fillLock.Dispose();
+    private static async Task<int> FillAsync(
+        IEmbeddingGenerator<string, Embedding<float>> generator,
+        ConcurrentDictionary<string, float[]> vectors,
+        string[] missing)
+    {
+        if (missing.Length == 0) return 0;
+
+        // Store only after the whole batch succeeded, so a failure caches nothing.
+        var embeddings = await generator.GenerateAsync(missing, cancellationToken: CancellationToken.None);
+        for (var i = 0; i < missing.Length; i++)
+        {
+            vectors[missing[i]] = embeddings[i].Vector.ToArray();
+        }
+
+        return missing.Length;
+    }
 
     private static IReadOnlyList<float[]>? TryCollect(ConcurrentDictionary<string, float[]> vectors, IReadOnlyList<string> descriptions)
     {
@@ -75,6 +96,13 @@ public sealed class AgentEmbeddingCache : IDisposable
         }
 
         return result;
+    }
+
+    private sealed class Entry
+    {
+        public ConcurrentDictionary<string, float[]> Vectors { get; } = new(StringComparer.Ordinal);
+        public Lock Gate { get; } = new();
+        public Task<int>? Fill { get; set; }
     }
 }
 

@@ -23,7 +23,7 @@ public class AgentEmbeddingCacheTests
     {
         var chatClient = new Mock<IChatClient>().Object;
         var generator = new CountingEmbedder();
-        using var cache = new AgentEmbeddingCache();
+        var cache = new AgentEmbeddingCache();
 
         foreach (var _ in Enumerable.Range(0, 2))
         {
@@ -48,7 +48,7 @@ public class AgentEmbeddingCacheTests
     public async Task ChangedDescription_EmbedsOnlyTheNewText()
     {
         var generator = new CountingEmbedder();
-        using var cache = new AgentEmbeddingCache();
+        var cache = new AgentEmbeddingCache();
 
         await cache.GetOrCreateAsync(generator, ["theory agent", "tab agent"], CancellationToken.None);
         var second = await cache.GetOrCreateAsync(generator, ["theory agent", "tab agent v2"], CancellationToken.None);
@@ -64,7 +64,7 @@ public class AgentEmbeddingCacheTests
     {
         var first = new CountingEmbedder();
         var second = new CountingEmbedder();
-        using var cache = new AgentEmbeddingCache();
+        var cache = new AgentEmbeddingCache();
 
         await cache.GetOrCreateAsync(first, ["theory agent"], CancellationToken.None);
         await cache.GetOrCreateAsync(second, ["theory agent"], CancellationToken.None);
@@ -77,7 +77,7 @@ public class AgentEmbeddingCacheTests
     public async Task FailedEmbeddingCall_LeavesNothingCached_AndNextCallRetries()
     {
         var generator = new CountingEmbedder { FailuresBeforeSuccess = 1 };
-        using var cache = new AgentEmbeddingCache();
+        var cache = new AgentEmbeddingCache();
 
         Assert.ThrowsAsync<HttpRequestException>(() =>
             cache.GetOrCreateAsync(generator, ["theory agent"], CancellationToken.None));
@@ -93,7 +93,7 @@ public class AgentEmbeddingCacheTests
     public async Task CachedHit_ReportsZeroGenerated()
     {
         var generator = new CountingEmbedder();
-        using var cache = new AgentEmbeddingCache();
+        var cache = new AgentEmbeddingCache();
 
         var first = await cache.GetOrCreateAsync(generator, ["theory agent"], CancellationToken.None);
         var second = await cache.GetOrCreateAsync(generator, ["theory agent"], CancellationToken.None);
@@ -106,12 +106,35 @@ public class AgentEmbeddingCacheTests
     public async Task ConcurrentCallers_TriggerASingleEmbeddingCall()
     {
         var generator = new CountingEmbedder { DelayMs = 50 };
-        using var cache = new AgentEmbeddingCache();
+        var cache = new AgentEmbeddingCache();
 
         await Task.WhenAll(Enumerable.Range(0, 20).Select(_ =>
             cache.GetOrCreateAsync(generator, ["theory agent", "tab agent"], CancellationToken.None)));
 
         Assert.That(generator.Batches, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void ConcurrentCallers_ShareOneFailedAttempt_AndALaterCallRetries()
+    {
+        // A wedged embedder must not make N queued callers retry one after another
+        // (N x timeout before the router falls back): they share the in-flight attempt.
+        var generator = new CountingEmbedder { DelayMs = 50, FailuresBeforeSuccess = int.MaxValue };
+        var cache = new AgentEmbeddingCache();
+
+        var calls = Enumerable.Range(0, 10)
+            .Select(_ => cache.GetOrCreateAsync(generator, ["theory agent"], CancellationToken.None))
+            .ToArray();
+        foreach (var call in calls)
+        {
+            Assert.ThrowsAsync<HttpRequestException>(() => call);
+        }
+
+        Assert.That(generator.Batches, Has.Count.EqualTo(1));
+
+        Assert.ThrowsAsync<HttpRequestException>(() =>
+            cache.GetOrCreateAsync(generator, ["theory agent"], CancellationToken.None));
+        Assert.That(generator.Batches, Has.Count.EqualTo(2));
     }
 
     [Test]
