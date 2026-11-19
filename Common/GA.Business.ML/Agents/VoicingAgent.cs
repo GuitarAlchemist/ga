@@ -68,6 +68,25 @@ public sealed class VoicingAgent(
         // Extract intent deterministically when possible; LLM fallback kicks in only for
         // fuzzy queries (composite extractor decides internally).
         var structured = await extractor.ExtractAsync(request.Query, cancellationToken);
+
+        // "Show me an easy way to play it on guitar." names its chord in the previous user turn;
+        // without it the search ran on the "open" tag alone and returned arbitrary voicings. Only
+        // that turn is consulted: an older chord is a stale referent.
+        if (structured is { ChordSymbol: null, PitchClasses: null or { Length: 0 }, ModeName: null }
+            && request.ConversationHistory?.LastOrDefault(t => t.Role.Equals("user", StringComparison.OrdinalIgnoreCase)) is { } previous)
+        {
+            var earlier = await extractor.ExtractAsync(previous.Content, cancellationToken);
+            if (earlier.ChordSymbol is not null)
+            {
+                structured = structured with
+                {
+                    ChordSymbol = earlier.ChordSymbol,
+                    RootPitchClass = earlier.RootPitchClass,
+                    PitchClasses = earlier.PitchClasses,
+                };
+            }
+        }
+
         var hasIntent = structured.ChordSymbol is not null
                         || (structured.PitchClasses is { Length: > 0 })
                         || structured.ModeName is not null
