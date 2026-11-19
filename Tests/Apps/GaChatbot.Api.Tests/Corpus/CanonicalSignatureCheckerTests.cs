@@ -68,6 +68,25 @@ public class CanonicalSignatureCheckerTests
     }
 
     [Test]
+    public void Compare_SignatureWithLlmCallSteps_MatchesItsOwnTrace()
+    {
+        // A signature extracted from traces that carried llm.call steps must still match.
+        var sig = new Signature(1, "test", "x", "test",
+        [
+            new StepSignature("chat.request",         "completed", null),
+            new StepSignature("llm.call",             "completed", "theory"),
+            new StepSignature("orchestration.answer", "completed", "theory"),
+        ]);
+
+        var trace = ToTrace(
+            ("chat.request",         null),
+            ("llm.call",             new Dictionary<string, string?> { ["agent.id"] = "theory" }),
+            ("orchestration.answer", new Dictionary<string, string?> { ["agent.id"] = "theory" }));
+
+        Assert.That(Compare(trace, sig), Is.Null);
+    }
+
+    [Test]
     public void Compare_AgentIdMismatch_Diagnostic()
     {
         var sig = new Signature(1, "test", "x", "test",
