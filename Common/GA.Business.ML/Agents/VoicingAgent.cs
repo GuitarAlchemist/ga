@@ -69,33 +69,19 @@ public sealed class VoicingAgent(
         // fuzzy queries (composite extractor decides internally).
         var structured = await extractor.ExtractAsync(request.Query, cancellationToken);
 
-        // "Show me an easy way to play it on guitar." names its chord in the previous user turn;
-        // without it the search ran on the "open" tag alone and returned arbitrary voicings. Only
-        // that turn is consulted: an older chord is a stale referent.
-        if (structured is { ChordSymbol: null, PitchClasses: null or { Length: 0 }, ModeName: null }
-            && request.ConversationHistory?.LastOrDefault(t => t.Role.Equals("user", StringComparison.OrdinalIgnoreCase)) is { } previous)
-        {
-            var earlier = await extractor.ExtractAsync(previous.Content, cancellationToken);
-            if (earlier.ChordSymbol is not null)
-            {
-                structured = structured with
-                {
-                    ChordSymbol = earlier.ChordSymbol,
-                    RootPitchClass = earlier.RootPitchClass,
-                    PitchClasses = earlier.PitchClasses,
-                };
-            }
-        }
-
-        var hasIntent = structured.ChordSymbol is not null
-                        || (structured.PitchClasses is { Length: > 0 })
-                        || structured.ModeName is not null
-                        || (structured.Tags is { Count: > 0 });
+        var namesMusic = structured.ChordSymbol is not null
+                         || (structured.PitchClasses is { Length: > 0 })
+                         || structured.ModeName is not null;
+        var hasIntent = namesMusic || (structured.Tags is { Count: > 0 });
 
         // No chord, mode or tag to search by — often a follow-up whose referent is in the
         // conversation ("Which chord does it fit best?"). Decline so the next agent, which
-        // reads the history, answers instead of this help text.
-        if (!hasIntent)
+        // reads the history, answers instead of this help text. A follow-up that carries only
+        // a tag declines too: its referent is in the conversation, which this agent does not
+        // read. "Show me an easy way to play it on guitar." after a D7 question searched the
+        // "open" tag alone and returned augmented hexachords; taking the previous turn's chord
+        // instead read "B" out of "tuned B E A D G B E" (2026-11-19).
+        if (!hasIntent || (!namesMusic && request.ConversationHistory is { Count: > 0 }))
         {
             return AgentResponse.Decline(
                 AgentId,

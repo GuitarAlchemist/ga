@@ -10,72 +10,70 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 /// <summary>
-/// A follow-up such as "Show me an easy way to play it on guitar." names its chord in the
-/// previous user turn. The live agent searched by the tag the message did carry ("open") with
-/// no chord and answered with augmented hexachords for a question about D7 (2026-11-19).
+/// A follow-up that carries only a style tag has its referent in the conversation, which this
+/// agent does not read. "Show me an easy way to play it on guitar." after a D7 question searched
+/// the "open" tag alone and answered with augmented hexachords; "What is the lowest note I can
+/// play on it?" after "I play a seven-string guitar tuned B E A D G B E." searched the "note" tag
+/// (2026-11-19). Both now decline so an agent that reads the history answers.
 /// </summary>
 [TestFixture]
 public class VoicingAgentFollowUpChordTests
 {
     private static readonly StructuredQuery OpenTagOnly = new(null, null, null, null, ["open"]);
-    private static readonly StructuredQuery D7 = new("D7", 2, [2, 6, 9, 0], null, null);
 
-    [Test]
-    public async Task MessageWithoutChord_SearchesTheChordOfThePreviousUserTurn()
+    [TestCase("Show me an easy way to play it on guitar.", "What notes are in a D7 chord?")]
+    [TestCase("What is the lowest note I can play on it?", "I play a seven-string guitar tuned B E A D G B E.")]
+    public async Task TagOnlyFollowUp_Declines(string followUp, string previous)
     {
-        var (agent, filters) = Agent(text => text.Contains("D7") ? D7 : OpenTagOnly);
+        var (agent, filters) = Agent(_ => OpenTagOnly);
 
-        await agent.ProcessAsync(new AgentRequest
+        var response = await agent.ProcessAsync(new AgentRequest
         {
-            Query = "Show me an easy way to play it on guitar.",
+            Query = followUp,
             ConversationHistory =
             [
-                new ChatHistoryTurn("user", "What notes are in a D7 chord?"),
-                new ChatHistoryTurn("assistant", "D dominant 7 chord contains D, F#, A, and C."),
+                new ChatHistoryTurn("user", previous),
+                new ChatHistoryTurn("assistant", "..."),
             ],
         });
 
-        Assert.That(filters, Is.Not.Empty);
         Assert.Multiple(() =>
         {
-            Assert.That(filters[0]?.ChordName, Is.EqualTo("D7"));
-            Assert.That(filters[0]?.Tags, Is.EqualTo(new[] { "open" }));
+            Assert.That(response.Declined, Is.True, response.Result);
+            Assert.That(filters, Is.Empty);
         });
     }
 
     [Test]
-    public async Task MessageNamingAChord_KeepsItsOwnChord()
+    public async Task TagOnlyFirstMessage_StillSearches()
     {
-        var (agent, filters) = Agent(text => text.Contains("G7") ? new StructuredQuery("G7", 7, [7, 11, 2, 5], null, null) : D7);
+        var (agent, filters) = Agent(_ => new StructuredQuery(null, null, null, null, ["shell"]));
 
-        await agent.ProcessAsync(new AgentRequest
+        var response = await agent.ProcessAsync(new AgentRequest { Query = "Show me shell voicings" });
+
+        Assert.Multiple(() =>
         {
-            Query = "Show me G7 instead.",
+            Assert.That(response.Declined, Is.False, response.Result);
+            Assert.That(filters[0]?.Tags, Is.EqualTo(new[] { "shell" }));
+        });
+    }
+
+    [Test]
+    public async Task FollowUpNamingAChord_StillSearches()
+    {
+        var (agent, filters) = Agent(_ => new StructuredQuery("G7", 7, [7, 11, 2, 5], null, ["open"]));
+
+        var response = await agent.ProcessAsync(new AgentRequest
+        {
+            Query = "Show me an open G7 instead.",
             ConversationHistory = [new ChatHistoryTurn("user", "What notes are in a D7 chord?")],
         });
 
-        Assert.That(filters[0]?.ChordName, Is.EqualTo("G7"));
-    }
-
-    [Test]
-    public async Task OnlyThePreviousUserTurnIsConsulted()
-    {
-        // An older chord is a stale referent: the user has moved on since.
-        var (agent, filters) = Agent(text => text.Contains("D7") ? D7 : OpenTagOnly);
-
-        await agent.ProcessAsync(new AgentRequest
+        Assert.Multiple(() =>
         {
-            Query = "Show me an easy way to play it on guitar.",
-            ConversationHistory =
-            [
-                new ChatHistoryTurn("user", "What notes are in a D7 chord?"),
-                new ChatHistoryTurn("assistant", "D, F#, A, C."),
-                new ChatHistoryTurn("user", "Thanks. What makes a voicing easy?"),
-                new ChatHistoryTurn("assistant", "Open strings and few fingers."),
-            ],
+            Assert.That(response.Declined, Is.False, response.Result);
+            Assert.That(filters[0]?.ChordName, Is.EqualTo("G7"));
         });
-
-        Assert.That(filters[0]?.ChordName, Is.Null);
     }
 
     private static (VoicingAgent Agent, List<VoicingSearchFilters?> Filters) Agent(Func<string, StructuredQuery> extract)
