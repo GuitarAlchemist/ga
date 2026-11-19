@@ -35,8 +35,8 @@ type chatMessage struct {
 }
 
 type chatResponse struct {
-	Answer        string `json:"naturalLanguageAnswer"`
-	AgentID       string `json:"agentId"`
+	Answer        string          `json:"naturalLanguageAnswer"`
+	AgentID       string          `json:"agentId"`
 	RoutingMethod string          `json:"routingMethod"`
 	Confidence    float64         `json:"confidence"`
 	ServerMs      float64         `json:"elapsedMs"`

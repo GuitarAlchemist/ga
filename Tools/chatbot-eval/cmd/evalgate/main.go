@@ -167,11 +167,27 @@ func report(w io.Writer, base, cur run, tolerance int) int {
 		}
 	}
 
+	// A baseline case absent from this run is listed; a good one counts as a regression, so
+	// emptying or dropping a case set cannot pass the gate. Removing cases on purpose needs a
+	// reviewer to accept the failure (the new main run then becomes the baseline).
+	var missing []string
+	missingGood := 0
+	for id, before := range base.cases {
+		if _, ok := cur.cases[id]; !ok {
+			missing = append(missing, id)
+			if before.good() {
+				missingGood++
+			}
+		}
+	}
+	sort.Strings(missing)
+	total := len(regressions) + missingGood
+
 	status := "no regression"
-	if len(regressions) > tolerance {
-		status = fmt.Sprintf("**%d regression(s)**", len(regressions))
-	} else if len(regressions) > 0 {
-		status = fmt.Sprintf("%d regression(s), within tolerance %d", len(regressions), tolerance)
+	if total > tolerance {
+		status = fmt.Sprintf("**%d regression(s)**", total)
+	} else if total > 0 {
+		status = fmt.Sprintf("%d regression(s), within tolerance %d", total, tolerance)
 	}
 
 	fmt.Fprintf(w, "## Chatbot evaluation: %s\n\n", status)
@@ -186,7 +202,14 @@ func report(w io.Writer, base, cur run, tolerance int) int {
 	section(w, "Regressions", regressions, cur)
 	section(w, "Improvements", improvements, cur)
 	section(w, "Still failing", stillBad, cur)
-	return len(regressions)
+	if len(missing) > 0 {
+		fmt.Fprintf(w, "### Missing from this run (%d)\n\n", len(missing))
+		for _, id := range missing {
+			fmt.Fprintf(w, "- `%s`: %s in the baseline\n", id, map[bool]string{true: "good", false: "not good"}[base.cases[id].good()])
+		}
+		fmt.Fprintln(w)
+	}
+	return total
 }
 
 func section(w io.Writer, title string, ids []string, r run) {

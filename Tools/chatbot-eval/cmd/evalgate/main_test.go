@@ -46,6 +46,25 @@ func TestReport_JudgeErrorIsNotARegression(t *testing.T) {
 	}
 }
 
+func TestReport_GoodBaselineCaseMissingFromTheRunIsARegression(t *testing.T) {
+	base := runOf(map[string]outcome{
+		"dropped":     {DetOK: true, Judge: "pass"},
+		"dropped-bad": {DetOK: false},
+		"kept":        {DetOK: true, Judge: "pass"},
+	})
+	cur := runOf(map[string]outcome{"kept": {DetOK: true, Judge: "pass"}})
+
+	var out bytes.Buffer
+	if n := report(&out, base, cur, 0); n != 1 {
+		t.Fatalf("regressions = %d, want 1: a good case that vanished must not pass the gate", n)
+	}
+	for _, want := range []string{"**1 regression(s)**", "### Missing from this run (2)", "`dropped`", "`dropped-bad`"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("summary lacks %q:\n%s", want, out.String())
+		}
+	}
+}
+
 func TestReport_ToleranceIsReported(t *testing.T) {
 	base := runOf(map[string]outcome{"c": {DetOK: true}})
 	cur := runOf(map[string]outcome{"c": {DetOK: false}})
