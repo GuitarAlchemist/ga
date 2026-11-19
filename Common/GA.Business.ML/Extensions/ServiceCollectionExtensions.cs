@@ -100,6 +100,8 @@ public static class MlServiceCollectionExtensions
 
         // Register Semantic Router
         services.AddScoped<SemanticRouter>();
+        // Process-wide: the scoped router would otherwise re-embed agent descriptions per request.
+        services.TryAddSingleton<AgentEmbeddingCache>();
 
         // Register Tab Analysis Services
         services.AddTransient<TabTokenizer>();
