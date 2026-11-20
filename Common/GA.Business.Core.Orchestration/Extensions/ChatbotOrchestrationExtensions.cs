@@ -96,6 +96,7 @@ public static class ChatbotOrchestrationExtensions
         // Conversation history — singleton in-memory store shared across scopes
         services.AddSingleton<ConversationHistoryStore>();
         services.AddSingleton<RoutingContextEnricher>();
+        services.AddSingleton<FollowUpRewriter>();
 
         // Cross-agent delegation coordinator
         services.AddScoped<IAgentCoordinator, AgentCoordinator>();

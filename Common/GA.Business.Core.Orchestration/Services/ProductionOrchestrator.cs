@@ -28,6 +28,7 @@ public class ProductionOrchestrator(
     IEnumerable<IChatHook> chatHooks,
     ConversationHistoryStore historyStore,
     RoutingContextEnricher routingContextEnricher,
+    FollowUpRewriter followUpRewriter,
     SemanticIntentRouter intentRouter,
     TabAnalysisOrchestrationService tabAnalysisService,
     TabTokenizer tabTokenizer,
@@ -269,8 +270,27 @@ public class ProductionOrchestrator(
             return blocked;
         }
 
+        // ── Follow-up rewrite (Chatbot:FollowUpRewrite) ──────────────────────
+        // Routing and the deterministic skills read only the current message, so a follow-up
+        // ("And a C shape?") is rewritten into a question that stands on its own. Every stage
+        // below sees the rewrite; the agents still get the history. A tab is never rewritten.
+        var message = hookCtx.CurrentMessage;
+        if (followUpRewriter.Enabled && agentHistory.Count > 0 && !HasTabContent(message))
+        {
+            var rewriteClock = Stopwatch.StartNew();
+            var rewritten = await followUpRewriter.RewriteAsync(message, agentHistory, ct);
+            traceCapture.AddStep("followup.rewrite", "completed", rewriteClock.ElapsedMilliseconds,
+                new Dictionary<string, object?>
+                {
+                    ["followup.original"]  = message,
+                    ["followup.rewritten"] = rewritten,
+                    ["followup.changed"]   = !string.Equals(rewritten, message, StringComparison.Ordinal),
+                });
+            message = rewritten;
+        }
+
         var turn = new CascadeTurn(
-            req, hookCtx.CurrentMessage, sessionId, correlationId, agentHistory, sink, activity, sw);
+            req, message, sessionId, correlationId, agentHistory, sink, activity, sw);
 
         // ── Deterministic voicing guard runs BEFORE semantic intent routing ──
         // The semantic embedding router can mis-rank an explicit voicing query
@@ -324,7 +344,10 @@ public class ProductionOrchestrator(
         //
         // Live found 2026-05-14 via demos.guitaralchemist.com/chatbot — see
         // task #168.
-        var routingMessage = routingContextEnricher.EnrichIfFollowUp(turn.Message, sessionId, req.History);
+        // The follow-up rewrite, when enabled, replaces this prefix heuristic.
+        var routingMessage = followUpRewriter.Enabled
+            ? turn.Message
+            : routingContextEnricher.EnrichIfFollowUp(turn.Message, sessionId, req.History);
 
         // ── Unified semantic intent dispatch with the hook lifecycle ─────────
         // One embedding similarity pass over IIntent registrations covers
@@ -452,9 +475,10 @@ public class ProductionOrchestrator(
     {
         var req = turn.Request;
 
-        // Parallelise — both calls consume req.Message with no mutual dependency
-        var filtersTask = queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
-        var routingTask = router.RouteAsync(req.Message, ct);
+        // Parallelise — both calls read the turn's message (the follow-up rewrite, if any)
+        // with no mutual dependency
+        var filtersTask = queryUnderstandingService.ExtractFiltersAsync(turn.Message, ct);
+        var routingTask = router.RouteAsync(turn.Message, ct);
 
         // The filters only steer the tab branches, which need tab notation in the
         // message. A streamed answer without it starts as soon as routing is known:

@@ -81,7 +81,7 @@ public class ProductionChatOrchestratorClientTests
     /// needs a real value; the overridden <c>AnswerAsync</c> touches none of the rest.
     /// </summary>
     private sealed class CapturingOrchestrator() : ProductionOrchestrator(
-        null!, null!, null!, null!, null!, [], null!, null!, null!, null!, null!, null!, null!)
+        null!, null!, null!, null!, null!, [], null!, null!, null!, null!, null!, null!, null!, null!)
     {
         public ChatRequest? Captured { get; private set; }
 
