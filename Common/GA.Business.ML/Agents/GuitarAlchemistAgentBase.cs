@@ -181,7 +181,9 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
         using var critiqueActivity = ChatbotActivitySource.Source.StartActivity(ChatbotActivitySource.AgentChatWithCritique);
         critiqueActivity?.SetTag(ChatbotActivitySource.TagAgentId, AgentId);
 
-        // Only the draft sees prior turns; critique and refinement quote the draft directly.
+        // Every pass sees the prior turns: a critique without them reads a follow-up such as
+        // "How many flats does it have?" as ambiguous, and the rewrite then hedges on a referent
+        // the conversation already named.
         var draft = await ChatPassAsync("draft", userMessage, systemPrompt, cancellationToken, conversationHistory);
 
         var critiqueMessage = $"""
@@ -190,7 +192,7 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             QUESTION: {userMessage}
             ANSWER: {draft}
             """;
-        var critique = await ChatPassAsync("critique", critiqueMessage, systemPrompt, cancellationToken);
+        var critique = await ChatPassAsync("critique", critiqueMessage, systemPrompt, cancellationToken, conversationHistory);
 
         var refineMessage = $"""
             Rewrite the answer incorporating the critique. Return valid JSON in the same format as before.
@@ -199,7 +201,7 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             ORIGINAL ANSWER: {draft}
             CRITIQUE: {critique}
             """;
-        return await ChatPassAsync("rewrite", refineMessage, systemPrompt, cancellationToken);
+        return await ChatPassAsync("rewrite", refineMessage, systemPrompt, cancellationToken, conversationHistory);
     }
 
     /// <summary>
