@@ -145,5 +145,6 @@
 - id: t2-french
   kind: free
   turns: ["Quelles sont les notes de l'accord de la mineur ?"]
-  all: [A, C, E]
+  # A French question may be answered in solfège (La, Do, Mi) or in letters (A, C, E).
+  any: ["La, Do et Mi", "La, Do, Mi", "La-Do-Mi", "A, C, E", "A, C and E", "A-C-E", "A C E"]
   min_len: 10
