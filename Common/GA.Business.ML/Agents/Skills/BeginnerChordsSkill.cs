@@ -51,6 +51,27 @@ public sealed class BeginnerChordsSkill(ILogger<BeginnerChordsSkill> logger) : I
 
     public bool CanHandle(string message) => false; // semantic-routing only — see ExamplePrompts
 
+    /// <summary>
+    /// The catalogue answers a request that opens a topic. On a follow-up turn ("Show me an easy
+    /// way to play it" after a D7 question) the message is about something earlier in the
+    /// conversation, which the catalogue cannot see; it declines so an agent with the history
+    /// answers.
+    /// </summary>
+    public Task<AgentResponse> ExecuteAsync(
+        string message,
+        IReadOnlyList<ChatHistoryTurn> history,
+        CancellationToken cancellationToken = default) =>
+        history.Count > 0
+            ? Task.FromResult(new AgentResponse
+            {
+                Declined   = true,
+                AgentId    = AgentIds.Theory,
+                Result     = "Ask for beginner chords to get the open-chord catalogue.",
+                Confidence = 0.1f,
+                Evidence   = ["BeginnerChordsSkill: follow-up turn, declined to the agent path"],
+            })
+            : ExecuteAsync(message, cancellationToken);
+
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
         var sb = new StringBuilder();
