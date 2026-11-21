@@ -128,6 +128,40 @@ public class RoutingContextEnricherTests
     }
 
     [Test]
+    public void WithPriorUserTurn_EllipticalFollowUp_PrependsThePreviousQuestion()
+    {
+        // No follow-up prefix is needed: the orchestrator uses this only after the bare
+        // message claimed no intent.
+        var requestHistory = new List<ConversationTurn>
+        {
+            new("user", "With a capo on fret 2, what key does a G shape sound in?", DateTimeOffset.UnixEpoch),
+            new("assistant", "A G shape with a capo on fret 2 sounds as A.", DateTimeOffset.UnixEpoch),
+        };
+
+        var result = _enricher.WithPriorUserTurn("And a C shape?", "s_unstable", requestHistory);
+
+        Assert.That(result, Is.EqualTo("With a capo on fret 2, what key does a G shape sound in? And a C shape?"));
+    }
+
+    [Test]
+    public void WithPriorUserTurn_NoPriorUserTurn_ReturnsNull()
+    {
+        _store.AddTurn("s1", "assistant", "Welcome!");
+
+        Assert.That(_enricher.WithPriorUserTurn("And a C shape?", "s1", requestHistory: null), Is.Null);
+    }
+
+    [Test]
+    public void WithPriorUserTurn_LongMessage_ReturnsNull()
+    {
+        _store.AddTurn("s1", "user", "earlier");
+
+        var longMessage = new string('x', RoutingContextEnricher.FollowUpMaxLength + 1);
+
+        Assert.That(_enricher.WithPriorUserTurn(longMessage, "s1", requestHistory: null), Is.Null);
+    }
+
+    [Test]
     public void TruncatePreservingSurrogates_PreservesEmojiPair()
     {
         // "ABC" + 🎸 (high+low surrogate pair) = 5 UTF-16 units total.

@@ -224,6 +224,12 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         if (AsksForBroadOverview(query))
             return Task.FromResult(FormatAllFamilies(families));
 
+        // A message that names no mode or family and does not ask about modes is not a
+        // modes request (e.g. "Which chord does it fit best?" routed with the previous turn):
+        // decline so an agent with the conversation answers it.
+        if (!query.Contains("mode", StringComparison.Ordinal) && !query.Contains("modal", StringComparison.Ordinal))
+            return Task.FromResult(NotAModesRequest());
+
         // 6) Default → diatonic family. Same behaviour as the legacy
         //    "what are the modes of the major scale" answer.
         var diatonic = families.FirstOrDefault(f =>
@@ -623,6 +629,15 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         Result     = "The mode catalog is unavailable in this environment. Try again later, or ask about a specific scale by name.",
         Confidence = 0.3f,
         Evidence   = ["Source: ModesConfig.GetModalFamilies() returned empty"],
+    };
+
+    private static AgentResponse NotAModesRequest() => new()
+    {
+        Declined   = true,
+        AgentId    = AgentIds.Theory,
+        Result     = "Ask about a mode or a mode family by name (\"What is Lydian dominant\", \"modes of melodic minor\").",
+        Confidence = 0.1f,
+        Evidence   = ["ModesSkill: the message names no mode and does not ask about modes"],
     };
 
     private static string StripFamilySuffix(string familyName) =>
