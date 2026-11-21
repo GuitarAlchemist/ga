@@ -679,6 +679,7 @@ jobs:
           echo "----- END DIGEST -----"
 
       - name: Commit weekly digest archive
+        id: commit
         if: ${{ inputs.dry_run != true }}
         env:
           DIGEST_PATH: ${{ steps.digest.outputs.digest }}
@@ -693,9 +694,19 @@ jobs:
           if git diff --cached --quiet; then
             echo "No new files to commit."
           else
-            git commit -m "chore(quality): weekly digest ${ISO_WEEK} [skip ci]" || true
-            git push || echo "Push failed (continuing — comment still posts)."
+            if git commit -m "chore(quality): weekly digest ${ISO_WEEK} [skip ci]"; then
+              echo "committed=true" >> "$GITHUB_OUTPUT"
+            fi
           fi
+
+      - name: Push the weekly digest archive
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          refspec: HEAD
+          # Continue on a failed push: the comment below still posts.
+          required: 'false'
 
       - name: Find or create the tracker issue
         id: tracker
