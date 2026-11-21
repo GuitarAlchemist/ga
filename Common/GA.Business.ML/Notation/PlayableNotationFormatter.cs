@@ -12,6 +12,8 @@ public static partial class PlayableNotationFormatter
 {
     /// <summary>
     /// Shared instruction for model paths that may include playable guitar fret positions.
+    /// Only for prompts that carry known frets (retrieved voicings, search results); ungrounded
+    /// paths use <see cref="UngroundedGuidance"/>.
     /// </summary>
     public const string PromptGuidance =
         """
@@ -25,6 +27,20 @@ public static partial class PlayableNotationFormatter
           notes :w (3/5.2/4.0/3.1/2.0/1)
           ```
         - Only emit a `vextab` block when the frets are known. Do not invent exact tabs.
+        """;
+
+    /// <summary>
+    /// Shared instruction for model paths with no source of known frets (no retrieved voicings,
+    /// no tool results). Invited to write VexTab, the model invents shapes: on a 34-question theory
+    /// eval (2026-10-03) the direct prompt with <see cref="PromptGuidance"/> gave 17 answers with
+    /// wrong frets; with this text instead, 2.
+    /// </summary>
+    public const string UngroundedGuidance =
+        """
+        Guitar shapes:
+        - You have no voicing database in this conversation, so do not write fret numbers, tablature, chord diagrams
+          such as x32010, or `vextab` blocks. Name the chord and its notes instead, and say that the user can ask
+          Guitar Alchemist for voicings of that chord.
         """;
 
     /// <summary>
