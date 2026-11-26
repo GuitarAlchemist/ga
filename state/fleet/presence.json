@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-11-25T19:27:26.247028Z",
+  "generated_at": "2026-11-26T02:55:53.389000Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "yellow",
   "limbs": [
@@ -18,8 +18,8 @@
       "kind": "delegation-lane",
       "workflow": "claude.yml",
       "status": "green",
-      "last_heartbeat": "2026-11-25T17:37:03Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/45666648048",
+      "last_heartbeat": "2026-11-26T02:34:33Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/45743329314",
       "detail": "latest completed run: skipped"
     },
     {
@@ -44,10 +44,10 @@
       "id": "sensor:ecosystem-health",
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
-      "status": "yellow",
-      "last_heartbeat": "2026-11-25T09:29:38Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/45585913118",
-      "detail": "stale: last run 2026-11-25T09:29:38Z, expected cadence ~240 min"
+      "status": "green",
+      "last_heartbeat": "2026-11-26T02:26:09Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/45742396550",
+      "detail": "latest completed run: success"
     },
     {
       "id": "sensor:quality-snapshot",
