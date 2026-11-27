@@ -531,8 +531,33 @@ public class ProductionOrchestrator(
         {
             turn.Activity?.SetTag("orchestration.branch", $"agent.{selectedAgent.AgentId}");
 
+            var request = new AgentRequest
+            {
+                Query = turn.Message,
+                ConversationHistory = turn.AgentHistory,
+            };
+
+            // A streamed turn streams the model only for an agent whose answer is the model's;
+            // any other agent answers (or declines) through ProcessAsync on both paths.
+            bool StreamsHere(GuitarAlchemistAgentBase agent) => turn.Sink is not null && agent.StreamsModelAnswer;
+
+            var agentResponse = StreamsHere(selectedAgent)
+                ? null
+                : await selectedAgent.ProcessAsync(request, ct);
+
+            // A declining agent found nothing it handles in the message (e.g. no voicing
+            // matched musically): the next-ranked agent answers instead.
+            if (agentResponse is { Declined: true } && NextAgent(routing, selectedAgent) is { } next)
+            {
+                EmitDeclinedTrace(selectedAgent.AgentId);
+                selectedAgent = next.Agent;
+                routingMetadata = new AgentRoutingMetadata(next.Agent.AgentId, next.Score, "agent-declined-fallthrough");
+                turn.Activity?.SetTag("orchestration.branch", $"agent.{next.Agent.AgentId}");
+                agentResponse = StreamsHere(next.Agent) ? null : await next.Agent.ProcessAsync(request, ct);
+            }
+
             string answer;
-            if (turn.Sink is { } sink)
+            if (agentResponse is null && turn.Sink is { } sink)
             {
                 await sink.RouteAsync(routingMetadata, grounding: null);
                 var fullText = new StringBuilder();
@@ -548,25 +573,7 @@ public class ProductionOrchestrator(
             }
             else
             {
-                var request = new AgentRequest
-                {
-                    Query = turn.Message,
-                    ConversationHistory = turn.AgentHistory,
-                };
-                var agentResponse = await selectedAgent.ProcessAsync(request, ct);
-
-                // A declining agent found nothing it handles in the message (e.g. no voicing
-                // matched musically): the next-ranked agent answers instead.
-                if (agentResponse.Declined && NextAgent(routing, selectedAgent) is { } next)
-                {
-                    EmitDeclinedTrace(selectedAgent.AgentId);
-                    selectedAgent = next.Agent;
-                    routingMetadata = new AgentRoutingMetadata(next.Agent.AgentId, next.Score, "agent-declined-fallthrough");
-                    turn.Activity?.SetTag("orchestration.branch", $"agent.{next.Agent.AgentId}");
-                    agentResponse = await next.Agent.ProcessAsync(request, ct);
-                }
-
-                answer = agentResponse.Result;
+                answer = agentResponse!.Result;
             }
 
             result = new ChatResponse(

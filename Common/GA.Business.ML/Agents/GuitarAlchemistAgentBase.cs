@@ -64,6 +64,15 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// True when the agent's answer is the model's reply to its system prompt, so a streamed
+    /// turn can stream <see cref="ProcessStreamingAsync"/> token by token. An agent whose
+    /// <see cref="ProcessAsync"/> answers from something else (an index, a template) and may
+    /// decline returns false: a streamed turn then runs <see cref="ProcessAsync"/> like a
+    /// non-streamed one, instead of streaming a model answer that skips both.
+    /// </summary>
+    public virtual bool StreamsModelAnswer => true;
+
+    /// <summary>
     /// Builds the system prompt for this agent.
     /// </summary>
     protected virtual string BuildSystemPrompt() => $"""

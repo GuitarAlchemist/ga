@@ -29,6 +29,10 @@ public sealed class VoicingAgent(
     public override string AgentId => AgentIds.Voicing;
     public override string Name => "Voicing Agent";
 
+    // The answer comes from the OPTIC-K search (or a CAGED template), and the agent declines
+    // when nothing matches: a streamed turn must run ProcessAsync, not stream the model.
+    public override bool StreamsModelAnswer => false;
+
     public override string Description =>
         "Finds playable guitar chord voicings matching a named chord, mode, or style. " +
         "Returns specific fingerings with diagrams (e.g. x-3-2-0-1-0) ranked by musical " +

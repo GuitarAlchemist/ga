@@ -30,10 +30,14 @@ public class VoicingDeclineFallThroughTests
 {
     private const string AgentAnswer = "Rock the fretting finger from the wrist.";
 
-    [Test]
-    public async Task AgentRouterPicksVoicing_VoicingDeclines_NextAgentAnswers()
+    // The streaming path used to stream the voicing agent's system prompt through the model,
+    // skipping its index search and its decline, so a streamed chat got an answer the
+    // non-streaming path never gives.
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task AgentRouterPicksVoicing_VoicingDeclines_NextAgentAnswers(bool streaming)
     {
-        var (response, chat) = await AskAsync("How do I develop a good finger vibrato?", streaming: false);
+        var (response, chat) = await AskAsync("How do I develop a good finger vibrato?", streaming);
 
         Assert.Multiple(() =>
         {

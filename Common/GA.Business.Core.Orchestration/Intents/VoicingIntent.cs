@@ -71,9 +71,20 @@ public sealed class VoicingIntent(VoicingAgent voicingAgent) : IIntent
         "I need an alternative for the standard Am7",
     ];
 
-    public async Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default)
+    public Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(query, [], cancellationToken);
+
+    /// <summary>Passes the conversation to the agent, which declines a follow-up that names no
+    /// chord or mode of its own ("Show me an easy way to play it") so an agent that reads the
+    /// history answers.</summary>
+    public async Task<IntentResult> ExecuteAsync(
+        string query,
+        IReadOnlyList<ChatHistoryTurn> history,
+        CancellationToken cancellationToken = default)
     {
-        var response = await voicingAgent.ProcessAsync(new AgentRequest { Query = query }, cancellationToken);
+        var response = await voicingAgent.ProcessAsync(
+            new AgentRequest { Query = query, ConversationHistory = history },
+            cancellationToken);
 
         return new IntentResult(
             Answer: response.Result,
