@@ -64,8 +64,18 @@ public static class ChatbotOrchestrationExtensions
         // Vector store — TryAdd so GaApi's FileBasedVectorIndex takes precedence if already registered
         services.TryAddSingleton<GA.Business.ML.Embeddings.IVectorIndex, GA.Business.ML.Embeddings.InMemoryVectorIndex>();
 
-        // Shared Ollama HTTP client wrapper — single plumbing point for /api/generate calls
-        services.AddSingleton<OllamaGenerateClient>();
+        // Single-prompt generation. Ollama is being phased out: the chat client is the default, and
+        // Ollama's /api/generate is used only with AI:Generate:Provider=ollama or without a chat client.
+        services.AddSingleton<ITextGenerator>(sp =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var chatClient = sp.GetService<IChatClient>();
+            var ollamaRequested = string.Equals(
+                configuration["AI:Generate:Provider"], "ollama", StringComparison.OrdinalIgnoreCase);
+            return chatClient is null || ollamaRequested
+                ? new OllamaGenerateClient(sp.GetRequiredService<IHttpClientFactory>(), configuration)
+                : new ChatClientTextGenerator(chatClient);
+        });
 
         // Arpeggio-suggestion structured-output tracer (ga#589): LLM proposes a typed
         // PerformanceIntent via Ollama's native JSON-schema structured outputs, then the

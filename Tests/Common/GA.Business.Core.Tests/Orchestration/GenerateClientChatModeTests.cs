@@ -1,26 +1,32 @@
 namespace GA.Business.Core.Tests.Orchestration;
 
 using GA.Business.Core.Orchestration.Clients;
+using GA.Business.Core.Orchestration.Extensions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 /// <summary>
-/// With <c>AI:Generate:Provider=chat</c> the generate client runs its prompts through the
-/// application's chat client (Anthropic in production and CI) instead of Ollama's
-/// <c>/api/generate</c>, so the chatbot needs no local model server.
+/// The default <see cref="ITextGenerator"/> runs its prompts through the application's chat client
+/// (Anthropic in production and CI) instead of Ollama's <c>/api/generate</c>, so the chatbot needs no
+/// local model server. Ollama is selected only with <c>AI:Generate:Provider=ollama</c>, or when no
+/// chat client is registered.
 /// </summary>
 [TestFixture]
 public class GenerateClientChatModeTests
 {
     private sealed record Filters(string? Key, string? Chord);
 
+    private static readonly object FiltersSchema = new { type = "object", required = new[] { "chord" } };
+
     [Test]
     public async Task ChatMode_SendsThePromptToTheChatClient_WithoutTemperature()
     {
-        var (client, chat, sent) = Client("Dorian is the second mode.");
+        var (generator, chat, sent) = Generator("Dorian is the second mode.");
 
-        var text = await client.GenerateAsync("Explain Dorian.", temperature: 0.7f, numPredict: 512);
+        var text = await generator.GenerateAsync("Explain Dorian.", temperature: 0.7f, numPredict: 512);
 
         Assert.Multiple(() =>
         {
@@ -36,9 +42,9 @@ public class GenerateClientChatModeTests
     [Test]
     public async Task ChatMode_Structured_ExtractsTheJsonObjectFromTheReply()
     {
-        var (client, _, sent) = Client("Here you go:\n```json\n{\"key\":\"D minor\",\"chord\":\"Dm7\"}\n```");
+        var (generator, _, sent) = Generator("Here you go:\n```json\n{\"key\":\"D minor\",\"chord\":\"Dm7\"}\n```");
 
-        var filters = await client.GenerateStructuredAsync<Filters>("Extract filters.");
+        var filters = await generator.GenerateStructuredAsync<Filters>("Extract filters.", FiltersSchema);
 
         Assert.Multiple(() =>
         {
@@ -50,15 +56,26 @@ public class GenerateClientChatModeTests
     [Test]
     public async Task ChatMode_Schema_IsWrittenIntoThePrompt()
     {
-        var (client, _, sent) = Client("{\"key\":null,\"chord\":\"G7\"}");
+        var (generator, _, sent) = Generator("{\"key\":null,\"chord\":\"G7\"}");
 
-        var filters = await client.GenerateStructuredAsync<Filters>("Extract filters.", new { type = "object", required = new[] { "chord" } });
+        var filters = await generator.GenerateStructuredAsync<Filters>("Extract filters.", FiltersSchema);
 
         Assert.Multiple(() =>
         {
             Assert.That(filters?.Chord, Is.EqualTo("G7"));
-            Assert.That(sent[0].Messages.Single().Text, Does.Contain("\"required\":[\"chord\"]"));
+            Assert.That(
+                sent[0].Messages.Single().Text,
+                Is.EqualTo("Extract filters.\n\nRespond with a single JSON object matching this JSON Schema, and nothing else:\n"
+                           + "{\"type\":\"object\",\"required\":[\"chord\"]}"));
         });
+    }
+
+    [Test]
+    public async Task ChatMode_ReplyWithoutJson_ReturnsNull()
+    {
+        var (generator, _, _) = Generator("I cannot help with that.");
+
+        Assert.That(await generator.GenerateStructuredAsync<Filters>("Extract filters.", FiltersSchema), Is.Null);
     }
 
     [Test]
@@ -68,31 +85,53 @@ public class GenerateClientChatModeTests
         var chat = new Mock<IChatClient>();
         chat.Setup(c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "From the chat client.")));
-        var client = new OllamaGenerateClient(
-            new Mock<IHttpClientFactory>(MockBehavior.Strict).Object, new ConfigurationBuilder().Build(), chat.Object);
 
-        Assert.That(await client.GenerateAsync("Explain Dorian."), Is.EqualTo("From the chat client."));
+        var generator = Resolve(provider: null, chat.Object);
+        var text = await generator.GenerateAsync("Explain Dorian.");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(generator, Is.InstanceOf<ChatClientTextGenerator>());
+            Assert.That(text, Is.EqualTo("From the chat client."));
+        });
     }
+
+    [TestCase(null)]
+    [TestCase("chat")]
+    [TestCase("anthropic")]
+    public void WithAChatClient_OnlyProviderOllamaSelectsTheOllamaAdapter(string? provider) =>
+        Assert.That(Resolve(provider, new Mock<IChatClient>().Object), Is.InstanceOf<ChatClientTextGenerator>());
+
+    [TestCase("ollama")]
+    [TestCase("Ollama")]
+    public void ProviderOllama_SelectsTheOllamaAdapter_EvenWithAChatClient(string provider) =>
+        Assert.That(Resolve(provider, new Mock<IChatClient>().Object), Is.InstanceOf<OllamaGenerateClient>());
 
     [Test]
-    public async Task ChatMode_ReplyWithoutJson_ReturnsNull()
-    {
-        var (client, _, _) = Client("I cannot help with that.");
+    public void WithoutAChatClient_FallsBackToTheOllamaAdapter() =>
+        Assert.That(Resolve(provider: null, chatClient: null), Is.InstanceOf<OllamaGenerateClient>());
 
-        Assert.That(await client.GenerateStructuredAsync<Filters>("Extract filters."), Is.Null);
+    /// <summary>Resolves <see cref="ITextGenerator"/> through the production composition root.</summary>
+    private static ITextGenerator Resolve(string? provider, IChatClient? chatClient)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["AI:Generate:Provider"] = provider })
+            .Build();
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddLogging(b => b.SetMinimumLevel(LogLevel.Warning));
+        if (chatClient is not null) services.AddSingleton(chatClient);
+        services.AddChatbotOrchestration();
+        return services.BuildServiceProvider().GetRequiredService<ITextGenerator>();
     }
 
-    private static (OllamaGenerateClient Client, Mock<IChatClient> Chat, List<(List<ChatMessage> Messages, ChatOptions? Options)> Sent) Client(string reply)
+    private static (ITextGenerator Generator, Mock<IChatClient> Chat, List<(List<ChatMessage> Messages, ChatOptions? Options)> Sent) Generator(string reply)
     {
         List<(List<ChatMessage>, ChatOptions?)> sent = [];
         var chat = new Mock<IChatClient>();
         chat.Setup(c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions?>(), It.IsAny<CancellationToken>()))
             .Callback<IEnumerable<ChatMessage>, ChatOptions?, CancellationToken>((m, o, _) => sent.Add(([.. m], o)))
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, reply)));
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["AI:Generate:Provider"] = "chat" })
-            .Build();
-        var client = new OllamaGenerateClient(new Mock<IHttpClientFactory>(MockBehavior.Strict).Object, configuration, chat.Object);
-        return (client, chat, sent);
+        return (new ChatClientTextGenerator(chat.Object), chat, sent);
     }
 }

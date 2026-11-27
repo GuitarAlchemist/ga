@@ -1,9 +1,7 @@
 namespace GA.Business.Core.Tests.Orchestration;
 
-using System.Net.Http;
 using GA.Business.Core.Orchestration.Clients;
 using GA.Business.Core.Orchestration.PerformanceIntents;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -17,15 +15,10 @@ using Moq;
 [TestFixture]
 public class ArpeggioPerformanceIntentTests
 {
-    // The service ctor needs an OllamaGenerateClient, but InterpretModelJson never calls it, so a
-    // client over a stub factory is enough — no network, deterministic.
-    private static ArpeggioIntentService MakeService()
-    {
-        var httpFactory = new Mock<IHttpClientFactory>().Object;
-        var config = new ConfigurationBuilder().Build();
-        var ollama = new OllamaGenerateClient(httpFactory, config);
-        return new ArpeggioIntentService(ollama, new PerformanceIntentValidator(), NullLogger<ArpeggioIntentService>.Instance);
-    }
+    // The service ctor needs an ITextGenerator, but InterpretModelJson never calls it, so a strict
+    // mock is enough — no network, deterministic.
+    private static ArpeggioIntentService MakeService() =>
+        new(new Mock<ITextGenerator>(MockBehavior.Strict).Object, new PerformanceIntentValidator(), NullLogger<ArpeggioIntentService>.Instance);
 
     // ── #567 case 1: 'Amm7' concatenation artefact must be refused ──────────────────
 

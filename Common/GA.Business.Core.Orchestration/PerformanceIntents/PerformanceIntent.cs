@@ -106,7 +106,7 @@ public static class PerformanceIntentSchema
         }
         """;
 
-    /// <summary>The schema parsed as an object graph, ready to hand to <c>OllamaGenerateClient.GenerateStructuredAsync</c>.</summary>
+    /// <summary>The schema parsed as an object graph, ready to hand to <c>ITextGenerator.GenerateStructuredAsync</c>.</summary>
     public static object Node { get; } =
         JsonSerializer.Deserialize<JsonElement>(Json);
 
