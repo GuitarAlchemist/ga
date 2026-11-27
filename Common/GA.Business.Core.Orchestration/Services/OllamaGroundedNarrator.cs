@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 public class OllamaGroundedNarrator(
     GroundedPromptBuilder promptBuilder,
     ResponseValidator validator,
-    OllamaGenerateClient ollamaClient,
+    ITextGenerator generator,
     ILogger<OllamaGroundedNarrator> logger) : IGroundedNarrator
 {
     public async Task<string> NarrateAsync(string query, IReadOnlyList<CandidateVoicing> candidates)
@@ -22,7 +22,7 @@ public class OllamaGroundedNarrator(
 
         try
         {
-            var response   = await ollamaClient.GenerateAsync(prompt, temperature: 0.7f, numPredict: 512);
+            var response   = await generator.GenerateAsync(prompt, temperature: 0.7f, numPredict: 512);
             var validation = validator.Validate(response, candidates);
             return validation.CleanedMessage;
         }

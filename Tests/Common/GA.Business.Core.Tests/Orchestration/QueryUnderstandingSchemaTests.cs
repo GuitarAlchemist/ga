@@ -4,7 +4,6 @@ using GA.Business.Core.Orchestration.Clients;
 using GA.Business.Core.Orchestration.Services;
 using GA.Infrastructure.Documentation;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -24,12 +23,9 @@ public class QueryUnderstandingSchemaTests
         chat.Setup(c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions?>(), It.IsAny<CancellationToken>()))
             .Callback<IEnumerable<ChatMessage>, ChatOptions?, CancellationToken>((m, _, _) => prompt = m.Single().Text)
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "{\"Quality\":\"Minor\",\"Key\":\"G major\"}")));
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["AI:Generate:Provider"] = "chat" })
-            .Build();
         var service = new QueryUnderstandingService(
             new DomainMetadataPrompter(new SchemaDiscoveryService()),
-            new OllamaGenerateClient(new Mock<IHttpClientFactory>(MockBehavior.Strict).Object, configuration, chat.Object),
+            new ChatClientTextGenerator(chat.Object),
             NullLogger<QueryUnderstandingService>.Instance);
 
         var filters = await service.ExtractFiltersAsync("sad minor chords in G major");

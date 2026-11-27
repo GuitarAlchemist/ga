@@ -12,12 +12,12 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public class QueryUnderstandingService(
     DomainMetadataPrompter prompter,
-    OllamaGenerateClient ollamaClient,
+    ITextGenerator generator,
     ILogger<QueryUnderstandingService> logger)
 {
     // Every filter is a scalar: without the schema, a model may answer "Quality": ["Minor"] and
-    // deserialization then drops every filter. Ollama enforces the schema while decoding; the chat
-    // mode writes it into the prompt.
+    // deserialization then drops every filter. The Ollama adapter enforces the schema while
+    // decoding; the chat adapter writes it into the prompt.
     private static readonly JsonNode FiltersSchema =
         JsonSerializerOptions.Default.GetJsonSchemaAsNode(
             typeof(QueryFilters), new JsonSchemaExporterOptions { TreatNullObliviousAsNonNullable = true });
@@ -29,7 +29,7 @@ public class QueryUnderstandingService(
             var systemPrompt = prompter.BuildSystemPrompt();
             var fullPrompt   = $"{systemPrompt}\n\nUSER QUERY: {userQuery}";
 
-            return await ollamaClient.GenerateStructuredAsync<QueryFilters>(fullPrompt, FiltersSchema, temperature: 0.1f, ct: ct);
+            return await generator.GenerateStructuredAsync<QueryFilters>(fullPrompt, FiltersSchema, temperature: 0.1f, ct: ct);
         }
         catch (Exception ex)
         {

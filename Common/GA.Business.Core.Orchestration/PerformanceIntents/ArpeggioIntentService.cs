@@ -9,21 +9,21 @@ using Microsoft.Extensions.Logging;
 /// Tracer for ga#589: constrains arpeggio-suggestion advice to a validated
 /// <see cref="PerformanceIntent"/> instead of free-form LLM text.
 /// <para>
-/// Flow: build a prompt → have Ollama emit a <see cref="PerformanceIntent"/> via its native
-/// JSON-schema structured outputs (<see cref="PerformanceIntentSchema.Json"/>) → validate through
+/// Flow: build a prompt → have the model emit a <see cref="PerformanceIntent"/> constrained by its
+/// JSON schema (<see cref="PerformanceIntentSchema.Json"/>) → validate through
 /// the deterministic theory engine (<see cref="PerformanceIntentValidator"/>) → render the validated
 /// intent, or refuse deterministically. An intent that fails validation never becomes a
 /// plausible-looking free-text answer — the failure mode #567 documented.
 /// </para>
 /// </summary>
 public sealed class ArpeggioIntentService(
-    OllamaGenerateClient ollama,
+    ITextGenerator generator,
     PerformanceIntentValidator validator,
     ILogger<ArpeggioIntentService> logger)
 {
     /// <summary>
     /// Ask the model for arpeggio suggestions over <paramref name="chords"/> in <paramref name="key"/>,
-    /// then validate and render. Talks to Ollama; use <see cref="InterpretModelJson"/> to exercise the
+    /// then validate and render. Talks to the model; use <see cref="InterpretModelJson"/> to exercise the
     /// deserialise → validate → render path without a live model.
     /// </summary>
     public async Task<ArpeggioAnswer> SuggestAsync(
@@ -34,7 +34,7 @@ public sealed class ArpeggioIntentService(
         PerformanceIntent? intent;
         try
         {
-            intent = await ollama.GenerateStructuredAsync<PerformanceIntent>(
+            intent = await generator.GenerateStructuredAsync<PerformanceIntent>(
                 prompt, PerformanceIntentSchema.Node, temperature: 0.1f, ct: ct);
         }
         catch (Exception ex)
