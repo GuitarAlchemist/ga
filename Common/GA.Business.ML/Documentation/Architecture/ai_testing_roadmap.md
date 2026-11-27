@@ -45,7 +45,7 @@ land within specified **semantic basins**, rather than exact string matches.
 
 **Goal:** Replacing mocks with real local LLM integration for live reasoning validation.
 
-- [x] **`OllamaJudgeService`**: Implementation of `IJudgeService` using local Ollama API.
+- [x] **`ChatClientJudgeService`** (formerly `OllamaJudgeService`): Implementation of `IJudgeService` over `IChatClient`; `AssertAi.AutoConfigureJudge` picks the provider from `AI:ChatProvider` (default `claude`, `ollama` only when set).
 - [x] **Gated Execution**: Integration of `Level1` tests into CI with optional skipping for local dev speed.
 - [x] **Storytelling Quality Rubrics**: Expanding the rubric library for deep musical insight validation.
 

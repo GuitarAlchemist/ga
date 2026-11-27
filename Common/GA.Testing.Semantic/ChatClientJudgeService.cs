@@ -1,13 +1,14 @@
 namespace GA.Testing.Semantic;
 
-using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.AI;
 
 /// <summary>
-///     Implementation of IJudgeService using a local Ollama instance.
-///     Uses JSON mode for structured evaluation.
+///     Implementation of IJudgeService over any <see cref="IChatClient" />; the provider is chosen by
+///     whoever builds the client (see <see cref="AssertAi.AutoConfigureJudge" />).
+///     Asks for JSON output when the provider supports it.
 /// </summary>
-public class OllamaJudgeService(HttpClient client, string modelName = "mistral") : IJudgeService
+public class ChatClientJudgeService(IChatClient chatClient) : IJudgeService
 {
     public async Task<JudgeResult> EvaluateAsync(string text, string prompt, string rubric,
         CancellationToken cancellationToken = default)
@@ -22,19 +23,11 @@ public class OllamaJudgeService(HttpClient client, string modelName = "mistral")
             $"2. \"rationale\": (string explanation)\n" +
             $"3. \"confidence\": (float between 0 and 1)\n";
 
-        var requestBody = new
-        {
-            model = modelName,
-            prompt = systemPrompt,
-            stream = false,
-            format = "json"
-        };
-
-        var response = await client.PostAsJsonAsync("/api/generate", requestBody, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        var responseJson = await response.Content.ReadFromJsonAsync<OllamaGenerateResponse>(cancellationToken);
-        var content = responseJson?.Response ?? throw new InvalidOperationException("No response from Ollama");
+        var response = await chatClient.GetResponseAsync(
+            [new ChatMessage(ChatRole.User, systemPrompt)],
+            new ChatOptions { ResponseFormat = ChatResponseFormat.Json },
+            cancellationToken);
+        var content = response.Text;
 
         try
         {
@@ -45,11 +38,9 @@ public class OllamaJudgeService(HttpClient client, string modelName = "mistral")
         }
         catch (JsonException ex)
         {
-            return new(false, $"Failed to parse Ollama JSON: {ex.Message}. Raw content: {content}", 0);
+            return new(false, $"Failed to parse judge JSON: {ex.Message}. Raw content: {content}", 0);
         }
     }
-
-    private record OllamaGenerateResponse(string Response);
 
     private record JudgeResultJson(bool IsPassing, string Rationale, double Confidence);
 }
