@@ -187,11 +187,6 @@ public static class ChatbotOrchestrationExtensions
         // GaChatbot.Api's heavier IChatApplicationService which adds
         // readiness probing, fallback, and AgenticTrace assembly.
 
-        // Inner: the bare HarmonicChatApplicationService is registered as a
-        // concrete type only (not the IChatApplicationService binding) so the
-        // decorator stack below is the canonical IChatApplicationService.
-        services.AddScoped<HarmonicChatApplicationService>();
-
         // Per-request trace capture. Scoped lifetime — every chat request
         // gets its own AgenticTrace; concurrent requests don't interleave.
         // The decorator stack writes steps; hosts read the captured trace
@@ -215,8 +210,10 @@ public static class ChatbotOrchestrationExtensions
             .BindConfiguration(FallbackOptions.SectionName);
 
         // Decorator stack (innermost → outermost):
-        //   Harmonic  →  Traceable  →  Fallback  →  ReadinessGated
+        //   Traceable  →  Fallback  →  ReadinessGated
         //
+        // - Traceable adapts IHarmonicChatOrchestrator directly; the former
+        //   HarmonicChatApplicationService pass-through layer added nothing.
         // - Trace innermost so its coverage extends to every outer layer.
         // - Fallback inside ReadinessGated so a readiness-blocked request
         //   short-circuits without invoking fallback (no point).
@@ -226,8 +223,8 @@ public static class ChatbotOrchestrationExtensions
         services.AddScoped<IChatApplicationService>(sp =>
         {
             var capture   = sp.GetRequiredService<IAgenticTraceCapture>();
-            var harmonic  = sp.GetRequiredService<HarmonicChatApplicationService>();
-            var traceable = new TraceableChatApplicationService(harmonic, capture);
+            var traceable = new TraceableChatApplicationService(
+                sp.GetRequiredService<IHarmonicChatOrchestrator>(), capture);
             var fallback  = new FallbackChatApplicationService(
                 traceable,
                 sp.GetRequiredService<IFallbackChatHandler>(),

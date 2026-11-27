@@ -37,8 +37,7 @@ public class ChatIntakeStreamingTests
             .Returns(Mock.Of<ITimedStep>());
         var probe = new Mock<IChatReadinessProbe>();
         probe.Setup(value => value.CheckAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new ChatReadinessResult(ready, "test provider"));
-        IChatApplicationService service = new HarmonicChatApplicationService(orchestrator.Object);
-        service = new TraceableChatApplicationService(service, trace.Object);
+        IChatApplicationService service = new TraceableChatApplicationService(orchestrator.Object, trace.Object);
         service = new FallbackChatApplicationService(service, fallback.Object,
             Options.Create(new FallbackOptions { Enabled = true, TimeoutSeconds = 1 }), trace.Object);
         service = new ReadinessGatedChatApplicationService(service, probe.Object, trace.Object);

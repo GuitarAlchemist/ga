@@ -18,8 +18,8 @@ public class TraceableChatLlmCallTests
     [Test]
     public async Task LlmCallsReportedDuringTheRequest_BecomeTraceSteps()
     {
-        var inner = new Mock<IChatApplicationService>();
-        inner.Setup(s => s.ChatAsync(It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
+        var inner = new Mock<IHarmonicChatOrchestrator>();
+        inner.Setup(s => s.AnswerAsync(It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
             .Returns(async () =>
             {
                 await Task.Yield();
@@ -55,8 +55,8 @@ public class TraceableChatLlmCallTests
     [Test]
     public async Task CallsReportedAfterTheRequest_AreNotRecorded()
     {
-        var inner = new Mock<IChatApplicationService>();
-        inner.Setup(s => s.ChatAsync(It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
+        var inner = new Mock<IHarmonicChatOrchestrator>();
+        inner.Setup(s => s.AnswerAsync(It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChatResponse("answer", []));
         var capture = new Mock<IAgenticTraceCapture>();
         capture.Setup(c => c.StartStep(It.IsAny<string>(), It.IsAny<IReadOnlyDictionary<string, object?>?>()))

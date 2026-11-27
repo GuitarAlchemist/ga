@@ -134,11 +134,21 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
     /// the time the fallback decorator inspects <c>Activity.Current</c>.
     /// Routing method, by contrast, lands on <see cref="ChatResponse.Routing"/>
     /// and survives the call boundary.
+    /// <para>
+    /// <c>"orchestrator-skill-semantic"</c> is stamped by
+    /// <c>OrchestratorSkillIntent</c> on EVERY orchestrator skill, not only the
+    /// SKILL.md (Path B) wrappers, so every skill is exempt. That is deliberate:
+    /// the skills compute from the domain (or a catalog, or a ga_dsl_eval
+    /// closure), and their low-confidence answers are honest failures such as
+    /// "couldn't parse that chord" that must not be replaced by an ungrounded
+    /// LLM guess. A skill that cannot handle a query declines instead, and the
+    /// orchestrator moves on, so a declined skill never reaches this check.
+    /// </para>
     /// </remarks>
     private static readonly string[] DeterministicRoutingMethods =
     [
         "ix-algebra",                       // AlgebraIntent
-        "orchestrator-skill-semantic",      // SKILL.md skills (transpose / common-tones / diatonic-chords / etc.)
+        "orchestrator-skill-semantic",      // every orchestrator skill (OrchestratorSkillIntent), C# and SKILL.md alike
         "semantic-intent-voicing",          // VoicingIntent (semantic dispatch)
         "deterministic-voicing",            // VoicingAgent (regex-guard fast path)
     ];
@@ -209,7 +219,7 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
         }
 
         // Gate 3: deterministic-failure exemption. If the orchestrator
-        // routed to a deterministic skill (algebra / Path B SKILL.md /
+        // routed to a deterministic path (algebra / any orchestrator skill /
         // voicing) AND confidence came back below threshold, that's a
         // deterministic failure that the P1 #5 contract says we surface
         // with confidence 0 intact — not paper over it with an LLM guess.

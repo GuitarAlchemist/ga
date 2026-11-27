@@ -51,8 +51,7 @@ flowchart LR
   restApi --> appSvc
 
   appSvc --> decorators[Trace / Fallback / Readiness decorators]
-  decorators --> harmonic[HarmonicChatApplicationService]
-  harmonic --> orchestrator[ProductionOrchestrator]
+  decorators --> orchestrator[ProductionOrchestrator]
   orchestrator --> skills[Deterministic skills + ga_dsl_eval]
   orchestrator --> router[SemanticRouter]
   orchestrator --> rag[TabAwareOrchestrator + SpectralRagOrchestrator]
@@ -65,8 +64,7 @@ The shared runtime substrate is:
 ```text
 GaApi controller / hub
   -> IChatApplicationService
-  -> Traceable / Fallback / Readiness decorators
-  -> HarmonicChatApplicationService
+  -> Readiness / Fallback / Traceable decorators
   -> IHarmonicChatOrchestrator
   -> ProductionOrchestrator
 ```
