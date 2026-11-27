@@ -56,16 +56,21 @@ GaApi normally runs under Aspire, which injects `ConnectionStrings__guitar-alche
 | `ASPNETCORE_URLS` | `http://localhost:5262` | loopback only; cloudflared is the public edge |
 | `--contentRoot` | `.deploy\current` | `appsettings.json` and `wwwroot` come from the release |
 | working directory | `.deploy\work` | GaApi writes `cache\`, `musical-knowledge.db` and similar relative to it; under the worktree root they would be untracked files that fail the next deploy's clean check |
-| `AI__ChatProvider` | `ollama` | what GaChatbot.Api uses; explicit because `appsettings.Development.json` selects `claude`. The model comes from `local-env.cmd` below |
-| `AI__CascadeProvider` | `mistral` | as on GaChatbot.Api: the Ollama client is wrapped in the Mistral cascade, which answers when Ollama times out or is unreachable. `MISTRAL_API_KEY` comes from the user environment |
-| `AI__Embedding__Routing__Model` | `bge-large` | same routing embedder as GaChatbot.Api (`Apps/GaChatbot.Api/appsettings.json`) |
+| `AI__ChatProvider` | `claude` | Ollama is phased out. Query understanding and narration go through the same chat client (`AI__Generate__Provider=ollama` would send them back to Ollama) |
+| `AI__CascadeProvider` | `mistral` | the chat client is wrapped in the Mistral cascade, which answers when the primary provider times out or is unreachable. `MISTRAL_API_KEY` comes from the user environment |
+| `AI__EmbeddingProvider` | `onnx` | embeddings run in process; the host needs no Ollama. `-EmbeddingProvider ollama` writes no embedding lines, which keeps the Ollama embedders |
+| `AI__Embedding__Default__OnnxDir`, `__Pooling`, `__Model` | `<models>\nomic-embed-text-v1.5`, `mean`, `nomic-embed-text` | default embedder |
+| `AI__Embedding__Routing__OnnxDir`, `__Pooling` | `<models>\bge-large-en-v1.5`, `cls` | routing embedder |
+| `AI__Embedding__Routing__Model` | `bge-large` | the routing embedder the thresholds below are calibrated on |
 | `AI__Routing__MinConfidence` | `0.64` | the threshold calibrated for bge-large; it only makes sense together with the line above (nomic's default is 0.55) |
 | `VoicingSearch__OpticIndexPath` | `<main checkout>\state\voicings\optick.index` | read-only; the gitignored OPTK index only exists in the main checkout. GaApi reads this key, not `GA_OPTICK_INDEX_PATH` |
-| `VoicingSearch__EnableIndexing` | `false` | the startup indexer embeds every voicing through Ollama, which the public chatbot shares. OPTK search needs no warmup, so it is not needed |
+| `VoicingSearch__EnableIndexing` | `false` | the startup indexer embeds every voicing. OPTK search needs no warmup, so it is not needed |
 | `Governance__DemerzelRoot` | `.deploy\work\governance\demerzel` | unset, GaApi falls back to the main checkout's `governance\demerzel` and writes algedonic signals and beliefs there |
 | `Proxy__PublicHost` | `demos.guitaralchemist.com` | GaApi's `appsettings.json` does not set it; without it, tunnel requests take the forwarded-header strip branch and the session cookie loses `Secure`. Never set it blank |
 
-Secrets are never written by the script. The chat path needs none with the default Ollama provider. `ANTHROPIC_API_KEY`, `MISTRAL_API_KEY` and the other user-level variables reach GaApi through the scheduled task's environment. The `Authentication:*` values (JWT signing key, Google OAuth) live in the dev user secrets, which Production does not load, so `/api/auth/*` sign-in is not configured on :5262.
+`<models>` is `.deploy\models` unless `-OnnxModelsDir` names another folder. Before stopping the running host, the script downloads `vocab.txt` and `onnx/model.onnx` of each model from Hugging Face at the revisions pinned in the script, the same ones `.github/workflows/chatbot-eval.yml` evaluates. That is about 1.9 GB the first time. A `REVISION` file per model makes later deploys skip the download.
+
+Secrets are never written by the script. `ANTHROPIC_API_KEY`, `MISTRAL_API_KEY` and the other user-level variables reach GaApi through the scheduled task's environment. The `Authentication:*` values (JWT signing key, Google OAuth) live in the dev user secrets, which Production does not load, so `/api/auth/*` sign-in is not configured on :5262.
 
 ### Operator settings: `.deploy\local-env.cmd`
 
@@ -126,5 +131,5 @@ Set the three `service` values back to `http://localhost:5252`, validate, and re
 | `/chatbot/` 404 | the build predates the public page (PR #881) | deploy a commit that contains it |
 | `Port 5262 is held by <process>` | another program on :5262 | the script only stops GaApi on its own port; stop the other program yourself |
 | `Deploy worktree has local changes or untracked files` | someone edited or added files in `ga-deploy-gaapi` | clean them (`git -C ..\ga-deploy-gaapi status`); only `.deploy` may differ |
-| smoke answered by another agent | routing changed in the deployed commit, or the router's embedder is unreachable | read the `SemanticIntentRouter: query=...` line in `gaapi.out.log` for the scores, and check that Ollama lists `nomic-embed-text` |
+| smoke answered by another agent | routing changed in the deployed commit, or the router's embedder is unreachable | read the `SemanticIntentRouter: query=...` line in `gaapi.out.log` for the scores, and check that both ONNX model folders hold `vocab.txt`, `onnx\model.onnx` and the pinned `REVISION` |
 | first smoke chat takes over a minute | the router embeds its intent examples on first use | expected once per start; the script allows 180 s |

@@ -42,6 +42,14 @@
     cloudflared routes those paths to this port.
 .PARAMETER KeepReleases
     Number of release folders kept after a successful deploy.
+.PARAMETER EmbeddingProvider
+    onnx (default): GaApi embeds in process with the pinned ONNX models below, so the
+    host needs no Ollama. ollama: the previous setup, embeddings through local Ollama
+    (nomic-embed-text and bge-large must be pulled).
+.PARAMETER OnnxModelsDir
+    Folder holding bge-large-en-v1.5/ and nomic-embed-text-v1.5/ (each with vocab.txt
+    and onnx/model.onnx). Default: .deploy/models, filled from Hugging Face at the pinned
+    revisions on first use (about 1.9 GB).
 #>
 
 param(
@@ -54,6 +62,9 @@ param(
     [string]$PublicHost = 'demos.guitaralchemist.com',
     [int]$StartupTimeoutSeconds = 180,
     [int]$KeepReleases = 3,
+    [ValidateSet('onnx', 'ollama')]
+    [string]$EmbeddingProvider = 'onnx',
+    [string]$OnnxModelsDir = '',
     [switch]$PublicProbe
 )
 
@@ -72,6 +83,40 @@ $localBase = "http://localhost:$Port"
 # Outside Development, GaApi answers 401 on /api/chatbot/* unless an X-Api-Key header is
 # present (any value; see Program.cs). The smoke test is a direct local caller, so it sends one.
 $smokeHeaders = @{ 'X-Api-Key' = 'deploy-gaapi-smoke' }
+if (-not $OnnxModelsDir) { $OnnxModelsDir = Join-Path $deployDir 'models' }
+
+# ONNX embedders, pinned to the revisions .github/workflows/chatbot-eval.yml evaluates
+# (parity with the Ollama models: cosine >= 0.99999). Default embedder: nomic, mean
+# pooling; routing embedder: bge-large, CLS pooling (the router's thresholds below are
+# calibrated on it).
+$onnxModels = @(
+    @{ Dir = 'nomic-embed-text-v1.5'; Repo = 'nomic-ai/nomic-embed-text-v1.5'; Rev = 'e9b6763023c676ca8431644204f50c2b100d9aab' }
+    @{ Dir = 'bge-large-en-v1.5'; Repo = 'BAAI/bge-large-en-v1.5'; Rev = 'd4aa6901d3a41ba39fb536a557fa166f842b0e09' }
+)
+
+# Downloads the pinned files of each model that is missing or at another revision. Each
+# file lands under a temporary name first, so an interrupted download is never used.
+function Install-OnnxModels([string]$Root) {
+    foreach ($model in $onnxModels) {
+        $dir = Join-Path $Root $model.Dir
+        $revFile = Join-Path $dir 'REVISION'
+        $vocab = Join-Path $dir 'vocab.txt'
+        $onnx = Join-Path $dir 'onnx\model.onnx'
+        $current = if (Test-Path -LiteralPath $revFile) { (Get-Content -LiteralPath $revFile -Raw).Trim() } else { '' }
+        if ($current -eq $model.Rev -and (Test-Path -LiteralPath $vocab) -and (Test-Path -LiteralPath $onnx)) {
+            Write-Host "  ONNX: $($model.Dir) @ $($model.Rev.Substring(0, 8)) present"
+            continue
+        }
+        Write-Host "  ONNX: downloading $($model.Repo) @ $($model.Rev.Substring(0, 8))"
+        New-Item -ItemType Directory -Path (Join-Path $dir 'onnx') -Force | Out-Null
+        foreach ($file in @(@{ Remote = 'vocab.txt'; Local = $vocab }, @{ Remote = 'onnx/model.onnx'; Local = $onnx })) {
+            $part = "$($file.Local).part"
+            Invoke-WebRequest -Uri "https://huggingface.co/$($model.Repo)/resolve/$($model.Rev)/$($file.Remote)" -OutFile $part -UseBasicParsing
+            Move-Item -LiteralPath $part -Destination $file.Local -Force
+        }
+        Set-Content -LiteralPath $revFile -Value $model.Rev -Encoding ascii
+    }
+}
 
 function Invoke-Git {
     git @args
@@ -221,6 +266,9 @@ $release = Join-Path $releasesDir $shortSha
 dotnet publish (Join-Path $DeployRoot 'Apps/ga-server/GaApi/GaApi.csproj') -c Release -o $release --nologo
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
 
+# 2b. ONNX embedders, before anything stops: a failed download leaves the old host serving.
+if ($EmbeddingProvider -eq 'onnx') { Install-OnnxModels $OnnxModelsDir }
+
 # 3. Launcher and scheduled task (idempotent). The launcher loops so a crash restarts
 #    the host, and rotates each log past 10 MB (one old copy) before every start. The
 #    task starts it at logon and again every 5 minutes in case the launcher itself
@@ -231,17 +279,19 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXIT
 #    - Production: no appsettings.Development.json, no user secrets, no Swagger, and the
 #      X-Api-Key gate on /api/chatbot/* (the public page's own calls are exempt in builds
 #      that ship the page).
-#    - Chat provider, Mistral cascade, routing embedder and threshold as on GaChatbot.Api
-#      (its launcher and appsettings.json), so the public chat answers and routes the same
-#      way after the cutover. The provider is explicit because appsettings.Development.json
-#      selects Claude. MinConfidence=0.64 is calibrated for bge-large; the two settings
+#    - Chat provider Claude with the Mistral cascade (Ollama is phased out; local-env.cmd
+#      may still override it). Generation (query understanding, narration) goes through
+#      the same chat client unless AI__Generate__Provider=ollama. MISTRAL_API_KEY comes
+#      from the user environment.
+#    - Embeddings in process from the pinned ONNX models (step 2b): nomic for the default
+#      embedder, bge-large for routing. -EmbeddingProvider ollama keeps the old Ollama
+#      embedders instead. MinConfidence=0.64 is calibrated for bge-large; the two settings
 #      only make sense together. AmbiguousBelow=0.75 with MinMargin=0.03 is calibrated on
 #      the same embedder: a skill scoring under 0.75 must lead the runner-up by 0.03, or a
-#      free-form question goes to the agent path. MISTRAL_API_KEY comes from the user
-#      environment.
+#      free-form question goes to the agent path.
 #    - OPTIC-K voicing search reads the index in the main checkout, read-only. With it,
-#      voicing search needs no warmup, so the startup indexer (which embeds every voicing
-#      through the Ollama instance the public chatbot shares) stays off.
+#      voicing search needs no warmup, so the startup indexer (which embeds every voicing)
+#      stays off.
 #    - Governance:DemerzelRoot pins governance state under .deploy/work. Unset, GaApi
 #      falls back to the main checkout's governance/demerzel and writes signals there.
 #    - Proxy:PublicHost makes the session cookie Secure behind the tunnel; GaApi's
@@ -250,13 +300,24 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXIT
 New-Item -ItemType Directory -Path $logDir, $workDir, (Join-Path $workDir 'governance\demerzel') -Force | Out-Null
 $opticIndex = Join-Path $mainCheckout 'state\voicings\optick.index'
 $indexLine = if (Test-Path -LiteralPath $opticIndex) { "set VoicingSearch__OpticIndexPath=$opticIndex" } else { 'rem optick.index not found; voicing search is unavailable (startup indexing is off)' }
+$embeddingLines = if ($EmbeddingProvider -eq 'onnx') {
+    @(
+        'set AI__EmbeddingProvider=onnx'
+        "set AI__Embedding__Default__OnnxDir=$(Join-Path $OnnxModelsDir 'nomic-embed-text-v1.5')"
+        'set AI__Embedding__Default__Pooling=mean'
+        'set AI__Embedding__Default__Model=nomic-embed-text'
+        "set AI__Embedding__Routing__OnnxDir=$(Join-Path $OnnxModelsDir 'bge-large-en-v1.5')"
+        'set AI__Embedding__Routing__Pooling=cls'
+    ) -join "`r`n"
+} else { 'rem Embeddings through local Ollama (-EmbeddingProvider ollama)' }
 @"
 @echo off
 rem Generated by Scripts/deploy-gaapi.ps1. Rerun the script instead of editing this file.
 set ASPNETCORE_ENVIRONMENT=Production
 set ASPNETCORE_URLS=$localBase
-set AI__ChatProvider=ollama
+set AI__ChatProvider=claude
 set AI__CascadeProvider=mistral
+$embeddingLines
 set AI__Embedding__Routing__Model=bge-large
 set AI__Routing__MinConfidence=0.64
 set AI__Routing__AmbiguousBelow=0.75
