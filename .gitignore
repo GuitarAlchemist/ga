@@ -132,7 +132,6 @@ paket-files/
 
 # Vendored node_modules (untracked 2026-05-24, kept on disk for npm install)
 /node_modules/
-/GA.WebBlazorApp/node_modules/
 /Experiments/ThreeJS-BSP-Loader/node_modules/
 
 # Ignore temp files
