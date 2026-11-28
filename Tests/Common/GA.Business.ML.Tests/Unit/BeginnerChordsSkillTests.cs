@@ -1,5 +1,6 @@
 namespace GA.Business.ML.Tests.Unit;
 
+using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Skills;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -69,5 +70,36 @@ public class BeginnerChordsSkillTests
         Assert.That(response.Evidence, Has.Count.GreaterThanOrEqualTo(8),
             "evidence should include one entry per catalog chord plus the catalog-size summary");
         Assert.That(response.Evidence, Has.Some.Contains("C major: x-3-2-0-1-0"));
+    }
+
+    [Test]
+    public async Task FollowUpTurn_Declines_SoTheAgentWithHistoryAnswers()
+    {
+        // "Show me an easy way to play it" after "What notes are in a D7 chord?" asks about D7,
+        // not for the catalogue; the catalogue answered with eight chords and no D7.
+        IReadOnlyList<ChatHistoryTurn> history =
+        [
+            new("user", "What notes are in a D7 chord?"),
+            new("assistant", "D7 contains D, F#, A and C."),
+        ];
+
+        // Called through the interface, as OrchestratorSkillIntent does.
+        IOrchestratorSkill skill = MakeSkill();
+        var response = await skill.ExecuteAsync("Show me an easy way to play it on guitar.", history);
+
+        Assert.That(response.Declined, Is.True);
+    }
+
+    [Test]
+    public async Task FirstTurn_WithEmptyHistory_StillReturnsTheCatalogue()
+    {
+        IOrchestratorSkill skill = MakeSkill();
+        var response = await skill.ExecuteAsync("What are the first chords I should learn?", []);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Declined, Is.False);
+            Assert.That(response.Result, Does.Contain("A minor"));
+        });
     }
 }
