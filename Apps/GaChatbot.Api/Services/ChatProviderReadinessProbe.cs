@@ -62,13 +62,23 @@ public sealed class ChatProviderReadinessProbe(
 
     private readonly SemaphoreSlim _embeddingProbeGate = new(1, 1);
     private (DateTime At, bool Success, string Diagnostic)? _lastEmbeddingProbe;
+    private Task<(bool Success, string Diagnostic)>? _pendingEmbeddingProbe;
 
     /// <summary>
-    /// Ceiling on one embedding call. A warm call takes well under a second; a
-    /// cold model load takes seconds (10 s measured right after an Ollama
-    /// reinstall), so the ceiling is sized for a cold load.
+    /// How long one /status call waits for the embedding. A warm call takes well
+    /// under a second; a cold load after Ollama idled (it unloads models after
+    /// 5 minutes) can take 15 s or more because Ollama rediscovers its GPU first.
+    /// When this elapses the call reports the model as still loading. It does
+    /// not cancel the embedding: Ollama aborts a load whose client disconnects,
+    /// so cutting it here would restart the load on every probe.
     /// </summary>
     public TimeSpan EmbeddingProbeTimeout { get; init; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// Ceiling on the embedding itself. Past it the model is not loading, it is
+    /// stuck, and the probe reports a failure.
+    /// </summary>
+    public TimeSpan EmbeddingLoadCeiling { get; init; } = TimeSpan.FromSeconds(90);
 
     public async Task<ChatbotStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
@@ -115,13 +125,23 @@ public sealed class ChatProviderReadinessProbe(
         // /api/tags stayed 200 while every embed and generate call failed, and
         // /status reported ready. One real embedding catches that.
         var embedding = await TryEmbeddingAsync(cancellationToken);
-        providerStatus.EmbeddingRoundTripOk = embedding?.Success;
-        if (embedding is { Success: false } failed)
+        if (embedding is { } probed)
         {
-            providerStatus.IsAvailable = false;
-            providerStatus.Message = string.IsNullOrEmpty(providerStatus.Message)
-                ? failed.Diagnostic
-                : $"{providerStatus.Message} | Embedding: {failed.Diagnostic}";
+            // Success is null while the model is still loading: not a failure,
+            // so availability is left as it was and the message says why the
+            // check is still open.
+            providerStatus.EmbeddingRoundTripOk = probed.Success;
+            if (probed.Success is not true)
+            {
+                if (probed.Success is false)
+                {
+                    providerStatus.IsAvailable = false;
+                }
+
+                providerStatus.Message = string.IsNullOrEmpty(providerStatus.Message)
+                    ? probed.Diagnostic
+                    : $"{providerStatus.Message} | {probed.Diagnostic}";
+            }
         }
 
         // Generation outcome: none of the checks above generates, so a provider
@@ -149,11 +169,14 @@ public sealed class ChatProviderReadinessProbe(
     /// Embeds one short text with the generator the semantic router uses
     /// (the <c>routing</c> purpose, else the default generator). Returns
     /// <see langword="null"/> when no embedder is registered: embeddings are
-    /// optional in this host, so there is nothing to probe. Outcomes are
-    /// cached for <see cref="EmbeddingProbeCacheTtl"/> and concurrent callers
-    /// share one call.
+    /// optional in this host, so there is nothing to probe. A finished outcome
+    /// is cached for <see cref="EmbeddingProbeCacheTtl"/>. Concurrent callers
+    /// share one call, and a call that outlasts <see cref="EmbeddingProbeTimeout"/>
+    /// keeps running: its caller gets a "loading" outcome (<c>Success</c> null).
+    /// The diagnostic names the model the probe actually embedded with, which is
+    /// the router's model, not necessarily <c>Ollama:EmbeddingModel</c>.
     /// </summary>
-    private async Task<(bool Success, string Diagnostic)?> TryEmbeddingAsync(CancellationToken outerCt)
+    private async Task<(bool? Success, string Diagnostic)?> TryEmbeddingAsync(CancellationToken outerCt)
     {
         var generator = serviceProvider.GetService<IEmbeddingGeneratorFactory>()?.Create("routing")
             ?? serviceProvider.GetService<IEmbeddingGenerator<string, Embedding<float>>>();
@@ -162,32 +185,67 @@ public sealed class ChatProviderReadinessProbe(
             return null;
         }
 
+        var label = generator.GetService<EmbeddingGeneratorMetadata>()?.DefaultModelId is { Length: > 0 } model
+            ? $"Embedding ({model})"
+            : "Embedding";
+
+        Task<(bool Success, string Diagnostic)> probe;
         await _embeddingProbeGate.WaitAsync(outerCt);
         try
         {
             if (_lastEmbeddingProbe is { } cached && DateTime.UtcNow - cached.At < EmbeddingProbeCacheTtl)
             {
-                return (cached.Success, cached.Diagnostic);
+                return (cached.Success, $"{label}: {cached.Diagnostic}");
             }
 
-            var result = await RunEmbeddingProbeAsync(generator, outerCt);
-            _lastEmbeddingProbe = (DateTime.UtcNow, result.Success, result.Diagnostic);
-            return result;
+            if (_pendingEmbeddingProbe is null or { IsCompleted: true })
+            {
+                // Detached from the caller: a /status request that ends must not
+                // cancel the load, because Ollama aborts a load whose client left.
+                _pendingEmbeddingProbe = RunEmbeddingProbeAsync(generator);
+            }
+
+            probe = _pendingEmbeddingProbe;
         }
         finally
         {
             _embeddingProbeGate.Release();
         }
+
+        var finished = await Task.WhenAny(probe, Task.Delay(EmbeddingProbeTimeout, outerCt));
+        outerCt.ThrowIfCancellationRequested();
+        if (finished != probe)
+        {
+            return (null,
+                $"{label}: model still loading after {EmbeddingProbeTimeout.TotalSeconds:0}s " +
+                "(first load after idle), check again shortly");
+        }
+
+        var result = await probe;
+        return (result.Success, $"{label}: {result.Diagnostic}");
     }
 
     private async Task<(bool Success, string Diagnostic)> RunEmbeddingProbeAsync(
-        IEmbeddingGenerator<string, Embedding<float>> generator,
-        CancellationToken outerCt)
+        IEmbeddingGenerator<string, Embedding<float>> generator)
     {
         try
         {
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(outerCt);
-            timeoutCts.CancelAfter(EmbeddingProbeTimeout);
+            var result = await EmbedOnceAsync(generator);
+            _lastEmbeddingProbe = (DateTime.UtcNow, result.Success, result.Diagnostic);
+            return result;
+        }
+        finally
+        {
+            Volatile.Write(ref _pendingEmbeddingProbe, null);
+        }
+    }
+
+    private async Task<(bool Success, string Diagnostic)> EmbedOnceAsync(
+        IEmbeddingGenerator<string, Embedding<float>> generator)
+    {
+        try
+        {
+            using var timeoutCts = new CancellationTokenSource(EmbeddingLoadCeiling);
 
             var sw = Stopwatch.StartNew();
             var embeddings = await generator.GenerateAsync([EmbeddingProbeText], cancellationToken: timeoutCts.Token);
@@ -198,13 +256,11 @@ public sealed class ChatProviderReadinessProbe(
                 ? (true, $"ok, {dimensions} dims in {sw.ElapsedMilliseconds}ms")
                 : (false, $"embedding call returned no vector in {sw.ElapsedMilliseconds}ms");
         }
-        catch (OperationCanceledException) when (!outerCt.IsCancellationRequested)
+        catch (OperationCanceledException)
         {
-            return (false, $"embedding timed out after {EmbeddingProbeTimeout.TotalSeconds}s");
+            return (false, $"embedding timed out after {EmbeddingLoadCeiling.TotalSeconds}s");
         }
-        // A caller that goes away is not a provider failure: let its cancellation
-        // propagate so it never reaches the shared cache.
-        catch (Exception ex) when (!outerCt.IsCancellationRequested)
+        catch (Exception ex)
         {
             logger.LogWarning(ex, "Embedding probe threw");
             return (false, $"embedding threw {ex.GetType().Name}: {ex.Message}");

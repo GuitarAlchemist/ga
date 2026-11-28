@@ -492,7 +492,7 @@ public class ChatProviderReadinessProbeTests
             JsonOk(HealthyTagsBody),
             intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
             embeddings: FakeEmbeddingGenerator.Hanging(),
-            embeddingTimeout: TimeSpan.FromMilliseconds(100));
+            embeddingLoadCeiling: TimeSpan.FromMilliseconds(100));
 
         var status = await probe.GetStatusAsync();
 
@@ -501,6 +501,61 @@ public class ChatProviderReadinessProbeTests
             Assert.That(status.EmbeddingRoundTripOk, Is.False);
             Assert.That(status.IsAvailable, Is.False);
             Assert.That(status.Message, Does.Contain("timed out"));
+        });
+    }
+
+    [Test]
+    public async Task GetStatusAsync_EmbeddingStillLoadingAfterWait_ReportsLoadingNotFailure()
+    {
+        // Issue #822: the first load after Ollama idled takes longer than the wait.
+        // That is a model loading, not a broken provider.
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            embeddings: FakeEmbeddingGenerator.Hanging(),
+            embeddingTimeout: TimeSpan.FromMilliseconds(100));
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.EmbeddingRoundTripOk, Is.Null, "unknown while loading, not false");
+            Assert.That(status.IsAvailable, Is.True, "a model that is loading is not a failed provider");
+            Assert.That(status.Message, Does.Contain("still loading"));
+        });
+    }
+
+    [Test]
+    public async Task GetStatusAsync_LoadOutlastsWait_NextCallJoinsItInsteadOfRestartingIt()
+    {
+        // Ollama aborts a load whose client disconnects, so a second probe must
+        // wait for the load in flight, not start another.
+        var release = new TaskCompletionSource();
+        var embeddings = new FakeEmbeddingGenerator(async _ =>
+        {
+            await release.Task;
+            return new GeneratedEmbeddings<Embedding<float>>([new Embedding<float>(new float[1024])]);
+        });
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            embeddings: embeddings,
+            embeddingTimeout: TimeSpan.FromMilliseconds(100));
+
+        var first = await probe.GetStatusAsync();
+        var second = await probe.GetStatusAsync();
+        release.SetResult();
+        await Task.Delay(100);
+        var third = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first.EmbeddingRoundTripOk, Is.Null);
+            Assert.That(second.EmbeddingRoundTripOk, Is.Null);
+            Assert.That(embeddings.Calls, Is.EqualTo(1), "one load, joined by every caller");
+            Assert.That(third.EmbeddingRoundTripOk, Is.True, "the finished load is reported once it lands");
         });
     }
 
@@ -544,35 +599,32 @@ public class ChatProviderReadinessProbeTests
     }
 
     [Test]
-    public void GetStatusAsync_CallerCancelsDuringEmbedding_PropagatesAndDoesNotCacheFailure()
+    public async Task GetStatusAsync_CallerCancelsDuringEmbedding_PropagatesAndDoesNotCacheFailure()
     {
         // A disconnecting /status caller must not leave a cached failure behind
-        // for the next 30 s of unrelated callers. The generator cancels the
-        // caller while the embedding is in flight.
-        CancellationTokenSource? caller = null;
-        var embeddings = new FakeEmbeddingGenerator(async ct =>
-        {
-            await caller!.CancelAsync();
-            await Task.Delay(Timeout.Infinite, ct);
-            return [];
-        });
+        // for the next 30 s of unrelated callers, and must not abort the load
+        // (Ollama aborts a load whose client disconnects, which restarts it).
+        var embeddings = FakeEmbeddingGenerator.Hanging();
         var probe = CreateProbe(
             HealthyOllamaConfig,
             JsonOk(HealthyTagsBody),
             intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
-            embeddings: embeddings);
+            embeddings: embeddings,
+            embeddingTimeout: TimeSpan.FromMilliseconds(500));
 
-        for (var attempt = 0; attempt < 2; attempt++)
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
+        Assert.That(
+            async () => await probe.GetStatusAsync(cts.Token),
+            Throws.InstanceOf<OperationCanceledException>());
+
+        var next = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
         {
-            using var cts = new CancellationTokenSource();
-            caller = cts;
-            Assert.That(
-                async () => await probe.GetStatusAsync(cts.Token),
-                Throws.InstanceOf<OperationCanceledException>());
-        }
-
-        Assert.That(embeddings.Calls, Is.EqualTo(2),
-            "the second caller must run its own probe instead of reading a cached failure");
+            Assert.That(embeddings.Calls, Is.EqualTo(1), "the load in flight is joined, not restarted");
+            Assert.That(next.EmbeddingRoundTripOk, Is.Null, "still loading, and no cached failure from the cancelled caller");
+            Assert.That(next.IsAvailable, Is.True);
+        });
     }
 
     [Test]
@@ -755,7 +807,8 @@ public class ChatProviderReadinessProbeTests
         IEmbeddingGenerator<string, Embedding<float>>? embeddings = null,
         IEmbeddingGeneratorFactory? embeddingFactory = null,
         TimeSpan? embeddingTimeout = null,
-        ChatGenerationHealth? generationHealth = null)
+        ChatGenerationHealth? generationHealth = null,
+        TimeSpan? embeddingLoadCeiling = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(values)
@@ -793,6 +846,7 @@ public class ChatProviderReadinessProbeTests
             generationHealth)
         {
             EmbeddingProbeTimeout = embeddingTimeout ?? TimeSpan.FromSeconds(10), // production default
+            EmbeddingLoadCeiling = embeddingLoadCeiling ?? TimeSpan.FromSeconds(90), // production default
         };
     }
 
