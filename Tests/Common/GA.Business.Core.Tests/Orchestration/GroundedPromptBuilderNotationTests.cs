@@ -25,6 +25,9 @@ public sealed class GroundedPromptBuilderNotationTests
             Assert.That(prompt, Does.Contain("fenced `vextab` block"));
             Assert.That(prompt, Does.Contain("string 6 = low E"));
             Assert.That(prompt, Does.Contain("Fingering: x-3-2-0-1-0"));
+            // The manifest carries known fingerings, so this prompt keeps the VexTab contract
+            // instead of the ungrounded no-frets rule.
+            Assert.That(prompt, Does.Not.Contain("do not write fret numbers"));
         });
     }
 
