@@ -165,6 +165,8 @@ jobs:
     if: needs.gate.outputs.run_review == 'true' && needs.gate.outputs.token_present == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      report: ${{ steps.report.outputs.changed }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -214,23 +216,67 @@ jobs:
                the same candidates.
           claude_args: '--model claude-sonnet-5 --allowed-tools "Agent,Read,Grep,Glob,Write,Bash(gh issue list:*),Bash(gh issue create:*),Bash(date:*)"'
 
+      # The report is committed and pushed by the `publish` job, on a fresh runner
+      # the agent never touched, so nothing Claude wrote here can reach the
+      # ruleset-bypass key. (claude-code-action also leaves origin on its app
+      # token, revoked by the time a later step here could push.)
+      - name: Check for a report
+        id: report
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain -- state/quality/architecture-refinement/)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No report produced — nothing to commit."
+          fi
+
+      - name: Hand the report to the publish job
+        if: steps.report.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-refinement-report
+          path: state/quality/architecture-refinement/
+          retention-days: 1
+
+  publish:
+    name: Commit the report
+    needs: [gate, review]
+    if: needs.review.outputs.report == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Take the report from the review job
+        uses: actions/download-artifact@v4
+        with:
+          name: architecture-refinement-report
+          path: state/quality/architecture-refinement/
+
       - name: Commit the report
+        id: commit
         shell: bash
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add state/quality/architecture-refinement/ 2>/dev/null || true
+          git add state/quality/architecture-refinement/
           if git diff --cached --quiet; then
-            echo "No report produced — nothing to commit."
+            echo "Report identical to the checked-out tree — nothing to commit."
             exit 0
           fi
 
           git commit -m "chore(arch): architecture-refinement report $(date -u +%Y-%m-%d) (${{ needs.gate.outputs.slug }}) [skip ci]"
-          for attempt in 1 2 3; do
-            if git push origin HEAD:main; then exit 0; fi
-            echo "::warning::push failed (attempt ${attempt}); rebasing and retrying."
-            git pull --rebase origin main || true
-          done
-          echo "::error::Could not push the report after 3 attempts."
-          exit 1
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push the report to main
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          attempts: 3
