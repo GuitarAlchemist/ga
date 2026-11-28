@@ -76,6 +76,24 @@ public sealed class RoutingContextEnricher(ConversationHistoryStore historyStore
         if (message.Length > FollowUpMaxLength) return message;
         if (!FollowUpPrefix.IsMatch(message.TrimStart())) return message;
 
+        return WithPriorUserTurn(message, sessionId, requestHistory) ?? message;
+    }
+
+    /// <summary>
+    /// Returns <paramref name="message"/> with the most recent prior user message prepended, or
+    /// <c>null</c> when there is no prior user turn or the message is longer than
+    /// <see cref="FollowUpMaxLength"/>. The orchestrator routes with it when the bare message
+    /// claims no intent: an elliptical follow-up such as "And a C shape?" carries too little
+    /// meaning to embed on its own, while the previous question it continues does.
+    /// </summary>
+    public string? WithPriorUserTurn(
+        string message,
+        string sessionId,
+        IReadOnlyList<ConversationTurn>? requestHistory)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return null;
+        if (message.Length > FollowUpMaxLength) return null;
+
         // Look in two places. (1) Session-scoped store — the just-added user
         // turn is the last entry; we want the most recent EARLIER user turn.
         // (2) Request-supplied history — the React frontend posts the prior
@@ -93,7 +111,7 @@ public sealed class RoutingContextEnricher(ConversationHistoryStore historyStore
             priorUser = FindMostRecentPriorUserTurn(requestHistory, skipLast: false);
         }
 
-        if (priorUser is null) return message;
+        if (priorUser is null) return null;
 
         var priorContent = TruncatePreservingSurrogates(priorUser.Content, PriorTurnMaxChars);
         return $"{priorContent} {message}";

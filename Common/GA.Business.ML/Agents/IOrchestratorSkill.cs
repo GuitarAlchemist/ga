@@ -41,6 +41,12 @@ public interface IOrchestratorSkill
     bool CanHandle(string message);
 
     /// <summary>
+    /// True when the history-aware <c>ExecuteAsync</c> resolves an elliptical follow-up ("And a
+    /// C shape?") against the previous turns and declines one it cannot resolve. Default: false.
+    /// </summary>
+    bool ResolvesFollowUps => false;
+
+    /// <summary>
     /// Executes the skill: compute with domain logic, optionally explain via LLM.
     /// </summary>
     Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default);

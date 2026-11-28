@@ -53,6 +53,12 @@ public sealed class BeginnerChordsSkill(ILogger<BeginnerChordsSkill> logger) : I
 
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
+        // The catalog answers a request for chords to learn. A message that does not ask about
+        // chords ("Show me an easy way to play it on guitar." after a D7 question) is about
+        // something named earlier: decline so an agent with the conversation answers it.
+        if (message?.Contains("chord", StringComparison.OrdinalIgnoreCase) != true)
+            return Task.FromResult(NotAChordListRequest());
+
         var sb = new StringBuilder();
         sb.AppendLine("Here are eight open-position chords every beginner should learn first. Diagrams are low-to-high (E A D G B e); `0` = open string, `x` = mute.");
         sb.AppendLine();
@@ -80,4 +86,13 @@ public sealed class BeginnerChordsSkill(ILogger<BeginnerChordsSkill> logger) : I
             Assumptions = ["Standard tuning EADGBe, open position"],
         });
     }
+
+    private static AgentResponse NotAChordListRequest() => new()
+    {
+        Declined   = true,
+        AgentId    = AgentIds.Theory,
+        Result     = "Ask for chords to learn (\"Show me some easy beginner chords\").",
+        Confidence = 0.1f,
+        Evidence   = ["BeginnerChordsSkill: the message does not ask about chords"],
+    };
 }

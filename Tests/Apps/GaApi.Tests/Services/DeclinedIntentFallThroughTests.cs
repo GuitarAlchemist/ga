@@ -5,6 +5,7 @@ using GA.Business.Core.Orchestration.Services;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Extensions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
@@ -111,12 +112,110 @@ public class DeclinedIntentFallThroughTests
         Assert.That(intent.ReceivedHistory, Is.EqualTo(new[] { new ChatHistoryTurn("user", PriorTurn) }));
     }
 
-    private sealed class HistoryRecordingIntent : IIntent
+    // An elliptical follow-up ("And a C shape?") carries too little meaning to route on its
+    // own. When it claims no intent, the router reads it with the previous user turn, and the
+    // intent that wins receives the raw message plus the history to resolve it.
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task EllipticalFollowUp_BelowThreshold_RoutesWithThePreviousUserTurn(bool streaming)
     {
+        const string capoQuestion = "With a capo on fret 2, what key does a G shape sound in?";
+        var intent = new HistoryRecordingIntent(examplePrompt: capoQuestion, resolvesFollowUps: true);
+        var chat = new RecordingChatClient();
+        using var factory = CreateFactory(intent, chat, new TopicEmbeddingGenerator("capo"));
+        using var scope = factory.Services.CreateScope();
+        var orchestrator = scope.ServiceProvider.GetRequiredService<ProductionOrchestrator>();
+        var request = new ChatRequest(
+            "And a C shape?",
+            History:
+            [
+                new ConversationTurn("user", capoQuestion, DateTimeOffset.UnixEpoch),
+                new ConversationTurn("assistant", "A G shape with a capo on fret 2 sounds as A.", DateTimeOffset.UnixEpoch),
+            ]);
+
+        var response = streaming
+            ? await orchestrator.AnswerStreamingAsync(request, _ => Task.CompletedTask)
+            : await orchestrator.AnswerAsync(request);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Routing?.AgentId, Is.EqualTo(intent.Id));
+            Assert.That(intent.ReceivedQuery, Is.EqualTo("And a C shape?"), "the intent parses the raw message");
+            Assert.That(intent.ReceivedHistory?.Select(t => t.Content), Does.Contain(capoQuestion));
+            Assert.That(chat.Prompts, Is.Empty, "the intent answers without the LLM agent path");
+        });
+    }
+
+    // An intent that answers the same way whatever the message (a catalog page) cannot resolve
+    // a follow-up: "Thanks" after a practice-routine question must not repeat the routine
+    // (Codex review on #913).
+    [Test]
+    public async Task BelowThresholdMessage_ContextualMatchThatDoesNotResolveFollowUps_FallsThrough()
+    {
+        const string routineQuestion = "Give me a 30-minute practice routine.";
+        var intent = new HistoryRecordingIntent(examplePrompt: routineQuestion, resolvesFollowUps: false);
+        var chat = new RecordingChatClient();
+        using var factory = CreateFactory(intent, chat, new TopicEmbeddingGenerator("routine"));
+        using var scope = factory.Services.CreateScope();
+        var orchestrator = scope.ServiceProvider.GetRequiredService<ProductionOrchestrator>();
+        var request = new ChatRequest(
+            "Thanks",
+            History: [new ConversationTurn("user", routineQuestion, DateTimeOffset.UnixEpoch)]);
+
+        var response = await orchestrator.AnswerAsync(request);
+
+        Assert.That(response.Routing?.AgentId, Is.Not.EqualTo(intent.Id));
+        Assert.That(intent.ReceivedQuery, Is.Null);
+    }
+
+    // Without a previous user turn there is nothing to read the message with: it falls through.
+    [Test]
+    public async Task BelowThresholdMessage_WithoutHistory_FallsThroughToAgentPath()
+    {
+        var intent = new HistoryRecordingIntent(
+            examplePrompt: "With a capo on fret 2, what key does a G shape sound in?", resolvesFollowUps: true);
+        var chat = new RecordingChatClient();
+        using var factory = CreateFactory(intent, chat, new TopicEmbeddingGenerator("capo"));
+        using var scope = factory.Services.CreateScope();
+        var orchestrator = scope.ServiceProvider.GetRequiredService<ProductionOrchestrator>();
+
+        var response = await orchestrator.AnswerAsync(new ChatRequest("And a C shape?"));
+
+        Assert.That(response.Routing?.AgentId, Is.Not.EqualTo(intent.Id));
+        Assert.That(intent.ReceivedQuery, Is.Null);
+    }
+
+    private static WebApplicationFactory<Program> CreateFactory(
+        IIntent intent,
+        IChatClient chat,
+        IEmbeddingGenerator<string, Embedding<float>> embeddings) =>
+        new TestWebApplicationFactory().WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("Ollama:Endpoint", "http://127.0.0.1:9");
+            builder.UseSetting("Ollama:BaseUrl", "http://127.0.0.1:9");
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<IIntent>();
+                services.AddSingleton(intent);
+                services.RemoveAll<IEmbeddingGenerator<string, Embedding<float>>>();
+                services.AddSingleton(embeddings);
+                services.RemoveAll<IEmbeddingGeneratorFactory>();
+                services.AddSingleton<IEmbeddingGeneratorFactory>(new ConstantEmbeddingGeneratorFactory(embeddings));
+                services.RemoveAll<IChatClient>();
+                services.AddSingleton(chat);
+            });
+        });
+
+    private sealed class HistoryRecordingIntent(
+        string examplePrompt = "Describe his playing style.",
+        bool resolvesFollowUps = false) : IIntent
+    {
+        public bool ResolvesFollowUps => resolvesFollowUps;
+        public string? ReceivedQuery { get; private set; }
         public IReadOnlyList<ChatHistoryTurn>? ReceivedHistory { get; private set; }
         public string Id => "skill.recording";
-        public string Description => "Records the history it receives";
-        public IReadOnlyList<string> ExamplePrompts => ["Describe his playing style."];
+        public string Description => examplePrompt;
+        public IReadOnlyList<string> ExamplePrompts => [examplePrompt];
 
         public Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default) =>
             ExecuteAsync(query, [], cancellationToken);
@@ -126,6 +225,7 @@ public class DeclinedIntentFallThroughTests
             IReadOnlyList<ChatHistoryTurn> history,
             CancellationToken cancellationToken = default)
         {
+            ReceivedQuery = query;
             ReceivedHistory = history;
             return Task.FromResult(new IntentResult("ok"));
         }
@@ -142,7 +242,7 @@ public class DeclinedIntentFallThroughTests
             Task.FromResult(new IntentResult(DeclineText, Confidence: 0.1f, Declined: declined));
     }
 
-    private sealed class ConstantEmbeddingGeneratorFactory(ConstantEmbeddingGenerator embeddings) : IEmbeddingGeneratorFactory
+    private sealed class ConstantEmbeddingGeneratorFactory(IEmbeddingGenerator<string, Embedding<float>> embeddings) : IEmbeddingGeneratorFactory
     {
         public IEmbeddingGenerator<string, Embedding<float>> Create(string purpose) => embeddings;
     }
@@ -156,6 +256,25 @@ public class DeclinedIntentFallThroughTests
             CancellationToken cancellationToken = default) =>
             Task.FromResult(new GeneratedEmbeddings<Embedding<float>>(
                 values.Select(_ => new Embedding<float>(new float[] { 1f, 0f, 0f }))));
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose() { }
+    }
+
+    // A text that mentions the topic embeds on one axis, any other text on an orthogonal one,
+    // so a message routes to the topic's intent only when it is read with a turn naming the topic.
+    private sealed class TopicEmbeddingGenerator(string topic) : IEmbeddingGenerator<string, Embedding<float>>
+    {
+        public Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
+            IEnumerable<string> values,
+            EmbeddingGenerationOptions? options = null,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new GeneratedEmbeddings<Embedding<float>>(
+                values.Select(value => new Embedding<float>(Axis(value)))));
+
+        private float[] Axis(string value) =>
+            value.Contains(topic, StringComparison.OrdinalIgnoreCase) ? [1f, 0f, 0f] : [0f, 1f, 0f];
 
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
 

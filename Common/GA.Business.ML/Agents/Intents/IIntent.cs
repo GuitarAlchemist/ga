@@ -37,6 +37,12 @@ public interface IIntent
     /// embeddings work. Default: <c>false</c> (the intent is embedding-routed only).</summary>
     bool MatchesWithoutEmbeddings(string query) => false;
 
+    /// <summary>True when the intent reads an elliptical follow-up ("And a C shape?") against
+    /// the history passed to <see cref="ExecuteAsync(string, IReadOnlyList{ChatHistoryTurn}, CancellationToken)"/>,
+    /// and declines one it cannot resolve. Only such intents may be picked by routing a message
+    /// together with the previous user turn. Default: <c>false</c>.</summary>
+    bool ResolvesFollowUps => false;
+
     /// <summary>Run the intent against the user query. Implementations should
     /// return a zero-confidence result rather than throwing for recoverable
     /// errors (e.g. unparseable input) so the chatbot pipeline can degrade

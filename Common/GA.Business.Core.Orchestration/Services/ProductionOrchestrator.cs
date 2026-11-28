@@ -89,7 +89,7 @@ public class ProductionOrchestrator(
     /// intent crossed threshold) we still emit the step so the trace shows
     /// WHY we fell through to the LLM agent path.
     /// </remarks>
-    private void EmitRoutingTrace(IntentMatch? match)
+    private void EmitRoutingTrace(IntentMatch? match, string stepName = "routing.candidates")
     {
         if (match is { Ranking: { Count: > 0 } ranking })
         {
@@ -110,13 +110,13 @@ public class ProductionOrchestrator(
                 attrs[$"routing.top{i + 1}.final"]    = c.FinalScore;
                 attrs[$"routing.top{i + 1}.matched"]  = c.MatchedSource;
             }
-            traceCapture.AddStep("routing.candidates", "completed", 0, attrs);
+            traceCapture.AddStep(stepName, "completed", 0, attrs);
             return;
         }
 
         // No match — fall-through to LLM path. Still emit the step so the
         // trace shows we DID try semantic routing and chose to give up.
-        traceCapture.AddStep("routing.candidates", "completed", 0,
+        traceCapture.AddStep(stepName, "completed", 0,
             new Dictionary<string, object?>
             {
                 ["routing.outcome"] = "below_threshold_or_unavailable",
@@ -326,12 +326,20 @@ public class ProductionOrchestrator(
         // task #168.
         var routingMessage = routingContextEnricher.EnrichIfFollowUp(turn.Message, sessionId, req.History);
 
+        // An elliptical follow-up ("And a C shape?" after a capo question) that claims no
+        // intent on its own is routed again with the previous user turn as semantic context.
+        // Only an intent that resolves follow-ups may take it; it still parses the raw message
+        // with the history, and declines if it cannot resolve it.
+        var contextualRoutingMessage = string.Equals(routingMessage, turn.Message, StringComparison.Ordinal)
+            ? routingContextEnricher.WithPriorUserTurn(turn.Message, sessionId, req.History)
+            : null;
+
         // ── Unified semantic intent dispatch with the hook lifecycle ─────────
         // One embedding similarity pass over IIntent registrations covers
         // algebra, deterministic skills, and tab-handling intents. See
         // docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
         // §"Routing classifiers".
-        if (await TryDispatchViaIntentAsync(turn, routingMessage, ct) is { } intentResponse)
+        if (await TryDispatchViaIntentAsync(turn, routingMessage, contextualRoutingMessage, ct) is { } intentResponse)
         {
             return intentResponse;
         }
@@ -366,13 +374,25 @@ public class ProductionOrchestrator(
     /// score. May be enriched with prior conversation context. The intent's
     /// <c>ExecuteAsync</c> receives <see cref="CascadeTurn.Message"/> so its
     /// internal regex parsers see the raw text without the enrichment prefix.</param>
+    /// <param name="contextualRoutingMessage">The message read with the previous user turn,
+    /// routed only when <paramref name="routingMessage"/> claims no intent; null to skip. Its
+    /// match counts only for an intent that resolves follow-ups: a catalog intent answers the
+    /// same page whatever the message, so "Thanks" would repeat the previous answer.</param>
     private async Task<ChatResponse?> TryDispatchViaIntentAsync(
         CascadeTurn turn,
         string routingMessage,
+        string? contextualRoutingMessage,
         CancellationToken ct)
     {
         var match = await intentRouter.RouteAsync(routingMessage, services, ct);
         EmitRoutingTrace(match);
+        if (match is null && contextualRoutingMessage is not null)
+        {
+            match = await intentRouter.RouteAsync(contextualRoutingMessage, services, ct);
+            EmitRoutingTrace(match, "routing.candidates.with_previous_turn");
+            if (match is { Intent.ResolvesFollowUps: false }) match = null;
+        }
+
         if (match is not { } pick) return null;
 
         // A tab intent picked for a tabless message (e.g. "give me a ii-V-I progression

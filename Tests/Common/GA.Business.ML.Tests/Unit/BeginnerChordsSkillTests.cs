@@ -70,4 +70,24 @@ public class BeginnerChordsSkillTests
             "evidence should include one entry per catalog chord plus the catalog-size summary");
         Assert.That(response.Evidence, Has.Some.Contains("C major: x-3-2-0-1-0"));
     }
+
+    // The catalog answers a request for chords to learn. "Show me an easy way to play it on
+    // guitar." after "What notes are in a D7 chord?" asks how to play one chord the user named
+    // earlier: the skill declines so an agent with the conversation answers it.
+    [TestCase("Show me an easy way to play it on guitar.")]
+    [TestCase("How do I play that?")]
+    public async Task MessageNotAskingForChords_Declines(string message)
+    {
+        var response = await MakeSkill().ExecuteAsync(message);
+
+        Assert.That(response.Declined, Is.True, response.Result);
+    }
+
+    [Test]
+    public async Task EveryExamplePrompt_IsAnswered()
+    {
+        var skill = MakeSkill();
+        foreach (var prompt in skill.ExamplePrompts)
+            Assert.That((await skill.ExecuteAsync(prompt)).Declined, Is.False, prompt);
+    }
 }
