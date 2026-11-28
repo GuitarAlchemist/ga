@@ -25,6 +25,7 @@ public sealed class OnnxEmbeddingService(
 {
     private readonly ILogger<OnnxEmbeddingService> _logger = logger ?? NullLogger<OnnxEmbeddingService>.Instance;
     private readonly InitializationContext _ctx = Initialize(options, sessionFactory ?? DefaultOnnxSessionFactory.Instance, logger ?? NullLogger<OnnxEmbeddingService>.Instance);
+    private const string TokenTypeIdsNodeName = "token_type_ids";
     private readonly int _maxTokens = Math.Max(options.MaxTokens, 2);
     private bool _disposed;
 
@@ -108,10 +109,17 @@ public sealed class OnnxEmbeddingService(
 
         var inputValue = NamedOnnxValue.CreateFromTensor(Options.InputIdsNodeName, inputTensor);
         var attentionValue = NamedOnnxValue.CreateFromTensor(Options.AttentionMaskNodeName, attentionTensor);
+        List<NamedOnnxValue> inputs = [inputValue, attentionValue];
+        if (Session.InputNames.Contains(TokenTypeIdsNodeName))
+        {
+            // Single-segment input: every token belongs to segment 0.
+            inputs.Add(NamedOnnxValue.CreateFromTensor(
+                TokenTypeIdsNodeName, new DenseTensor<long>(new long[attentionMask.Length], [1, attentionMask.Length])));
+        }
 
         try
         {
-            using var outputs = Session.Run(new[] { inputValue, attentionValue });
+            using var outputs = Session.Run(inputs);
 
             var tokenEmbeddings = outputs
                 .FirstOrDefault(output => output.Name == Options.OutputNodeName)?.AsTensor<float>()
@@ -151,9 +159,10 @@ public sealed class OnnxEmbeddingService(
             tokenIds[^1] = SepTokenId;
         }
 
-        var inputIds = new long[_maxTokens];
-        var attentionMask = new long[_maxTokens];
         var validLength = Math.Min(tokenIds.Count, _maxTokens);
+        var sequenceLength = Options.PadToMaxTokens ? _maxTokens : validLength;
+        var inputIds = new long[sequenceLength];
+        var attentionMask = new long[sequenceLength];
 
         for (var i = 0; i < validLength; i++)
         {
@@ -161,13 +170,13 @@ public sealed class OnnxEmbeddingService(
             attentionMask[i] = 1;
         }
 
-        for (var i = validLength; i < _maxTokens; i++)
+        for (var i = validLength; i < sequenceLength; i++)
         {
             inputIds[i] = PadTokenId;
         }
 
-        var inputTensor = new DenseTensor<long>(inputIds, [1, _maxTokens]);
-        var attentionTensor = new DenseTensor<long>(attentionMask, [1, _maxTokens]);
+        var inputTensor = new DenseTensor<long>(inputIds, [1, sequenceLength]);
+        var attentionTensor = new DenseTensor<long>(attentionMask, [1, sequenceLength]);
 
         return (inputTensor, attentionTensor, attentionMask);
     }
@@ -215,7 +224,9 @@ public sealed class OnnxEmbeddingService(
 
             var current = char.ToLowerInvariant(character);
 
-            if (char.IsLetterOrDigit(current) || current == '\'' || current == '#')
+            // Every other character splits, as in BERT's basic tokenizer: punctuation
+            // (apostrophe and '#' included) becomes its own token, whitespace is dropped.
+            if (char.IsLetterOrDigit(current))
             {
                 builder.Append(current);
                 continue;
@@ -487,6 +498,13 @@ public sealed class OnnxEmbeddingOptions
     public string OutputNodeName { get; set; } = "last_hidden_state";
     public OnnxEmbeddingPoolingStrategy PoolingStrategy { get; set; } = OnnxEmbeddingPoolingStrategy.Mean;
     public bool NormalizeEmbeddings { get; set; } = true;
+
+    /// <summary>
+    /// Pad every input to <see cref="MaxTokens"/> (needed by graphs exported with a fixed
+    /// sequence length). False runs each text at its own length, which is much cheaper for
+    /// short texts on graphs with a dynamic sequence axis; masked pooling gives the same vector.
+    /// </summary>
+    public bool PadToMaxTokens { get; set; } = true;
 }
 
 public enum OnnxEmbeddingPoolingStrategy
@@ -500,6 +518,9 @@ public enum OnnxEmbeddingPoolingStrategy
 /// </summary>
 public interface IOnnxSession : IDisposable
 {
+    /// <summary>Input names the graph declares (e.g. <c>token_type_ids</c> on BERT exports).</summary>
+    IReadOnlyCollection<string> InputNames => [];
+
     IDisposableReadOnlyCollection<NamedOnnxValue> Run(IReadOnlyCollection<NamedOnnxValue> inputs);
 }
 
@@ -524,6 +545,8 @@ internal sealed class DefaultOnnxSessionFactory : IOnnxSessionFactory
     private sealed class OnnxRuntimeSession(string modelPath) : IOnnxSession
     {
         private readonly InferenceSession _session = new(modelPath);
+
+        public IReadOnlyCollection<string> InputNames => [.. _session.InputMetadata.Keys];
 
         public IDisposableReadOnlyCollection<NamedOnnxValue> Run(IReadOnlyCollection<NamedOnnxValue> inputs)
             => new DisposableCollectionAdapter(_session.Run(inputs));

@@ -206,6 +206,14 @@ public static class AiServiceExtensions
                     Providers.OllamaProvider.CreateEmbeddingGeneratorFromConfig(configuration));
                 break;
 
+            // In-process model from AI:Embedding:Default:OnnxDir (e.g. nomic-embed-text-v1.5,
+            // Pooling=mean): the same vectors as Ollama's nomic-embed-text, without a server.
+            case "onnx":
+                services.TryAddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
+                    Text.Onnx.OnnxEmbeddingConfig.Create(
+                        configuration, "AI:Embedding:Default", sp.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()));
+                break;
+
             case "docker":
                 services.TryAddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(_ =>
                     Providers.DockerModelRunnerProvider.CreateEmbeddingGeneratorFromConfig(configuration));
