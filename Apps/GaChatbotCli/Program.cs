@@ -7,11 +7,11 @@
 ///   dotnet run --project Apps/GaChatbotCli -- -i              (interactive mode)
 ///
 /// Prints routing metadata + response to stdout.
-/// Set ANTHROPIC_API_KEY to enable SKILL.md-driven skills.
+/// The chat provider comes from AI:ChatProvider (default claude: set ANTHROPIC_API_KEY;
+/// set AI__ChatProvider=ollama to use a local Ollama instead).
 /// </summary>
 
 using System.Text.Json;
-using Anthropic;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Extensions;
 using GA.Business.Core.Orchestration.Models;
@@ -68,17 +68,11 @@ builder.Services.TryAddSingleton<SchemaDiscoveryService>();
 builder.Services.TryAddSingleton<IEmbeddingGenerator<string, Embedding<float>>, NullEmbeddingGenerator>();
 
 // IChatClient for the base agents (TheoryAgent, TabAgent, etc.) and SKILL.md skills.
-// Prefer Anthropic when ANTHROPIC_API_KEY is set; fall back to Ollama for local dev.
-var anthropicKeyForCli = builder.Configuration["Anthropic:ApiKey"]
-    ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
-builder.Services.TryAddSingleton<IChatClient>(_ =>
-    !string.IsNullOrWhiteSpace(anthropicKeyForCli)
-        ? new AnthropicClient { ApiKey = anthropicKeyForCli }
-              .AsIChatClient("claude-sonnet-5")
-              .AsBuilder()
-              .UseFunctionInvocation()
-              .Build()
-        : (IChatClient)new OllamaChatClient(new Uri("http://localhost:11434"), "llama3.2"));
+// The provider comes from AI:ChatProvider (default claude, which needs ANTHROPIC_API_KEY);
+// Ollama is used only when AI:ChatProvider is ollama.
+builder.Services.AddGuitarAlchemistChatClient(
+    builder.Configuration["AI:ChatProvider"] ?? "claude",
+    builder.Configuration);
 
 // Stub narrator for CLI — SpectralRagOrchestrator requires IGroundedNarrator but the CLI
 // surfaces the raw orchestrator answer; the narrator result is never used here.
@@ -88,10 +82,12 @@ var host = builder.Build();
 
 // ── Execute ────────────────────────────────────────────────────────────────
 using var scope = host.Services.CreateScope();
-var orchestrator = scope.ServiceProvider.GetRequiredService<IHarmonicChatOrchestrator>();
 
 try
 {
+    // Resolved inside the try so a missing provider key prints one line, not a stack trace.
+    var orchestrator = scope.ServiceProvider.GetRequiredService<IHarmonicChatOrchestrator>();
+
     if (interactive)
         return await RunInteractiveAsync(orchestrator);
 

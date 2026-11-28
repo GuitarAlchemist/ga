@@ -5,6 +5,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Business.ML.Abstractions;
+using Business.ML.Extensions;
+using GA.Providers.Anthropic;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 
 /// <summary>
@@ -55,19 +60,26 @@ public static class AssertAi
     public static void ConfigureJudge(IJudgeService service) => _judgeService = service;
 
     /// <summary>
-    ///     Automatically configures the Judge service if environment variables are set.
-    ///     GA_OLLAMA_BASE_URL (e.g. http://localhost:11434)
-    ///     GA_OLLAMA_MODEL (e.g. mistral)
+    ///     Configures the Judge service from the shared chat-provider selection
+    ///     (<c>AI:ChatProvider</c>, default <c>claude</c>; <c>ollama</c> only when set explicitly).
+    ///     Reads environment variables (<c>AI__ChatProvider</c>, <c>ANTHROPIC_API_KEY</c>, ...) when
+    ///     <paramref name="configuration" /> is null. Leaves the judge unconfigured when the provider
+    ///     is Claude and no API key is available.
     /// </summary>
-    public static void AutoConfigureJudge()
+    /// <returns>The provider the judge now uses, or null when nothing was configured.</returns>
+    public static string? AutoConfigureJudge(IConfiguration? configuration = null)
     {
-        var baseUrl = Environment.GetEnvironmentVariable("GA_OLLAMA_BASE_URL");
-        if (!string.IsNullOrWhiteSpace(baseUrl))
+        configuration ??= new ConfigurationBuilder().AddEnvironmentVariables().Build();
+        var provider = (configuration["AI:ChatProvider"] ?? "claude").ToLowerInvariant();
+        if (provider is "claude" or "anthropic" && !AnthropicProvider.IsAvailable(configuration))
         {
-            var model = Environment.GetEnvironmentVariable("GA_OLLAMA_MODEL") ?? "mistral";
-            var client = new HttpClient { BaseAddress = new(baseUrl) };
-            _judgeService = new OllamaJudgeService(client, model);
+            return null;
         }
+
+        var services = new ServiceCollection().AddGuitarAlchemistChatClient(provider, configuration);
+        var chatClient = services.BuildServiceProvider().GetRequiredService<IChatClient>();
+        _judgeService = new ChatClientJudgeService(chatClient);
+        return provider;
     }
 
     /// <summary>

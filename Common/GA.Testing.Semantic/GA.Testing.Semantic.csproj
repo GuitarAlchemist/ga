@@ -14,6 +14,7 @@
     <PackageReference Include="NUnit" Version="4.2.2"/>
     <PackageReference Include="System.Numerics.Tensors" Version="10.0.2"/>
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.2"/>
   </ItemGroup>
 
   <ItemGroup>
