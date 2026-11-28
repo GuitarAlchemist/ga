@@ -47,32 +47,49 @@ public sealed class TheoryComparisonSkill(ILogger<TheoryComparisonSkill> logger)
         "How do major and minor differ",
     ];
 
-    public bool CanHandle(string message) => false;  // semantic-routing only
+    // Semantic routing is the normal path; this predicate only serves the offline
+    // keyword fallback (embeddings unavailable), so it accepts exactly the
+    // phrasings ExecuteAsync answers.
+    public bool CanHandle(string message) => MatchPair(message) is (not null, not null);
 
     // Match "difference between X and Y", "compare X and Y", "X vs Y",
     // "X versus Y", "how do X and Y differ", "X and Y difference".
     // Quality tokens are kept narrow so unrelated comparisons
     // ("C major vs F major", "Hendrix vs Clapton") do not route here.
-    private const string QualityTokens = "major|minor";
+    // A quality may carry an article and a plural ("a major", "the minors")
+    // and a noun ("major scale", "minor chord").
+    private static string Quality(string group) =>
+        @"(?:(?:an?|the)\s+)?(?<" + group + @">majors?|minors?)(?:\s+(?:scales?|chords?|keys?|triads?))?";
+
+    private static readonly string A = Quality("a");
+    private static readonly string B = Quality("b");
 
     private static readonly Regex DifferencePattern =
-        new(@"\b(?:what(?:'s|\s+is)?\s+the\s+)?(?:difference|distinction)\s+between\s+(?<a>" + QualityTokens + @")\s+and\s+(?<b>" + QualityTokens + @")\b",
+        new(@"\b(?:difference|distinction)s?\s+between\s+" + A + @"\s+(?:and|vs\.?|versus)\s+" + B + @"\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex ComparePattern =
-        new(@"\bcompare\s+(?<a>" + QualityTokens + @")\s+(?:and|with|vs|versus)\s+(?<b>" + QualityTokens + @")\b",
+        new(@"\bcompar(?:e|ing|ison)\s+(?:of\s+|between\s+)?" + A + @"\s+(?:and|with|to|vs\.?|versus)\s+" + B + @"\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex VsPattern =
-        // Negative lookbehind keeps "C major vs C minor" out — that's a
-        // parallel-key question handled by RelativeKeySkill. Bare
-        // "major vs minor" with no preceding key letter falls through.
-        new(@"(?<![A-Ga-g][b#♭♯]?\s)\b(?<a>" + QualityTokens + @")\s+(?:vs\.?|versus)\s+(?<b>" + QualityTokens + @")\b",
+        new(@"\b" + A + @"\s+(?:vs\.?|versus)\s+" + B + @"\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex HowDifferPattern =
-        new(@"\bhow\s+do\s+(?<a>" + QualityTokens + @")\s+and\s+(?<b>" + QualityTokens + @")\s+differ\b",
+        new(@"\bhow\s+(?:do|does|are|is)\s+" + A + @"\s+and\s+" + B + @"\s+(?:differ|different|compare)\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    // "Major and minor difference", "Major or minor: what's the difference?"
+    private static readonly Regex TrailingDifferencePattern =
+        new(@"\b" + A + @"\s+(?:and|or)\s+" + B + @"\W+(?:(?:what(?:['\u2019]s|\s+is)\s+)?the\s+)?differences?\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    // A key named before a quality ("C major", "Bb minor", "A major") makes it a
+    // parallel-key question, not a comparison of the two qualities. Case-sensitive
+    // on purpose: with IgnoreCase the "e" of "the" and the article "a" read as keys.
+    private static readonly Regex NamedKeyPattern =
+        new(@"(?<![A-Za-z])[A-G][b#\u266D\u266F]?\s+(?i:major|minor)\b", RegexOptions.Compiled);
 
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
@@ -90,18 +107,25 @@ public sealed class TheoryComparisonSkill(ILogger<TheoryComparisonSkill> logger)
 
     private static (string? a, string? b) MatchPair(string message)
     {
-        foreach (var pattern in new[] { DifferencePattern, ComparePattern, VsPattern, HowDifferPattern })
+        if (NamedKeyPattern.IsMatch(message)) return (null, null);
+
+        foreach (var pattern in new[]
+                 {
+                     DifferencePattern, ComparePattern, VsPattern, HowDifferPattern, TrailingDifferencePattern,
+                 })
         {
             var match = pattern.Match(message);
             if (match.Success)
             {
                 return (
-                    match.Groups["a"].Value.ToLowerInvariant(),
-                    match.Groups["b"].Value.ToLowerInvariant());
+                    Singular(match.Groups["a"].Value),
+                    Singular(match.Groups["b"].Value));
             }
         }
         return (null, null);
     }
+
+    private static string Singular(string quality) => quality.ToLowerInvariant().TrimEnd('s');
 
     private static (string left, string right) NormalizePair(string a, string b)
     {
@@ -127,13 +151,13 @@ public sealed class TheoryComparisonSkill(ILogger<TheoryComparisonSkill> logger)
             "**Scale formulas (semitones from root):**\n" +
             "- Major:   2 2 1 2 2 2 1 — degrees `1 2 3 4 5 6 7` (major third = 4 semitones)\n" +
             "- Minor:   2 1 2 2 1 2 2 — degrees `1 2 b3 4 5 b6 b7` (minor third = 3 semitones, natural minor)\n\n" +
-            "The single interval that flips is the **third**: a major third (4 semitones) versus a minor third (3 semitones). " +
+            "The **third** is the one degree that differs in every minor form: a major third (4 semitones) versus a minor third (3 semitones). " +
             "That one-semitone shift changes the entire harmonic and emotional character of the key — chords built on the same root come out major or minor accordingly.\n\n" +
             "**Common associations:** major sounds bright and stable (often \"happy\"); minor sounds darker and more ambiguous (often \"sad\" but really just emotionally richer). These are cultural shorthand, not absolutes.\n\n" +
             "**Minor variants:**\n" +
-            "- Natural minor: `1 2 b3 4 5 b6 b7`\n" +
-            "- Harmonic minor: `1 2 b3 4 5 b6 7` — raised 7th for stronger dominant resolution\n" +
-            "- Melodic minor: `1 2 b3 4 5 6 7` ascending (raised 6th and 7th), natural minor descending\n\n" +
+            "- Natural minor: `1 2 b3 4 5 b6 b7` — differs from major at degrees 3, 6 and 7\n" +
+            "- Harmonic minor: `1 2 b3 4 5 b6 7` — raised 7th for stronger dominant resolution; differs from major at degrees 3 and 6\n" +
+            "- Melodic minor: `1 2 b3 4 5 6 7` ascending (raised 6th and 7th), natural minor descending — ascending, it differs from major at the 3rd alone\n\n" +
             "**In context:**\n" +
             "- Relative pairs share a key signature (C major ↔ A minor, G major ↔ E minor)\n" +
             "- Parallel pairs share a root but flip quality (C major ↔ C minor)\n" +
@@ -151,7 +175,7 @@ public sealed class TheoryComparisonSkill(ILogger<TheoryComparisonSkill> logger)
     private static AgentResponse SamePair(string label) => new()
     {
         AgentId    = AgentIds.Theory,
-        Result     = $"You asked to compare {label} to itself — there's no difference. Try comparing {label} to its opposite (major↔minor) or to a specific mode (e.g. \"{label} vs dorian\").",
+        Result     = $"You asked to compare {label} to itself — there's no difference. Try comparing it to its opposite: \"{label} vs {(label == "major" ? "minor" : "major")}\".",
         Confidence = 0.7f,
         Evidence   = ["TheoryComparisonSkill: same-token pair"],
     };
