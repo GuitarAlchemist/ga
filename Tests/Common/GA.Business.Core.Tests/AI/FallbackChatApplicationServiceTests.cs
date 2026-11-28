@@ -1,6 +1,7 @@
 namespace GA.Business.Core.Tests.AI;
 
 using GA.Business.Core.Orchestration.Abstractions;
+using GA.Business.Core.Orchestration.Intents;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Services;
 using GA.Business.Core.Orchestration.Trace;
@@ -178,6 +179,56 @@ public class FallbackChatApplicationServiceTests
         });
         fallback.Verify(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()), Times.Never,
             "fallback handler MUST NOT be invoked when routing.method indicates a deterministic skill");
+    }
+
+    [Test]
+    public async Task ChatAsync_FallbackEnabled_LowConfidenceFromNonSkillMdSkill_RefusesFallback()
+    {
+        // The exemption list names "orchestrator-skill-semantic", which
+        // OrchestratorSkillIntent stamps on EVERY orchestrator skill, not only
+        // the SKILL.md wrappers. Pin that scope through the real adapter: a
+        // plain C# domain skill reporting an honest low-confidence failure
+        // keeps its answer instead of being replaced by direct chat.
+        var intent = new OrchestratorSkillIntent(new LowConfidenceDomainSkill());
+        var result = await intent.ExecuteAsync("Tell me about the chord Xq9");
+
+        // Same mapping ProductionOrchestrator applies to an intent result.
+        var inner = new ChatResponse(
+            NaturalLanguageAnswer: result.Answer,
+            Candidates: [],
+            Routing: new AgentRoutingMetadata(
+                intent.Id, result.Confidence, result.RoutingMethodOverride ?? "semantic-intent"));
+
+        var fallback = new Mock<IFallbackChatHandler>();
+        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("PAPERED-OVER ANSWER");
+
+        var decorator = MakeDecorator(inner, fallbackEnabled: true, fallbackHandler: fallback.Object);
+        var response = await decorator.ChatAsync(new ChatRequest("Tell me about the chord Xq9"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.NaturalLanguageAnswer, Is.EqualTo(LowConfidenceDomainSkill.Answer));
+            Assert.That(response.Routing!.AgentId, Is.EqualTo("skill.chord-info"));
+            Assert.That(response.Routing!.Confidence, Is.EqualTo(0f));
+        });
+        fallback.Verify(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()), Times.Never,
+            "every orchestrator skill is exempt from fallback, not only SKILL.md skills");
+    }
+
+    /// <summary>A C# domain skill (not SKILL.md-driven) that fails to parse its input.</summary>
+    private sealed class LowConfidenceDomainSkill : IOrchestratorSkill
+    {
+        public const string Answer = "I couldn't parse \"Xq9\" as a chord.";
+
+        public string Name => "Chord Info";
+
+        public string Description => "Explains a chord's notes and intervals.";
+
+        public bool CanHandle(string message) => true;
+
+        public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AgentResponse { AgentId = "theory", Result = Answer, Confidence = 0.1f });
     }
 
     [Test]

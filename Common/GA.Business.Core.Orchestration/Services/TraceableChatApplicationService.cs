@@ -6,12 +6,13 @@ using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
 
 /// <summary>
-/// <see cref="IChatApplicationService"/> decorator that records each
-/// orchestration call into the scoped <see cref="IAgenticTraceCapture"/>.
-/// Adds no behaviour change — pure observability — so it's safe to enable
-/// by default. Innermost decorator in the
-/// <c>ReadinessGated → Fallback → Traceable → Harmonic</c> stack so
-/// trace coverage extends to every outer behaviour layer.
+/// Innermost <see cref="IChatApplicationService"/> of the chat stack: adapts
+/// <see cref="IHarmonicChatOrchestrator"/> to the application-service contract
+/// and records each orchestration call into the scoped
+/// <see cref="IAgenticTraceCapture"/>. Adds no behaviour change — pure
+/// observability — so it's safe to enable by default. Sits at the bottom of
+/// the <c>ReadinessGated → Fallback → Traceable</c> stack so trace coverage
+/// extends to every outer behaviour layer.
 /// </summary>
 /// <remarks>
 /// Codex CLI 2026-05-08 design review: keeps <see cref="IChatApplicationService"/>
@@ -22,7 +23,7 @@ using GA.Business.ML.Agents;
 /// payload, AG-UI custom event).
 /// </remarks>
 public sealed class TraceableChatApplicationService(
-    IChatApplicationService inner,
+    IHarmonicChatOrchestrator orchestrator,
     IAgenticTraceCapture capture) : IChatApplicationService
 {
     public Task<ChatResponse> ChatAsync(ChatRequest request, CancellationToken cancellationToken = default) =>
@@ -79,7 +80,9 @@ public sealed class TraceableChatApplicationService(
 
         try
         {
-            var response = onToken is null ? await inner.ChatAsync(request, cancellationToken) : await inner.ChatStreamingAsync(request, onToken, cancellationToken, onRouting);
+            var response = onToken is null
+                ? await orchestrator.AnswerAsync(request, cancellationToken)
+                : await orchestrator.AnswerStreamingAsync(request, onToken, cancellationToken, onRouting);
 
             step.Complete(
                 finalAttributes: new Dictionary<string, object?>
